@@ -1,4 +1,5 @@
 use super::*;
+use crate::i18n::Language;
 use crate::render::night;
 use crate::ui::keymap;
 
@@ -30,8 +31,8 @@ pub(super) fn ui(config: &AppConfig, ctx: &Context) -> Vec<Block> {
     let language = row(
         t("settings.ui.language"),
         None,
-        Control::Dropdown { options: vec!["Русский".into(), "English".into()], selected: language_index(&config.ui.language) },
-        |c, v| c.ui.language = LANGUAGES[index(v).min(1)].to_owned(),
+        Control::Dropdown { options: Language::ALL.iter().map(|language| language.native_name().to_owned()).collect(), selected: language_index(&config.ui.language) },
+        |c, v| c.ui.language = Language::ALL[index(v).min(Language::ALL.len() - 1)].code().to_owned(),
     );
     let fonts = font_rows(
         &config.ui.font,

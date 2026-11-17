@@ -7,16 +7,21 @@ pub(super) fn format_locale(value: f64, digits: usize) -> String {
     let text = format!("{value:.digits$}");
     let text = if digits > 0 { text.trim_end_matches('0').trim_end_matches('.').to_owned() } else { text };
     let (whole, fraction) = text.split_once('.').map_or((text.as_str(), None), |(w, f)| (w, Some(f)));
-    let russian = i18n::is_russian();
+    // Разделитель тысяч и десятичный знак.
+    let (thousands, decimal) = match i18n::language() {
+        i18n::Language::Ru => ('\u{a0}', ','),
+        i18n::Language::Es => ('.', ','),
+        i18n::Language::En => (',', '.'),
+    };
     let mut grouped = String::new();
     for (i, ch) in whole.chars().enumerate() {
         if i > 0 && (whole.len() - i) % 3 == 0 {
-            grouped.push(if russian { '\u{a0}' } else { ',' });
+            grouped.push(thousands);
         }
         grouped.push(ch);
     }
     match fraction {
-        Some(f) => format!("{grouped}{}{f}", if russian { ',' } else { '.' }),
+        Some(f) => format!("{grouped}{decimal}{f}"),
         None => grouped,
     }
 }

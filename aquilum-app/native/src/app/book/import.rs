@@ -49,7 +49,8 @@ impl App {
     pub(super) fn pick_book(&mut self, root: &mut RenderRoot) {
         let Some(note) = self.note.as_ref().map(|n| n.path.clone()) else { return };
         self.set_book_busy(root, true);
-        self.pick(move || Some(Picked::Book(note, crate::native_dialog::pick_file("Books", &BOOK_EXTENSIONS))));
+        let filter = crate::i18n::t("book.filesFilter");
+        self.pick(move || Some(Picked::Book(note, crate::native_dialog::pick_file(&filter, &BOOK_EXTENSIONS))));
     }
 
     pub(in crate::app) fn pick(&self, choose: impl FnOnce() -> Option<Picked> + Send + 'static) {
@@ -86,8 +87,9 @@ impl App {
 
     pub(super) fn pick_image(&self, page_cover: bool) {
         let Some(note) = self.note.as_ref().map(|n| n.path.clone()) else { return };
+        let filter = crate::i18n::t("book.imagesFilter");
         self.pick(move || {
-            let file = crate::native_dialog::pick_file("Images", &crate::images::EXTENSIONS)?;
+            let file = crate::native_dialog::pick_file(&filter, &crate::images::EXTENSIONS)?;
             Some(if page_cover { Picked::PageCover(note, file) } else { Picked::BookCover(note, file) })
         });
     }

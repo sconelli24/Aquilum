@@ -7,17 +7,22 @@ use aquilum_core::history::Source;
 
 use super::apply_placeholders;
 use crate::frontmatter::{self, AUTHOR, BOOK_COVER, BOOK_FILE, BOOK_TYPE, COVER, CREATED, PAGE_COVER, PAGES, RATING, READ_PERCENT, READER_POSITION, STATUS, TAGS, TYPE};
+use crate::i18n::{self, Language, t_in};
 
 const CREATED_PLACEHOLDER: &str = "{{date:DD-MM-YYYY}} | ({{time:HH:mm}})";
-const NOTE_TAIL: &str = "\n\n\n\n***\n\nСсылки:\n- [[]]\n";
-const BOOK_TAIL: &str = "\n\n\n***\n\nСсылки:\n- [[]]\n";
 
-fn note_starter() -> String {
-    let fields = [(CREATED, CREATED_PLACEHOLDER), (TAGS, "[]"), (AUTHOR, ""), ("source", "")];
-    frontmatter::template(&fields) + NOTE_TAIL
+/// Хвост шаблона: разделитель и список ссылок с подписью на языке интерфейса.
+fn tail(language: Language, blank_lines: usize) -> String {
+    format!("{}***\n\n{}\n- [[]]\n", "\n".repeat(blank_lines), t_in(language, "templateDialog.starterLinks"))
 }
 
-fn book_starter() -> String {
+fn note_starter(language: Language) -> String {
+    let fields = [(CREATED, CREATED_PLACEHOLDER), (TAGS, "[]"), (AUTHOR, ""), ("source", "")];
+    frontmatter::template(&fields) + &tail(language, 4)
+}
+
+fn book_starter(language: Language) -> String {
+    let tags = format!("[{}, ]", t_in(language, "templateDialog.starterBookTag"));
     let fields = [
         (CREATED, CREATED_PLACEHOLDER),
         (COVER, "true"),
@@ -25,7 +30,7 @@ fn book_starter() -> String {
         (AUTHOR, ""),
         (STATUS, "to-read"),
         (PAGES, ""),
-        (TAGS, "[книга, ]"),
+        (TAGS, tags.as_str()),
         (RATING, "0"),
         (BOOK_COVER, ""),
         (PAGE_COVER, "pattern:tunnel"),
@@ -33,7 +38,7 @@ fn book_starter() -> String {
         (READER_POSITION, ""),
         (READ_PERCENT, ""),
     ];
-    frontmatter::template(&fields) + BOOK_TAIL
+    frontmatter::template(&fields) + &tail(language, 3)
 }
 
 pub fn template_text(path: &Path) -> String {
@@ -46,7 +51,8 @@ pub fn write_starters(core: &Core, folder: &Path) -> Vec<PathBuf> {
         return Vec::new();
     }
     let mut created = Vec::new();
-    for (name, content) in [("Note.md", note_starter()), ("Book.md", book_starter())] {
+    let language = i18n::language();
+    for (name, content) in [("Note.md", note_starter(language)), ("Book.md", book_starter(language))] {
         let path = folder.join(name);
         if path.exists() {
             continue;
@@ -65,10 +71,19 @@ mod tests {
 
     #[test]
     fn starters_keep_their_text_and_have_valid_frontmatter() {
-        assert_eq!(note_starter(), "---\ncreated: {{date:DD-MM-YYYY}} | ({{time:HH:mm}})\ntags: []\nauthor: \nsource: \n---\n\n\n\n\n***\n\nСсылки:\n- [[]]\n");
-        let book = book_starter();
+        assert_eq!(note_starter(Language::Ru), "---\ncreated: {{date:DD-MM-YYYY}} | ({{time:HH:mm}})\ntags: []\nauthor: \nsource: \n---\n\n\n\n\n***\n\nСсылки:\n- [[]]\n");
+        let book = book_starter(Language::Ru);
         assert_eq!(book, "---\ncreated: {{date:DD-MM-YYYY}} | ({{time:HH:mm}})\ncover: true\ntype: book\nauthor: \nstatus: to-read\npages: \ntags: [книга, ]\nrating: 0\nBook_cover: \nPage_cover: pattern:tunnel\nПуть к файлу: \nreader_position: \nread_percent: \n---\n\n\n\n***\n\nСсылки:\n- [[]]\n");
         assert!(frontmatter::end(&book).is_some_and(|end| book[end..].starts_with("\n\n\n\n***")));
+        assert!(frontmatter::parse(&book).is_some_and(|fields| fields.is_book() && fields.has_page_cover()));
+    }
+
+    #[test]
+    fn starters_follow_the_interface_language() {
+        assert!(note_starter(Language::En).ends_with("\n\n\n\n***\n\nLinks:\n- [[]]\n"));
+        assert!(note_starter(Language::Es).ends_with("\n\n\n\n***\n\nEnlaces:\n- [[]]\n"));
+        let book = book_starter(Language::Es);
+        assert!(book.contains("\ntags: [libro, ]\n") && book.ends_with("\n\n\n***\n\nEnlaces:\n- [[]]\n"));
         assert!(frontmatter::parse(&book).is_some_and(|fields| fields.is_book() && fields.has_page_cover()));
     }
 

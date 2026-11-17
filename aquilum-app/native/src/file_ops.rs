@@ -8,7 +8,10 @@ use aquilum_core::files::gate;
 use aquilum_core::history::Source;
 use aquilum_core::search::paths::is_markdown;
 
-pub const UNTITLED_NOTE: &str = "Без названия";
+/// Имя новой заметки или папки без названия — на языке интерфейса.
+pub fn untitled() -> String {
+    crate::i18n::t("editor.untitled")
+}
 
 fn numbered(path: &Path, index: usize) -> PathBuf {
     if index == 0 {
@@ -96,9 +99,8 @@ pub fn move_all(core: &Arc<Core>, sources: Vec<PathBuf>, target: PathBuf) {
 
 pub fn create_note(core: &Core, folder: &Path, title: Option<&str>) -> Result<PathBuf, FileCommandError> {
     std::fs::create_dir_all(folder)?;
-    let sanitized = title.map(sanitize_file_name).filter(|t| !t.is_empty());
-    let base = sanitized.as_deref().unwrap_or(UNTITLED_NOTE);
-    first_free(|i| folder.join(format!("{}.md", counted(base, i))), |path| gate::create(core, path, &"", Source::Me, None))
+    let base = title.map(sanitize_file_name).filter(|t| !t.is_empty()).unwrap_or_else(untitled);
+    first_free(|i| folder.join(format!("{}.md", counted(&base, i))), |path| gate::create(core, path, &"", Source::Me, None))
 }
 
 fn counted(base: &str, index: usize) -> String {

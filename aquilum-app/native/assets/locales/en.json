@@ -675,7 +675,9 @@
     "uploadBookCover": "Upload the book cover",
     "progress": "Progress: {{current}}/{{total}}",
     "progressUnknown": "Progress: —",
-    "author": "Author"
+    "author": "Author",
+    "filesFilter": "Books",
+    "imagesFilter": "Images"
   },
   "templateDialog": {
     "title": "Templates",
@@ -683,7 +685,9 @@
     "empty": "No templates yet",
     "emptyHint": "Creates the “{{folder}}” folder with a plain note and a book template",
     "createFolder": "Create the templates folder",
-    "close": "close"
+    "close": "close",
+    "starterLinks": "Links:",
+    "starterBookTag": "book"
   },
   "workspaces": {
     "title": "Knowledge bases",

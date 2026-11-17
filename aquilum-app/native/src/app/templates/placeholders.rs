@@ -1,18 +1,54 @@
 use chrono::{Datelike, Timelike};
 
+use crate::i18n::{self, Language};
+
 const DEFAULT_DATE: &str = "YYYY-MM-DD";
 const DEFAULT_TIME: &str = "HH:mm";
-const MONTHS: [&str; 12] = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"];
-const MONTHS_SHORT: [&str; 12] = ["янв.", "февр.", "март", "апр.", "май", "июнь", "июль", "авг.", "сент.", "окт.", "нояб.", "дек."];
-const DAYS: [&str; 7] = ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье"];
-const DAYS_SHORT: [&str; 7] = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"];
 const TOKENS: [&str; 16] = ["YYYY", "MMMM", "DDDD", "MMM", "DDD", "YY", "MM", "DD", "HH", "mm", "ss", "M", "D", "H", "m", "s"];
 
-pub fn apply_placeholders(text: &str) -> String {
-    apply_at(text, &chrono::Local::now())
+/// Названия месяцев и дней недели (с понедельника) для `MMMM`, `MMM`, `DDDD`, `DDD` — как в локалях moment.js.
+struct Names {
+    months: [&'static str; 12],
+    months_short: [&'static str; 12],
+    days: [&'static str; 7],
+    days_short: [&'static str; 7],
 }
 
-fn apply_at<T: Datelike + Timelike>(text: &str, now: &T) -> String {
+const RU: Names = Names {
+    months: ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"],
+    months_short: ["янв.", "февр.", "март", "апр.", "май", "июнь", "июль", "авг.", "сент.", "окт.", "нояб.", "дек."],
+    days: ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье"],
+    days_short: ["пн", "вт", "ср", "чт", "пт", "сб", "вс"],
+};
+
+const EN: Names = Names {
+    months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+    months_short: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    days_short: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+};
+
+const ES: Names = Names {
+    months: ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"],
+    months_short: ["ene.", "feb.", "mar.", "abr.", "may.", "jun.", "jul.", "ago.", "sept.", "oct.", "nov.", "dic."],
+    days: ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"],
+    days_short: ["lun.", "mar.", "mié.", "jue.", "vie.", "sáb.", "dom."],
+};
+
+fn names(language: Language) -> &'static Names {
+    match language {
+        Language::Ru => &RU,
+        Language::En => &EN,
+        Language::Es => &ES,
+    }
+}
+
+/// Подставляет `{{date}}` и `{{time}}`; названия месяцев и дней — на языке интерфейса.
+pub fn apply_placeholders(text: &str) -> String {
+    apply_at(text, &chrono::Local::now(), i18n::language())
+}
+
+fn apply_at<T: Datelike + Timelike>(text: &str, now: &T, language: Language) -> String {
     let mut out = String::with_capacity(text.len());
     let mut rest = text;
     while let Some(start) = rest.find("{{") {
@@ -33,7 +69,7 @@ fn apply_at<T: Datelike + Timelike>(text: &str, now: &T) -> String {
         match default {
             Some(default) if !pattern.is_some_and(|p| p.contains('}')) => {
                 let pattern = pattern.map(str::trim).filter(|p| !p.is_empty()).unwrap_or(default);
-                out.push_str(&format_moment(pattern, now));
+                out.push_str(&format_moment(pattern, now, names(language)));
             }
             _ => out.push_str(&rest[start..start + 2 + end + 2]),
         }
@@ -43,16 +79,16 @@ fn apply_at<T: Datelike + Timelike>(text: &str, now: &T) -> String {
     out
 }
 
-fn part<T: Datelike + Timelike>(token: &str, now: &T) -> String {
+fn part<T: Datelike + Timelike>(token: &str, now: &T, names: &Names) -> String {
     match token {
         "YYYY" => format!("{:04}", now.year()),
         "YY" => format!("{:02}", now.year().rem_euclid(100)),
-        "MMMM" => MONTHS[now.month0() as usize].to_owned(),
-        "MMM" => MONTHS_SHORT[now.month0() as usize].to_owned(),
+        "MMMM" => names.months[now.month0() as usize].to_owned(),
+        "MMM" => names.months_short[now.month0() as usize].to_owned(),
         "MM" => format!("{:02}", now.month()),
         "M" => now.month().to_string(),
-        "DDDD" => DAYS[now.weekday().num_days_from_monday() as usize].to_owned(),
-        "DDD" => DAYS_SHORT[now.weekday().num_days_from_monday() as usize].to_owned(),
+        "DDDD" => names.days[now.weekday().num_days_from_monday() as usize].to_owned(),
+        "DDD" => names.days_short[now.weekday().num_days_from_monday() as usize].to_owned(),
         "DD" => format!("{:02}", now.day()),
         "D" => now.day().to_string(),
         "HH" => format!("{:02}", now.hour()),
@@ -64,7 +100,7 @@ fn part<T: Datelike + Timelike>(token: &str, now: &T) -> String {
     }
 }
 
-fn format_moment<T: Datelike + Timelike>(pattern: &str, now: &T) -> String {
+fn format_moment<T: Datelike + Timelike>(pattern: &str, now: &T, names: &Names) -> String {
     let mut out = String::new();
     let mut rest = pattern;
     while let Some(c) = rest.chars().next() {
@@ -74,7 +110,7 @@ fn format_moment<T: Datelike + Timelike>(pattern: &str, now: &T) -> String {
             out.push_str(&rest[1..close]);
             rest = &rest[close + 1..];
         } else if let Some(token) = TOKENS.iter().find(|t| rest.starts_with(**t)) {
-            out.push_str(&part(token, now));
+            out.push_str(&part(token, now, names));
             rest = &rest[token.len()..];
         } else {
             out.push(c);
@@ -95,9 +131,19 @@ mod tests {
     #[test]
     fn formats_like_the_tauri_version() {
         let now = moment();
-        assert_eq!(apply_at("Сегодня {{date}}, время {{time}}", &now), "Сегодня 2026-10-11, время 09:05");
-        assert_eq!(apply_at("{{ Date : DDDD, D MMMM YYYY [в] H:mm:ss }}", &now), "воскресенье, 11 октябрь 2026 в 9:05:07");
-        assert_eq!(apply_at("{{date:100%}} {{title}} {{date:}}", &now), "100% {{title}} 2026-10-11");
-        assert_eq!(apply_at("{{date:YY.M.D}} {{time:HH-mm}}", &now), "26.10.11 09-05");
+        let ru = Language::Ru;
+        assert_eq!(apply_at("Сегодня {{date}}, время {{time}}", &now, ru), "Сегодня 2026-10-11, время 09:05");
+        assert_eq!(apply_at("{{ Date : DDDD, D MMMM YYYY [в] H:mm:ss }}", &now, ru), "воскресенье, 11 октябрь 2026 в 9:05:07");
+        assert_eq!(apply_at("{{date:100%}} {{title}} {{date:}}", &now, ru), "100% {{title}} 2026-10-11");
+        assert_eq!(apply_at("{{date:YY.M.D}} {{time:HH-mm}}", &now, ru), "26.10.11 09-05");
+    }
+
+    #[test]
+    fn month_and_day_names_follow_the_interface_language() {
+        let now = moment();
+        let pattern = "{{date:DDDD, D MMMM YYYY (DDD, MMM)}}";
+        assert_eq!(apply_at(pattern, &now, Language::Ru), "воскресенье, 11 октябрь 2026 (вс, окт.)");
+        assert_eq!(apply_at(pattern, &now, Language::En), "Sunday, 11 October 2026 (Sun, Oct)");
+        assert_eq!(apply_at(pattern, &now, Language::Es), "domingo, 11 octubre 2026 (dom., oct.)");
     }
 }

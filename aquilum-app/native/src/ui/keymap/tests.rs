@@ -85,9 +85,9 @@ fn non_latin_shortcuts_keep_working_without_affecting_typing_or_altgr() {
 }
 
 #[test]
-fn every_shortcut_is_listed_in_settings_with_both_translations() {
+fn every_shortcut_is_listed_in_settings_with_every_translation() {
     let listed: Vec<&str> = super::groups().into_iter().flat_map(|(title, rows)| std::iter::once(title).chain(rows.into_iter().map(|(label, _)| label))).collect();
-    for locale in [include_str!("../../../assets/locales/ru.json"), include_str!("../../../assets/locales/en.json")] {
+    for locale in [include_str!("../../../assets/locales/ru.json"), include_str!("../../../assets/locales/en.json"), include_str!("../../../assets/locales/es.json")] {
         let json: serde_json::Value = serde_json::from_str(locale).unwrap();
         for key in &listed {
             assert!(json["settings"]["shortcuts"][key].is_string(), "нет перевода settings.shortcuts.{key}");

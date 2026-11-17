@@ -1,10 +1,9 @@
 use aquilum_core::settings::models::{AppConfig, FontSettings};
 
 use super::{Control, Number, Row, Setter, Value};
-use crate::i18n::t;
+use crate::i18n::{Language, t};
 
 pub(super) const THEMES: [&str; 4] = ["system", "light", "dark", "night"];
-pub(super) const LANGUAGES: [&str; 2] = ["ru", "en"];
 pub(super) const READER_FLOWS: [&str; 2] = ["paginated", "scrolled"];
 pub(super) const HISTORY_DAYS: [u32; 4] = [0, 30, 90, 365];
 
@@ -77,7 +76,8 @@ fn weight_label(weight: u32) -> String {
 }
 
 pub(super) fn language_index(language: &str) -> usize {
-    usize::from(language != "ru")
+    let language = Language::from_setting(language);
+    Language::ALL.iter().position(|known| *known == language).unwrap_or(0)
 }
 
 pub(super) fn families(base: &[&str]) -> Vec<String> {

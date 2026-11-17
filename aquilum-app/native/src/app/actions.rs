@@ -152,7 +152,7 @@ impl App {
             Some(TreeAction::CreateNote) => return self.create_note_titled(root, None),
             Some(TreeAction::NewNote { folder }) => return self.create_note_in(root, &folder),
             Some(TreeAction::NewFolder { folder }) => {
-                match file_ops::create_folder(&folder, file_ops::UNTITLED_NOTE, 0) {
+                match file_ops::create_folder(&folder, &file_ops::untitled(), 0) {
                     Ok(path) => {
                         self.tree.paths_changed(root, std::slice::from_ref(&path));
                         self.tree.reveal(root, &path);

@@ -687,7 +687,9 @@
     "uploadBookCover": "Загрузить обложку книги",
     "progress": "Прогресс: {{current}}/{{total}}",
     "progressUnknown": "Прогресс: —",
-    "author": "Автор"
+    "author": "Автор",
+    "filesFilter": "Книги",
+    "imagesFilter": "Изображения"
   },
   "templateDialog": {
     "title": "Шаблоны",
@@ -695,7 +697,9 @@
     "empty": "Шаблонов пока нет",
     "emptyHint": "Создаст папку «{{folder}}» с шаблонами обычной заметки и книги",
     "createFolder": "Создать папку с шаблонами",
-    "close": "закрыть"
+    "close": "закрыть",
+    "starterLinks": "Ссылки:",
+    "starterBookTag": "книга"
   },
   "workspaces": {
     "title": "Базы знаний",

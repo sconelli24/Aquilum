@@ -27,13 +27,9 @@ pub(super) fn install_crash_log(file: std::path::PathBuf) {
         append(&file, &entry);
 
         let copied = crate::clipboard::copy(entry.clone());
-        let prompt = if copied {
-            "В приложении произошла непредвиденная ошибка.\nОтчёт об ошибке скопирован в буфер обмена.\n\nПерезапустить Aquilum?"
-        } else {
-            "В приложении произошла непредвиденная ошибка.\n\nПерезапустить Aquilum?"
-        };
+        let (title, prompt) = crash_dialog(crate::i18n::language(), copied);
 
-        if crate::native_dialog::confirm("Упс, приложение упало!", prompt) {
+        if crate::native_dialog::confirm(title, &prompt) {
             crate::system::restart();
         }
 
@@ -41,8 +37,31 @@ pub(super) fn install_crash_log(file: std::path::PathBuf) {
     }));
 }
 
+/// Заголовок и текст окна после падения. Строки здесь, а не в локалях: разбор JSON внутри обработчика паники
+/// мог бы паниковать сам.
+fn crash_dialog(language: crate::i18n::Language, copied: bool) -> (&'static str, String) {
+    use crate::i18n::Language;
+    let (title, happened, copied_note, restart) = match language {
+        Language::Ru => ("Упс, приложение упало!", "В приложении произошла непредвиденная ошибка.", "Отчёт об ошибке скопирован в буфер обмена.", "Перезапустить Aquilum?"),
+        Language::En => ("Oops, the app crashed!", "An unexpected error occurred in the app.", "The error report has been copied to the clipboard.", "Restart Aquilum?"),
+        Language::Es => ("¡Ups, la aplicación se cerró!", "Ocurrió un error inesperado en la aplicación.", "El informe del error se copió al portapapeles.", "¿Reiniciar Aquilum?"),
+    };
+    let prompt = if copied { format!("{happened}\n{copied_note}\n\n{restart}") } else { format!("{happened}\n\n{restart}") };
+    (title, prompt)
+}
+
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn the_crash_dialog_speaks_the_interface_language() {
+        use crate::i18n::Language;
+        assert_eq!(
+            super::crash_dialog(Language::Ru, true),
+            ("Упс, приложение упало!", "В приложении произошла непредвиденная ошибка.\nОтчёт об ошибке скопирован в буфер обмена.\n\nПерезапустить Aquilum?".to_owned())
+        );
+        assert_eq!(super::crash_dialog(Language::Es, false).1, "Ocurrió un error inesperado en la aplicación.\n\n¿Reiniciar Aquilum?");
+    }
+
     #[test]
     fn a_full_log_starts_over_instead_of_growing() {
         let directory = crate::test_dir::tempdir();
