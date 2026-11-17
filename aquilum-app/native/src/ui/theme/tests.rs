@@ -110,3 +110,107 @@ fn installed_families_are_sorted_unique_and_skip_the_bundled_ones() {
     assert!(names.windows(2).all(|pair| pair[0].to_lowercase() <= pair[1].to_lowercase()));
     assert!(names.iter().all(|name| !known.contains(&name.as_str()) && !name.starts_with(['.', '@'])));
 }
+
+fn rgba(color: Color) -> [u8; 4] {
+    color.to_rgba8().to_u8_array()
+}
+
+fn builtin(id: &str) -> (usize, &'static tokens::Builtin) {
+    tokens::THEMES.iter().enumerate().find(|(_, b)| b.id == id).unwrap_or_else(|| panic!("нет темы {id}"))
+}
+
+#[test]
+fn builtin_themes_start_with_aquilum_and_have_unique_ids() {
+    let ids: Vec<&str> = tokens::THEMES.iter().map(|b| b.id).collect();
+    assert_eq!(&ids[..2], ["light", "dark"]);
+    assert!(ids.iter().enumerate().all(|(i, id)| !ids[..i].contains(id)), "{ids:?}");
+    assert_eq!(super::builtins(false).map(|b| b.id).collect::<Vec<_>>(), ["light", "catppuccin-latte"]);
+    assert_eq!(super::builtins(true).map(|b| b.id).collect::<Vec<_>>(), ["dark", "catppuccin-frappe", "catppuccin-macchiato", "catppuccin-mocha"]);
+    let light = tokens::LIGHT;
+    assert!((light.editor_heading_1_scale - 24.0 / 14.0).abs() < 1e-6);
+    assert_eq!((light.editor_heading_3_scale, light.editor_heading_3_weight), (1.0, 700.0));
+    assert_eq!(rgba(light.editor_heading_4_color), rgba(light.editor_text), "у темы Aquilum заголовки цвета текста");
+}
+
+#[test]
+fn catppuccin_takes_its_palette_and_anuppuccin_heading_colors() {
+    let mocha = builtin("catppuccin-mocha").1.theme;
+    assert_eq!(rgba(mocha.editor_bg), [0x1e, 0x1e, 0x2e, 0xff]);
+    assert_eq!(rgba(mocha.sidebar_bg), [0x18, 0x18, 0x25, 0xff]);
+    assert_eq!(rgba(mocha.editor_code_bg), [0x11, 0x11, 0x1b, 0xff]);
+    let headings = [mocha.editor_heading_1_color, mocha.editor_heading_2_color, mocha.editor_heading_3_color, mocha.editor_heading_4_color];
+    assert_eq!(headings.map(rgba), [[0xf3, 0x8b, 0xa8, 0xff], [0xfa, 0xb3, 0x87, 0xff], [0xa6, 0xe3, 0xa1, 0xff], [0x94, 0xe2, 0xd5, 0xff]]);
+    assert_eq!((rgba(mocha.editor_strong_color), rgba(mocha.editor_em_color)), ([0xf3, 0x8b, 0xa8, 0xff], [0xa6, 0xe3, 0xa1, 0xff]));
+    assert_eq!([mocha.editor_heading_1_scale, mocha.editor_heading_4_scale], [1.8, 1.27]);
+    assert_eq!(rgba(mocha.text_primary)[..3], [0xcd, 0xd6, 0xf4], "текст — Text палитры");
+    let latte = builtin("catppuccin-latte").1.theme;
+    assert_eq!(rgba(latte.editor_bg), [0xef, 0xf1, 0xf5, 0xff]);
+    assert_eq!(rgba(latte.bg_accent), [0x1e, 0x66, 0xf5, 0xff]);
+    assert_eq!(rgba(latte.editor_heading_1_color), [0xd2, 0x0f, 0x39, 0xff]);
+}
+
+#[test]
+fn derive_without_edits_reproduces_every_theme() {
+    let close = |a: Color, b: Color| rgba(a).iter().zip(rgba(b)).all(|(x, y)| x.abs_diff(y) <= 1);
+    for (index, builtin) in tokens::THEMES.iter().enumerate() {
+        let mut theme = builtin.theme;
+        tokens::derive(index, &mut theme, &[None; tokens::INPUT_COUNT]);
+        for (at, name) in tokens::INPUTS.iter().enumerate() {
+            assert!(close(tokens::input_color(&theme, at), tokens::input_color(&builtin.theme, at)), "{}: {name}", builtin.id);
+        }
+        for (name, derived, original) in [
+            ("editor-text", theme.editor_text, builtin.theme.editor_text),
+            ("tab-bg-active", theme.tab_bg_active, builtin.theme.tab_bg_active),
+            ("selection-bg", theme.selection_bg, builtin.theme.selection_bg),
+            ("graph-backdrop", theme.graph_backdrop, builtin.theme.graph_backdrop),
+        ] {
+            assert!(close(derived, original), "{}: {name}", builtin.id);
+        }
+    }
+}
+
+#[test]
+fn an_edited_color_reaches_the_tokens_built_from_it() {
+    let (index, mocha) = builtin("catppuccin-mocha");
+    let mut set = [None; tokens::INPUT_COUNT];
+    let at = |name: &str| tokens::INPUTS.iter().position(|input| *input == name).unwrap();
+    set[at("editor-bg")] = Some([0.0, 0.0, 0.0, 1.0]);
+    set[at("text-primary")] = Some([1.0, 0.0, 0.0, 1.0]);
+    let mut theme = mocha.theme;
+    tokens::derive(index, &mut theme, &set);
+    assert_eq!(rgba(theme.editor_bg), [0, 0, 0, 255]);
+    assert_eq!(rgba(theme.tab_bg_active), [0, 0, 0, 255], "активная вкладка — цвета заметки");
+    assert_eq!(rgba(theme.graph_backdrop), [0, 0, 0, 255]);
+    assert_eq!(rgba(theme.editor_text), [255, 0, 0, 230], "текст редактора — 90 % текста");
+    assert_eq!(rgba(theme.editor_heading_1_color), rgba(mocha.theme.editor_heading_1_color), "свой цвет заголовка остаётся");
+    let (light, aquilum) = builtin("light");
+    let mut theme = aquilum.theme;
+    tokens::derive(light, &mut theme, &set);
+    assert_eq!(rgba(theme.editor_heading_2_color), rgba(theme.editor_text), "у Aquilum заголовок идёт за текстом");
+}
+
+#[test]
+fn the_mode_picks_the_chosen_theme_and_its_edits() {
+    let _lock = super::test_lock();
+    let before = super::is_dark();
+    let edits = [("editor-bg".to_owned(), "#000000".to_owned()), ("editor-heading-1-scale".to_owned(), "2".to_owned())];
+    super::set_choice(super::Choice {
+        light: "catppuccin-latte".into(),
+        dark: "catppuccin-mocha".into(),
+        overrides: [("catppuccin-mocha".to_owned(), edits.into_iter().collect())].into_iter().collect(),
+    });
+    super::apply_setting("dark", false, "#1471eb");
+    assert_eq!(super::active().id, "catppuccin-mocha");
+    assert_eq!(rgba(super::current().editor_bg), [0, 0, 0, 255]);
+    assert_eq!(super::current().editor_heading_1_scale, 2.0);
+    assert_eq!(super::number("editor-heading-1-scale"), Some(2.0));
+    assert_eq!(super::input_hex("sidebar-bg").as_deref(), Some("#181825"));
+    super::apply_setting("light", true, "#1471eb");
+    assert_eq!(super::active().id, "catppuccin-latte");
+    assert_eq!(super::input_hex("editor-bg").as_deref(), Some("#eff1f5"));
+    super::set_choice(super::Choice { light: "catppuccin-mocha".into(), ..super::Choice::default() });
+    super::apply_setting("light", false, "#1471eb");
+    assert_eq!(super::active().id, "light", "тёмная тема не ставится в светлый режим");
+    super::set_choice(super::Choice::default());
+    super::apply_setting(if before { "dark" } else { "light" }, before, "#1471eb");
+}

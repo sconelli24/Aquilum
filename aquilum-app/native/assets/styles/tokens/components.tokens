@@ -118,12 +118,28 @@
   --q-editor-table-selection-bg: var(--q-selection-bg);
   --q-editor-heading-font: var(--q-font-family-heading);
   --q-editor-heading-weight: var(--q-font-weight-bold);
-  --q-editor-heading-1-size: calc(var(--q-editor-font-size) * 24 / 14);
-  --q-editor-heading-2-size: calc(var(--q-editor-font-size) * 16 / 14);
-  --q-editor-heading-3-size: var(--q-editor-font-size);
-  --q-editor-heading-4-size: var(--q-editor-font-size);
-  --q-editor-heading-5-size: var(--q-editor-font-size);
-  --q-editor-heading-6-size: var(--q-editor-font-size);
+  /* Заголовки: размер — доля размера текста редактора; размер, насыщенность и цвет зависят от темы. */
+  --q-editor-heading-1-scale: calc(24 / 14);
+  --q-editor-heading-2-scale: calc(16 / 14);
+  --q-editor-heading-3-scale: 1;
+  --q-editor-heading-4-scale: 1;
+  --q-editor-heading-5-scale: 1;
+  --q-editor-heading-6-scale: 1;
+  --q-editor-heading-1-weight: var(--q-font-weight-bold);
+  --q-editor-heading-2-weight: var(--q-font-weight-bold);
+  --q-editor-heading-3-weight: var(--q-font-weight-bold);
+  --q-editor-heading-4-weight: var(--q-font-weight-bold);
+  --q-editor-heading-5-weight: var(--q-font-weight-bold);
+  --q-editor-heading-6-weight: var(--q-font-weight-bold);
+  --q-editor-heading-1-color: var(--q-editor-text);
+  --q-editor-heading-2-color: var(--q-editor-text);
+  --q-editor-heading-3-color: var(--q-editor-text);
+  --q-editor-heading-4-color: var(--q-editor-text);
+  --q-editor-heading-5-color: var(--q-editor-text);
+  --q-editor-heading-6-color: var(--q-editor-text);
+  /* Цвет жирного и курсива; совпадает с текстом — не красится. */
+  --q-editor-strong-color: var(--q-editor-text);
+  --q-editor-em-color: var(--q-editor-text);
   --q-editor-code-font: var(--q-font-family-mono);
   --q-editor-code-bg: var(--q-gray-100);
   --q-editor-code-radius: var(--q-rounded-sm);

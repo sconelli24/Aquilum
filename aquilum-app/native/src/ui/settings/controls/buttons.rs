@@ -111,11 +111,13 @@ impl Widget for DropdownButton {
 #[derive(Default)]
 pub struct Swatch {
     press: Press,
+    /// Вход темы (`tokens::INPUTS`), цвет которого показан; `None` — акцент.
+    input: Option<usize>,
 }
 
 impl Swatch {
-    pub fn new() -> NewWidget<Self> {
-        NewWidget::new(Swatch::default())
+    pub fn new(input: Option<usize>) -> NewWidget<Self> {
+        NewWidget::new(Swatch { input, ..Swatch::default() })
     }
 }
 
@@ -139,7 +141,8 @@ impl Widget for Swatch {
     fn paint(&mut self, ctx: &mut PaintCtx<'_>, _props: &PropertiesRef<'_>, painter: &mut Painter<'_>) {
         let t = theme::current();
         let shape = RoundedRect::from_rect(ctx.content_box(), size::RADIUS_MD);
-        painter.fill(shape, t.bg_accent).draw();
+        let color = self.input.map_or(t.bg_accent, |input| crate::ui::tokens::input_color(&t, input));
+        painter.fill(shape, color).draw();
         ring(painter, shape, t.border_default);
     }
 

@@ -61,7 +61,7 @@ fn templates_and_attachments_share_one_section_and_search_tuning_lives_with_bm25
         assert_eq!(Section::from_key(old), Some(Section::Data), "сохранённый раздел «{old}» открывает общий раздел");
     }
     assert_eq!(Section::from_key("search"), Some(Section::Analysis));
-    assert_eq!(Section::ALL.len(), 11);
+    assert_eq!(Section::ALL.len(), 12);
 
     let rows = |config: &AppConfig| blocks(Section::Analysis, config, &ctx).into_iter().flat_map(|b| b.rows).map(|r| r.label).collect::<Vec<_>>();
     let pool = t("settings.search.candidatePool");
@@ -107,4 +107,18 @@ fn sync_is_turned_on_per_vault_after_connecting() {
     assert_eq!(description(&ctx), Some(stage("settings.sync.downloading", 1, 2)));
     ctx.sync = SyncStatus::Running(aquilum_core::sync::Progress { done: 2, total: 4, down: count(2, 2), up: count(0, 1) });
     assert_eq!(description(&ctx), Some(stage("settings.sync.uploading", 0, 1)));
+}
+
+#[test]
+fn theme_edits_are_stored_per_theme_in_settings_units() {
+    let mut config = AppConfig::default();
+    assert!(set_theme_value(&mut config, "catppuccin-mocha", "editor-bg", &Value::Text("#ABCDEF".into())));
+    assert!(!set_theme_value(&mut config, "catppuccin-mocha", "editor-bg", &Value::Text("#ABC".into())));
+    assert!(set_theme_value(&mut config, "catppuccin-mocha", "editor-heading-2-scale", &Value::Number(150.0)));
+    assert!(set_theme_value(&mut config, "catppuccin-mocha", "editor-heading-2-weight", &Value::Index(2)));
+    let edits = &config.ui.theme_overrides["catppuccin-mocha"];
+    assert_eq!(edits["editor-bg"], "#abcdef");
+    assert_eq!(edits["editor-heading-2-scale"], "1.5");
+    assert_eq!(edits["editor-heading-2-weight"], "600");
+    assert!(!config.ui.theme_overrides.contains_key("light"));
 }

@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -149,6 +151,12 @@ impl Default for ReaderSettings {
 pub struct UiSettings {
     pub theme: String,
     pub night: String,
+    /// Тема светлого режима (id встроенной темы).
+    pub light_theme: String,
+    /// Тема тёмного и ночного режимов.
+    pub dark_theme: String,
+    /// Правки пользователя поверх тем: id темы → токен → «#rrggbb» или число.
+    pub theme_overrides: BTreeMap<String, BTreeMap<String, String>>,
     pub language: String,
     pub primary_color: String,
     pub animations: bool,
@@ -161,6 +169,9 @@ impl Default for UiSettings {
         Self {
             theme: "system".to_string(),
             night: "red".to_string(),
+            light_theme: "light".to_string(),
+            dark_theme: "dark".to_string(),
+            theme_overrides: BTreeMap::new(),
             language: String::new(),
             primary_color: "#1471eb".to_string(),
             animations: true,

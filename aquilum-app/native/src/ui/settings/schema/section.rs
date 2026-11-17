@@ -4,6 +4,7 @@ use crate::ui::icons::{self, Icon};
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Section {
     Ui,
+    Themes,
     Editor,
     Reader,
     Data,
@@ -20,6 +21,7 @@ pub enum Section {
 impl Section {
     pub const ALL: &[Section] = &[
         Section::Ui,
+        Section::Themes,
         Section::Editor,
         Section::Reader,
         Section::Data,
@@ -36,6 +38,7 @@ impl Section {
     pub fn key(self) -> &'static str {
         match self {
             Section::Ui => "ui",
+            Section::Themes => "themes",
             Section::Editor => "editor",
             Section::Reader => "reader",
             Section::Data => "data",
@@ -65,6 +68,7 @@ impl Section {
     pub fn icon(self) -> Icon {
         match self {
             Section::Ui => icons::MONITOR,
+            Section::Themes => icons::PALETTE,
             Section::Editor => icons::TYPE,
             Section::Reader => icons::BOOK_OPEN,
             Section::Data => icons::FOLDER,

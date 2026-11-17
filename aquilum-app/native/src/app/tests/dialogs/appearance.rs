@@ -187,3 +187,39 @@ fn a_preset_swatch_sets_the_accent_at_once_and_is_saved_on_close() {
     h.escape();
     assert_eq!(h.config().ui.primary_color, "#9333ea");
 }
+
+#[test]
+fn themes_section_edits_the_shown_theme_and_resets_it() {
+    use crate::ui::settings::schema::{Action, Setter};
+    let mut h = Harness::new();
+    h.click(242.0, 578.0);
+    h.open_section(Section::Themes);
+    assert_eq!(h.section(), Some(Section::Themes));
+    let field = h.binding("поле фона заметки", |b| matches!(b, Binding::Text { setter: Setter::ThemeValue("editor-bg"), .. }));
+    h.send(field, TextAction::Changed("#112233".into()));
+    let id = theme::active().id;
+    assert_eq!(h.config().ui.theme_overrides[id]["editor-bg"], "#112233");
+    assert_eq!(theme::current().editor_bg.to_rgba8().to_u8_array(), [0x11, 0x22, 0x33, 0xff]);
+    assert_eq!(h.section(), Some(Section::Themes));
+    let reset = h.binding("кнопка сброса темы", |b| matches!(b, Binding::Button(Action::ResetTheme)));
+    h.send(reset, crate::ui::widgets::Pressed);
+    assert!(h.config().ui.theme_overrides.get(id).is_none_or(|edits| edits.is_empty()));
+    assert_ne!(theme::current().editor_bg.to_rgba8().to_u8_array(), [0x11, 0x22, 0x33, 0xff]);
+}
+
+#[test]
+fn a_chosen_dark_theme_applies_in_dark_mode() {
+    let mut h = Harness::new();
+    let mut config = h.config();
+    config.ui.theme = "dark".into();
+    config.ui.dark_theme = "catppuccin-mocha".into();
+    h.app.workspace.core.settings.update_config(config).unwrap();
+    h.app.restyle(&mut h.root, false, None);
+    assert_eq!(theme::active().id, "catppuccin-mocha");
+    assert_eq!(theme::current().editor_bg.to_rgba8().to_u8_array(), [0x1e, 0x1e, 0x2e, 0xff]);
+    let mut config = h.config();
+    config.ui.theme = "light".into();
+    h.app.workspace.core.settings.update_config(config).unwrap();
+    h.app.restyle(&mut h.root, false, None);
+    assert_eq!(theme::active().id, "light");
+}

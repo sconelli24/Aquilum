@@ -24,6 +24,9 @@ pub const WARNING: BrushIndex = BrushIndex(EXTRA + 6);
 pub const INFO: BrushIndex = BrushIndex(EXTRA + 7);
 pub const IDEA: BrushIndex = BrushIndex(TOKENS + 3);
 const TAGS: usize = EXTRA + 8;
+const HEADINGS: usize = TAGS + palette::TAG_COLORS;
+pub const STRONG: BrushIndex = BrushIndex(HEADINGS + 6);
+pub const EMPHASIS: BrushIndex = BrushIndex(HEADINGS + 7);
 
 pub(super) const LIST_CALLOUTS: [(char, fn(&Theme) -> Color); 7] = [
     ('!', |t| t.list_callout_important),
@@ -40,7 +43,23 @@ pub fn palette(tm: &Theme, text: Color) -> Vec<Brush> {
     let code = [tm.editor_code_keyword, tm.editor_code_string, tm.editor_code_number, tm.editor_code_comment, tm.editor_code_function, tm.editor_code_type, tm.editor_code_property];
     let extra = [tm.text_secondary, tm.text_danger, tm.text_on_accent, tm.text_muted, tm.text_success, tm.text_link.multiply_alpha(0.6), tm.text_warning, tm.text_info];
     let tags = palette::NAMES[..palette::TAG_COLORS].iter().filter_map(|name| palette::color(name, tm)).map(|color| blend(color, text, 0.3));
-    [text, Color::TRANSPARENT, tm.text_tertiary, tm.text_link, tm.editor_list_marker_color, tm.text_accent].into_iter().chain(tones).chain(code).chain(extra).chain(tags).map(Brush::from).collect()
+    // Цвет темы, совпадающий с её текстом, — цвет текста этого поля.
+    let own = |color: Color| if color == tm.editor_text { text } else { color };
+    let headings = [tm.editor_heading_1_color, tm.editor_heading_2_color, tm.editor_heading_3_color, tm.editor_heading_4_color, tm.editor_heading_5_color, tm.editor_heading_6_color];
+    let emphasis = [tm.editor_strong_color, tm.editor_em_color];
+    [text, Color::TRANSPARENT, tm.text_tertiary, tm.text_link, tm.editor_list_marker_color, tm.text_accent]
+        .into_iter()
+        .chain(tones)
+        .chain(code)
+        .chain(extra)
+        .chain(tags)
+        .chain(headings.into_iter().chain(emphasis).map(own))
+        .map(Brush::from)
+        .collect()
+}
+
+pub(super) fn heading_brush(level: u8) -> BrushIndex {
+    BrushIndex(HEADINGS + usize::from(level.clamp(1, 6) - 1))
 }
 
 fn blend(color: Color, text: Color, share: f32) -> Color {

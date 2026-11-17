@@ -1,0 +1,307 @@
+/* Catppuccin — палитра https://catppuccin.com (лицензия MIT): светлая Latte и тёмные Frappé, Macchiato, Mocha.
+   Фон заметки — Base, панели — Mantle, код — Crust; акцент — Blue. Цвета заголовков, жирного и курсива —
+   как по умолчанию в теме AnuPpuccin для Obsidian, размеры заголовков — шкала Obsidian. */
+
+[data-theme="catppuccin-latte"] {
+    color-scheme: light;
+    --q-theme-name: 'Catppuccin Latte';
+    --q-ctp-rosewater: #dc8a78;
+    --q-ctp-flamingo: #dd7878;
+    --q-ctp-pink: #ea76cb;
+    --q-ctp-mauve: #8839ef;
+    --q-ctp-red: #d20f39;
+    --q-ctp-maroon: #e64553;
+    --q-ctp-peach: #fe640b;
+    --q-ctp-yellow: #df8e1d;
+    --q-ctp-green: #40a02b;
+    --q-ctp-teal: #179299;
+    --q-ctp-sky: #04a5e5;
+    --q-ctp-sapphire: #209fb5;
+    --q-ctp-blue: #1e66f5;
+    --q-ctp-lavender: #7287fd;
+    --q-ctp-text: #4c4f69;
+    --q-ctp-subtext1: #5c5f77;
+    --q-ctp-subtext0: #6c6f85;
+    --q-ctp-overlay2: #7c7f93;
+    --q-ctp-overlay1: #8c8fa1;
+    --q-ctp-overlay0: #9ca0b0;
+    --q-ctp-surface2: #acb0be;
+    --q-ctp-surface1: #bcc0cc;
+    --q-ctp-surface0: #ccd0da;
+    --q-ctp-base: #eff1f5;
+    --q-ctp-mantle: #e6e9ef;
+    --q-ctp-crust: #dce0e8;
+}
+
+[data-theme="catppuccin-frappe"] {
+    color-scheme: dark;
+    --q-theme-name: 'Catppuccin Frappé';
+    --q-ctp-rosewater: #f2d5cf;
+    --q-ctp-flamingo: #eebebe;
+    --q-ctp-pink: #f4b8e4;
+    --q-ctp-mauve: #ca9ee6;
+    --q-ctp-red: #e78284;
+    --q-ctp-maroon: #ea999c;
+    --q-ctp-peach: #ef9f76;
+    --q-ctp-yellow: #e5c890;
+    --q-ctp-green: #a6d189;
+    --q-ctp-teal: #81c8be;
+    --q-ctp-sky: #99d1db;
+    --q-ctp-sapphire: #85c1dc;
+    --q-ctp-blue: #8caaee;
+    --q-ctp-lavender: #babbf1;
+    --q-ctp-text: #c6d0f5;
+    --q-ctp-subtext1: #b5bfe2;
+    --q-ctp-subtext0: #a5adce;
+    --q-ctp-overlay2: #949cbb;
+    --q-ctp-overlay1: #838ba7;
+    --q-ctp-overlay0: #737994;
+    --q-ctp-surface2: #626880;
+    --q-ctp-surface1: #51576d;
+    --q-ctp-surface0: #414559;
+    --q-ctp-base: #303446;
+    --q-ctp-mantle: #292c3c;
+    --q-ctp-crust: #232634;
+}
+
+[data-theme="catppuccin-macchiato"] {
+    color-scheme: dark;
+    --q-theme-name: 'Catppuccin Macchiato';
+    --q-ctp-rosewater: #f4dbd6;
+    --q-ctp-flamingo: #f0c6c6;
+    --q-ctp-pink: #f5bde6;
+    --q-ctp-mauve: #c6a0f6;
+    --q-ctp-red: #ed8796;
+    --q-ctp-maroon: #ee99a0;
+    --q-ctp-peach: #f5a97f;
+    --q-ctp-yellow: #eed49f;
+    --q-ctp-green: #a6da95;
+    --q-ctp-teal: #8bd5ca;
+    --q-ctp-sky: #91d7e3;
+    --q-ctp-sapphire: #7dc4e4;
+    --q-ctp-blue: #8aadf4;
+    --q-ctp-lavender: #b7bdf8;
+    --q-ctp-text: #cad3f5;
+    --q-ctp-subtext1: #b8c0e0;
+    --q-ctp-subtext0: #a5adcb;
+    --q-ctp-overlay2: #939ab7;
+    --q-ctp-overlay1: #8087a2;
+    --q-ctp-overlay0: #6e738d;
+    --q-ctp-surface2: #5b6078;
+    --q-ctp-surface1: #494d64;
+    --q-ctp-surface0: #363a4f;
+    --q-ctp-base: #24273a;
+    --q-ctp-mantle: #1e2030;
+    --q-ctp-crust: #181926;
+}
+
+[data-theme="catppuccin-mocha"] {
+    color-scheme: dark;
+    --q-theme-name: 'Catppuccin Mocha';
+    --q-ctp-rosewater: #f5e0dc;
+    --q-ctp-flamingo: #f2cdcd;
+    --q-ctp-pink: #f5c2e7;
+    --q-ctp-mauve: #cba6f7;
+    --q-ctp-red: #f38ba8;
+    --q-ctp-maroon: #eba0ac;
+    --q-ctp-peach: #fab387;
+    --q-ctp-yellow: #f9e2af;
+    --q-ctp-green: #a6e3a1;
+    --q-ctp-teal: #94e2d5;
+    --q-ctp-sky: #89dceb;
+    --q-ctp-sapphire: #74c7ec;
+    --q-ctp-blue: #89b4fa;
+    --q-ctp-lavender: #b4befe;
+    --q-ctp-text: #cdd6f4;
+    --q-ctp-subtext1: #bac2de;
+    --q-ctp-subtext0: #a6adc8;
+    --q-ctp-overlay2: #9399b2;
+    --q-ctp-overlay1: #7f849c;
+    --q-ctp-overlay0: #6c7086;
+    --q-ctp-surface2: #585b70;
+    --q-ctp-surface1: #45475a;
+    --q-ctp-surface0: #313244;
+    --q-ctp-base: #1e1e2e;
+    --q-ctp-mantle: #181825;
+    --q-ctp-crust: #11111b;
+}
+
+[data-theme="catppuccin-latte"],
+[data-theme="catppuccin-frappe"],
+[data-theme="catppuccin-macchiato"],
+[data-theme="catppuccin-mocha"] {
+    /* У Catppuccin один цвет на оттенок: вся шкала оттенка берёт его. */
+    --q-red-alpha-main: var(--q-ctp-red);
+    --q-red-50: var(--q-ctp-red);
+    --q-red-100: var(--q-ctp-red);
+    --q-red-200: var(--q-ctp-red);
+    --q-red-300: var(--q-ctp-red);
+    --q-red-400: var(--q-ctp-red);
+    --q-red-500: var(--q-ctp-red);
+    --q-red-600: var(--q-ctp-red);
+    --q-red-700: var(--q-ctp-red);
+    --q-red-800: var(--q-ctp-red);
+    --q-red-900: var(--q-ctp-red);
+    --q-red-950: var(--q-ctp-red);
+    --q-amber-alpha-main: var(--q-ctp-peach);
+    --q-amber-50: var(--q-ctp-peach);
+    --q-amber-100: var(--q-ctp-peach);
+    --q-amber-200: var(--q-ctp-peach);
+    --q-amber-300: var(--q-ctp-peach);
+    --q-amber-400: var(--q-ctp-peach);
+    --q-amber-500: var(--q-ctp-peach);
+    --q-amber-600: var(--q-ctp-peach);
+    --q-amber-700: var(--q-ctp-peach);
+    --q-amber-800: var(--q-ctp-peach);
+    --q-amber-900: var(--q-ctp-peach);
+    --q-amber-950: var(--q-ctp-peach);
+    --q-green-alpha-main: var(--q-ctp-green);
+    --q-green-50: var(--q-ctp-green);
+    --q-green-100: var(--q-ctp-green);
+    --q-green-200: var(--q-ctp-green);
+    --q-green-300: var(--q-ctp-green);
+    --q-green-400: var(--q-ctp-green);
+    --q-green-500: var(--q-ctp-green);
+    --q-green-600: var(--q-ctp-green);
+    --q-green-700: var(--q-ctp-green);
+    --q-green-800: var(--q-ctp-green);
+    --q-green-900: var(--q-ctp-green);
+    --q-green-950: var(--q-ctp-green);
+    --q-teal-alpha-main: var(--q-ctp-teal);
+    --q-teal-50: var(--q-ctp-teal);
+    --q-teal-100: var(--q-ctp-teal);
+    --q-teal-200: var(--q-ctp-teal);
+    --q-teal-300: var(--q-ctp-teal);
+    --q-teal-400: var(--q-ctp-teal);
+    --q-teal-500: var(--q-ctp-teal);
+    --q-teal-600: var(--q-ctp-teal);
+    --q-teal-700: var(--q-ctp-teal);
+    --q-teal-800: var(--q-ctp-teal);
+    --q-teal-900: var(--q-ctp-teal);
+    --q-teal-950: var(--q-ctp-teal);
+    --q-blue-alpha-main: var(--q-ctp-blue);
+    --q-blue-50: var(--q-ctp-blue);
+    --q-blue-100: var(--q-ctp-blue);
+    --q-blue-200: var(--q-ctp-blue);
+    --q-blue-300: var(--q-ctp-blue);
+    --q-blue-400: var(--q-ctp-blue);
+    --q-blue-500: var(--q-ctp-blue);
+    --q-blue-600: color-mix(in srgb, var(--q-ctp-blue) 85%, var(--q-ctp-crust));
+    --q-blue-700: var(--q-ctp-blue);
+    --q-blue-800: var(--q-ctp-blue);
+    --q-blue-900: var(--q-ctp-blue);
+    --q-blue-950: var(--q-ctp-blue);
+    --q-purple-alpha-main: var(--q-ctp-mauve);
+    --q-purple-50: var(--q-ctp-mauve);
+    --q-purple-100: var(--q-ctp-mauve);
+    --q-purple-200: var(--q-ctp-mauve);
+    --q-purple-300: var(--q-ctp-mauve);
+    --q-purple-400: var(--q-ctp-mauve);
+    --q-purple-500: var(--q-ctp-mauve);
+    --q-purple-600: var(--q-ctp-mauve);
+    --q-purple-700: var(--q-ctp-mauve);
+    --q-purple-800: var(--q-ctp-mauve);
+    --q-purple-900: var(--q-ctp-mauve);
+    --q-purple-950: var(--q-ctp-mauve);
+    --q-pink-alpha-main: var(--q-ctp-pink);
+    --q-pink-50: var(--q-ctp-pink);
+    --q-pink-100: var(--q-ctp-pink);
+    --q-pink-200: var(--q-ctp-pink);
+    --q-pink-300: var(--q-ctp-pink);
+    --q-pink-400: var(--q-ctp-pink);
+    --q-pink-500: var(--q-ctp-pink);
+    --q-pink-600: var(--q-ctp-pink);
+    --q-pink-700: var(--q-ctp-pink);
+    --q-pink-800: var(--q-ctp-pink);
+    --q-pink-900: var(--q-ctp-pink);
+    --q-pink-950: var(--q-ctp-pink);
+    --q-yellow-alpha-main: var(--q-ctp-yellow);
+
+    /* Подложки: заметка — Base, панели и рамка окна — Mantle, код — Crust. */
+    --q-bg-canvas: var(--q-ctp-mantle);
+    --q-bg-surface: var(--q-ctp-mantle);
+    --q-bg-surface-raised: var(--q-ctp-mantle);
+    --q-sidebar-bg: var(--q-ctp-mantle);
+    --q-editor-bg: var(--q-ctp-base);
+    --q-editor-code-bg: var(--q-ctp-crust);
+
+    --q-accent-preset-1: var(--q-ctp-blue);
+    --q-accent-preset-2: var(--q-ctp-mauve);
+    --q-accent-preset-3: var(--q-ctp-pink);
+    --q-accent-preset-4: var(--q-ctp-peach);
+    --q-accent-preset-5: var(--q-ctp-green);
+    --q-accent-preset-6: var(--q-ctp-teal);
+
+    /* Заголовки и выделение — как в AnuPpuccin; размеры — как в Obsidian. */
+    --q-editor-heading-1-color: var(--q-ctp-red);
+    --q-editor-heading-2-color: var(--q-ctp-peach);
+    --q-editor-heading-3-color: var(--q-ctp-green);
+    --q-editor-heading-4-color: var(--q-ctp-teal);
+    --q-editor-heading-5-color: var(--q-ctp-lavender);
+    --q-editor-heading-6-color: var(--q-ctp-mauve);
+    --q-editor-heading-1-scale: 1.8;
+    --q-editor-heading-2-scale: 1.6;
+    --q-editor-heading-3-scale: 1.42;
+    --q-editor-heading-4-scale: 1.27;
+    --q-editor-heading-5-scale: 1.13;
+    --q-editor-heading-6-scale: 1;
+    --q-editor-strong-color: var(--q-ctp-red);
+    --q-editor-em-color: var(--q-ctp-green);
+}
+
+[data-theme="catppuccin-latte"] {
+    /* Чернила — Text: из них текст, значки, границы и тени; белое — Base. */
+    --q-black-alpha-main: var(--q-ctp-text);
+    --q-white-alpha-main: var(--q-ctp-base);
+    --q-gray-alpha-main: var(--q-ctp-subtext0);
+    --q-gray-50: var(--q-ctp-base);
+    --q-gray-100: var(--q-ctp-mantle);
+    --q-gray-150: var(--q-ctp-crust);
+    --q-gray-200: var(--q-ctp-surface0);
+    --q-gray-250: var(--q-ctp-surface1);
+    --q-gray-300: var(--q-ctp-surface2);
+    --q-gray-350: var(--q-ctp-overlay0);
+    --q-gray-400: var(--q-ctp-overlay1);
+    --q-gray-450: var(--q-ctp-overlay2);
+    --q-gray-500: var(--q-ctp-subtext0);
+    --q-gray-550: var(--q-ctp-subtext1);
+    --q-gray-600: var(--q-ctp-text);
+    --q-gray-650: var(--q-ctp-text);
+    --q-gray-700: var(--q-ctp-text);
+    --q-gray-750: var(--q-ctp-text);
+    --q-gray-800: var(--q-ctp-text);
+    --q-gray-850: var(--q-ctp-text);
+    --q-gray-900: var(--q-ctp-text);
+    --q-gray-950: var(--q-ctp-text);
+}
+
+[data-theme="catppuccin-frappe"],
+[data-theme="catppuccin-macchiato"],
+[data-theme="catppuccin-mocha"] {
+    /* Чернила — Text: из них текст, значки и границы; тени и затемнение — Crust. */
+    --q-white-alpha-main: var(--q-ctp-text);
+    --q-black-alpha-main: var(--q-ctp-crust);
+    --q-gray-alpha-main: var(--q-ctp-overlay0);
+    --q-gray-50: var(--q-ctp-text);
+    --q-gray-100: var(--q-ctp-subtext1);
+    --q-gray-150: var(--q-ctp-subtext0);
+    --q-gray-200: var(--q-ctp-subtext0);
+    --q-gray-250: var(--q-ctp-overlay2);
+    --q-gray-300: var(--q-ctp-overlay2);
+    --q-gray-350: var(--q-ctp-overlay1);
+    --q-gray-400: var(--q-ctp-overlay1);
+    --q-gray-450: var(--q-ctp-overlay0);
+    --q-gray-500: var(--q-ctp-overlay0);
+    --q-gray-550: var(--q-ctp-surface2);
+    --q-gray-600: var(--q-ctp-surface2);
+    --q-gray-650: var(--q-ctp-surface1);
+    --q-gray-700: var(--q-ctp-surface1);
+    --q-gray-750: var(--q-ctp-surface0);
+    --q-gray-800: var(--q-ctp-surface0);
+    --q-gray-850: var(--q-ctp-base);
+    --q-gray-900: var(--q-ctp-mantle);
+    --q-gray-950: var(--q-ctp-crust);
+    /* Акценты Catppuccin светлые: текст и значки на них — тёмные. */
+    --q-text-on-accent: var(--q-ctp-crust);
+    --q-icon-on-accent: var(--q-ctp-crust);
+}

@@ -16,6 +16,8 @@ pub enum Value {
 #[derive(Clone, Copy)]
 pub enum Setter {
     Config(fn(&mut AppConfig, &Value)),
+    /// Правка токена показанной темы (`tokens::INPUTS` или `tokens::NUMBERS`).
+    ThemeValue(&'static str),
     VaultSync(fn(&mut SyncSettings, &Value)),
     Scale,
     HomePage,
@@ -64,6 +66,7 @@ pub enum Action {
     OpenUrl(String),
     CheckUpdates,
     InstallUpdate,
+    ResetTheme,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]

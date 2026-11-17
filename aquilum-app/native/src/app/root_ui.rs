@@ -1,5 +1,6 @@
 use super::*;
 use crate::interface::Side;
+use crate::ui::settings::schema::Setter;
 
 impl App {
     pub fn root_widget(&mut self, system_dark: bool) -> NewWidget<dyn Widget> {
@@ -34,13 +35,26 @@ impl App {
         self.show_update_bar(root);
     }
 
-    pub(in crate::app) fn restyle(&mut self, root: &mut RenderRoot, fonts: bool, primary: Option<&str>) {
-        self.apply_appearance(primary);
+    /// `preview` — цвет из открытого выбора цвета, ещё не сохранённый: акцент или цвет темы.
+    pub(in crate::app) fn restyle(&mut self, root: &mut RenderRoot, fonts: bool, preview: Option<(Setter, &str)>) {
+        let before = theme::typography(&theme::current());
+        self.apply_appearance(preview);
+        let fonts = fonts || theme::typography(&theme::current()) != before;
         root.restyle(Arc::new(theme::default_properties()), fonts);
     }
 
-    fn apply_appearance(&self, primary: Option<&str>) {
+    fn apply_appearance(&self, preview: Option<(Setter, &str)>) {
         let config = self.workspace.core.settings.get_config();
+        let mut overrides = config.ui.theme_overrides.clone();
+        let primary = match preview {
+            Some((Setter::ThemeValue(key), hex)) => {
+                overrides.entry(theme::active().id.to_owned()).or_default().insert(key.to_owned(), hex.to_owned());
+                None
+            }
+            Some((_, hex)) => Some(hex),
+            None => None,
+        };
+        theme::set_choice(theme::Choice { light: config.ui.light_theme.clone(), dark: config.ui.dark_theme.clone(), overrides });
         theme::apply_setting(&config.ui.theme, self.system_dark, primary.unwrap_or(&config.ui.primary_color));
         crate::render::night::apply(&config.ui.theme, &config.ui.night);
         crate::ui::motion::set(config.ui.animations);

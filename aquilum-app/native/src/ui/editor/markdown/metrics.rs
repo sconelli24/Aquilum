@@ -14,8 +14,6 @@ pub(super) const CHECKBOX_RADIUS: f64 = 6.0;
 pub(super) const BOX_CHARS: usize = 3;
 pub(super) const TAB_SIZE: f32 = 4.0;
 pub(super) const SCRIPT: f32 = 0.75;
-pub(super) const H1: f32 = 24.0 / 14.0;
-pub(super) const H2: f32 = 16.0 / 14.0;
 
 pub struct Fonts {
     pub size: f32,
@@ -27,10 +25,30 @@ pub struct Fonts {
     pub digits: Vec<Layout<BrushIndex>>,
     pub callouts: bool,
     pub tags: bool,
+    pub typography: Typography,
+}
+
+/// Оформление текста из темы, от которого зависит раскладка.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Typography {
+    /// Размер заголовка уровня `i + 1` — доля размера текста.
+    pub scale: [f32; 6],
+    pub weight: [f32; 6],
+    /// Жирный и курсив красятся своим цветом.
+    pub strong: bool,
+    pub emphasis: bool,
+}
+
+impl Typography {
+    pub fn current() -> Typography {
+        let [s1, s2, s3, s4, s5, s6, w1, w2, w3, w4, w5, w6, strong, emphasis] = crate::ui::theme::typography(&crate::ui::theme::current());
+        Typography { scale: [s1, s2, s3, s4, s5, s6], weight: [w1, w2, w3, w4, w5, w6], strong: strong > 0.0, emphasis: emphasis > 0.0 }
+    }
 }
 
 impl Fonts {
     pub fn new(size: f32, callouts: bool, tags: bool) -> Fonts {
-        Fonts { size, mono: crate::ui::theme::editor_font("iA Writer Mono"), ch: 0.0, mark: 0.0, space: 0.0, line: 0.0, digits: Vec::new(), callouts, tags }
+        let mono = crate::ui::theme::editor_font("iA Writer Mono");
+        Fonts { size, mono, ch: 0.0, mark: 0.0, space: 0.0, line: 0.0, digits: Vec::new(), callouts, tags, typography: Typography::current() }
     }
 }

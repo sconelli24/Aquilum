@@ -75,7 +75,11 @@ fn stepper_input(bindings: &mut HashMap<WidgetId, Binding>, setter: Option<schem
 
 fn color_input(bindings: &mut HashMap<WidgetId, Binding>, setter: Option<schema::Setter>, hex: &str) -> NewWidget<dyn Widget> {
     let field = text_field(&hex.to_uppercase(), false);
-    let swatch = Swatch::new();
+    let input = match setter {
+        Some(schema::Setter::ThemeValue(key)) => crate::ui::tokens::INPUTS.iter().position(|input| *input == key),
+        _ => None,
+    };
+    let swatch = Swatch::new(input);
     if let Some(setter) = setter {
         bindings.insert(field.id(), Binding::Text { setter, commit: false, value: hex.to_owned() });
         bindings.insert(swatch.id(), Binding::Color(setter));

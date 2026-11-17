@@ -108,6 +108,6 @@ pub fn style(builder: &mut RangedBuilder<'_, BrushIndex>, frame: &Frame, block: 
         decor.inset = decor.x + frame.right();
     }
     let room = width.map_or(f64::INFINITY, |w| f64::from(w) - decor.inset);
-    style_spans(builder, text, content, context, room, &mut decor);
+    style_spans(builder, text, content, context, room, matches!(block, Block::Heading { .. }), &mut decor);
     decor
 }

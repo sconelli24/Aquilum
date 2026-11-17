@@ -17,6 +17,7 @@ pub fn measure(fcx: &mut FontContext, lcx: &mut LayoutContext<BrushIndex>, style
         layout.break_all_lines(None);
         layout
     };
+    fonts.typography = markdown::Typography::current();
     fonts.ch = mono(SAMPLE).width() / SAMPLE.len() as f32;
     fonts.digits = SAMPLE.char_indices().map(|(i, _)| mono(&i.to_string())).collect();
     let quote = spec_layout(fcx, lcx, styles, fonts, &Spec::plain("> >", Font::Editor, markdown::TEXT));

@@ -178,6 +178,7 @@
     "back": "Volver a las secciones",
     "nav": {
       "ui": "Interfaz",
+      "themes": "Temas",
       "editor": "Editor",
       "reader": "Lector",
       "data": "Datos",
@@ -213,6 +214,38 @@
       "primaryColor": "Color de acento",
       "animations": "Animaciones",
       "animationsHint": "Transiciones suaves en diálogos, paneles, pestañas, interruptores, modo concentración y grafo. Desactivadas, todo cambia al instante"
+    },
+    "themes": {
+      "section": "Temas",
+      "light": "Tema claro",
+      "lightHint": "Se usa en el modo claro",
+      "dark": "Tema oscuro",
+      "darkHint": "Se usa en los modos oscuro y nocturno",
+      "colors": "Colores de {{theme}}",
+      "reset": "Restablecer el tema",
+      "resetHint": "Vuelve a los colores y títulos originales de {{theme}}",
+      "resetButton": "Restablecer",
+      "heading": "Título {{level}} ({{marks}})",
+      "headingColor": "Color",
+      "headingSize": "Tamaño, %",
+      "headingSizeHint": "Respecto del texto de la nota",
+      "headingWeight": "Grosor",
+      "weightBold": "Negrita",
+      "weightHeavy": "Extra negrita",
+      "color": {
+        "bg-canvas": "Fondo de la ventana",
+        "sidebar-bg": "Fondo del panel lateral",
+        "tabs-bg": "Fondo de la barra de pestañas",
+        "editor-bg": "Fondo de las notas",
+        "text-primary": "Texto",
+        "text-secondary": "Texto secundario",
+        "text-tertiary": "Texto atenuado",
+        "border-default": "Bordes",
+        "text-link": "Enlaces",
+        "editor-code-bg": "Fondo del código",
+        "editor-strong-color": "Negrita",
+        "editor-em-color": "Cursiva"
+      }
     },
     "editor": {
       "lineHeight": "Altura de línea",

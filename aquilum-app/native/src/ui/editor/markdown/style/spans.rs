@@ -3,7 +3,7 @@ use masonry::parley::{FontStyle, FontWeight, InlineBox, InlineBoxKind, RangedBui
 
 use super::super::super::embed::{MediaView, formula, media};
 use super::super::super::resolve::{Fetch, Media, Resolver};
-use super::super::brushes::{ACCENT, LINK, LINK_MISSING, MUTED, SYNTAX, tag_brush};
+use super::super::brushes::{ACCENT, EMPHASIS, LINK, LINK_MISSING, MUTED, STRONG, SYNTAX, tag_brush};
 use super::super::inline::{Kind, hashtags, inline};
 use super::super::metrics::{INLINE_CODE_PADDING, SCRIPT, TAG_PADDING};
 use super::super::{Boxed, Decor, Link};
@@ -28,8 +28,21 @@ fn picture(builder: &mut RangedBuilder<'_, BrushIndex>, source: &str, at: usize,
     decor.boxes.push(Boxed::Image { image, crop: view.crop() });
 }
 
-pub(super) fn style_spans(builder: &mut RangedBuilder<'_, BrushIndex>, text: &str, content: usize, context: &Context, room: f64, decor: &mut Decor) {
+pub(super) fn style_spans(builder: &mut RangedBuilder<'_, BrushIndex>, text: &str, content: usize, context: &Context, room: f64, heading: bool, decor: &mut Decor) {
     let (fonts, unresolved) = (context.fonts, context.unresolved);
+    let spans = inline(&text[content..]);
+    // Цвет жирного и курсива — до остальных кистей: ссылки, метки и разметка внутри них важнее; в заголовке — цвет заголовка.
+    let typography = &fonts.typography;
+    if !heading && (typography.strong || typography.emphasis) {
+        for span in &spans {
+            let inner = span.inner.start + content..span.inner.end + content;
+            match span.kind {
+                Kind::Strong if typography.strong => push(builder, StyleProperty::Brush(STRONG), inner),
+                Kind::Emphasis if typography.emphasis => push(builder, StyleProperty::Brush(EMPHASIS), inner),
+                _ => {}
+            }
+        }
+    }
     let tags: Vec<_> = hashtags(&text[content..]).into_iter().map(|tag| tag.start + content..tag.end + content).collect();
     for pair in tags.windows(2) {
         let gap = pair[0].end..pair[1].start;
@@ -48,7 +61,6 @@ pub(super) fn style_spans(builder: &mut RangedBuilder<'_, BrushIndex>, text: &st
             decor.tags.push((tag, slot));
         }
     }
-    let spans = inline(&text[content..]);
     let links: Vec<_> = spans.iter().filter(|s| matches!(s.kind, Kind::Link | Kind::Reader)).map(|s| s.whole.start + content..s.whole.end + content).collect();
     for span in spans {
         let whole = span.whole.start + content..span.whole.end + content;

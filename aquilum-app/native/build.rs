@@ -1,9 +1,13 @@
 //! Токены дизайн-системы для нативного интерфейса.
 //!
-//! Источник — файлы токенов в синтаксисе CSS-переменных (`assets/styles/tokens/*.tokens`, тёмная тема —
-//! `assets/styles/themes/dark.tokens`). Расширение не `.css`, потому что это не таблицы стилей: их читает
+//! Источник — файлы токенов в синтаксисе CSS-переменных (`assets/styles/tokens/*.tokens`, темы —
+//! `assets/styles/themes/*.tokens`). Расширение не `.css`, потому что это не таблицы стилей: их читает
 //! только эта сборка. Здесь объявления `--q-*` вычисляются целиком: `var()`,
 //! `color-mix(in srgb, …)`, `calc`/`min`/`max`/`clamp`, `rem` (база 16 px → логические пиксели).
+//!
+//! Темы: `:root` — светлая тема Aquilum, `[data-theme="dark"]` — тёмная. Другие темы — блоки
+//! `[data-theme="id"]` с `--q-theme-name` и `color-scheme`: тёмная (`color-scheme: dark`) строится поверх
+//! тёмной темы Aquilum, светлая — поверх `:root`. Селектор может перечислять несколько тем через запятую.
 //!
 //! Шрифты — `assets/fonts/*.woff2`: распаковываются в TTF, у кириллической
 //! половины Inter семейство переименовывается в «Inter Cyrillic» (обе половины называются «Inter»,
@@ -12,13 +16,16 @@
 //! `$OUT_DIR/fonts.rs`.
 //!
 //! На выходе `$OUT_DIR/tokens.rs`:
-//! - `Theme` — цвета и тени (зависят от темы), значения `LIGHT` и `DARK`;
+//! - `Theme` — цвета, тени, размеры и насыщенность заголовков (зависят от темы); значения `LIGHT`, `DARK`
+//!   и список встроенных тем `THEMES`;
+//! - `INPUTS` и `derive` — цвета, которые меняются поверх темы (акцент и правки пользователя), и пересчёт
+//!   зависящих от них токенов: зависимость линейна, рецепт снимается пробами (вход прозрачный или белый);
 //! - модули `size` (логические пиксели), `number`, `em`, `ms`, `text` — константы, одинаковые
-//!   для обеих тем;
+//!   для всех тем;
 //! - модуль `motion` — длительности в секундах (`FAST`, `MEDIUM`, `NORMAL`, `MORPH`, `SLOWER`) и кривые
 //!   `EASE_*` четвёркой чисел из токенов `--q-duration-*` и `--q-ease-*`.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
@@ -32,51 +39,171 @@ const TOKEN_FILES: &[&str] = &[
     "elevations.tokens",
     "components.tokens",
 ];
+const THEME_FILES: &[&str] = &["dark.tokens", "catppuccin.tokens"];
+/// Цвета акцента — первые три входа `derive`: основной, `500` и `600` (темнее).
+const ACCENT: [&str; 3] = ["blue-alpha-main", "blue-500", "blue-600"];
+/// Цвета, которые пользователь меняет поверх темы в настройках.
+const EDITABLE: &[&str] = &[
+    "bg-canvas",
+    "sidebar-bg",
+    "tabs-bg",
+    "editor-bg",
+    "text-primary",
+    "text-secondary",
+    "text-tertiary",
+    "border-default",
+    "text-link",
+    "editor-code-bg",
+    "editor-strong-color",
+    "editor-em-color",
+    "editor-heading-1-color",
+    "editor-heading-2-color",
+    "editor-heading-3-color",
+    "editor-heading-4-color",
+    "editor-heading-5-color",
+    "editor-heading-6-color",
+];
 /// `--q-base-font-size`: 1rem в логических пикселях.
 const REM: f64 = 16.0;
 /// Значение зависит от окна или родителя (`vh`, `vw`, `ch`, `inherit`): статически не вычисляется,
 /// попадает в `text::*` как есть, считается в коде виджета.
 const DYNAMIC: &str = "динамическое значение";
 
+/// Числа, которые зависят от темы: размер и насыщенность заголовков.
+fn themed_number(name: &str) -> bool {
+    name.strip_prefix("editor-heading-").is_some_and(|rest| rest.ends_with("-scale") || rest.ends_with("-weight"))
+}
+
+struct Built {
+    id: String,
+    name: String,
+    dark: bool,
+    vars: BTreeMap<String, String>,
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum Kind {
+    Color,
+    Shadows,
+    Number,
+}
+
+struct Field {
+    name: String,
+    kind: Kind,
+    /// По темам, в порядке `THEMES`.
+    values: Vec<Value>,
+}
+
+type Consts = BTreeMap<&'static str, Vec<(String, String)>>;
+
 fn main() {
     icon();
     fonts();
     let styles = Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/styles");
-    let mut files: Vec<PathBuf> = TOKEN_FILES.iter().map(|f| styles.join("tokens").join(f)).collect();
-    files.push(styles.join("themes/dark.tokens"));
+    let mut problems = Vec::new();
+    let themes = themes(&styles, &mut problems);
+    let (fields, consts) = fields(&themes, &mut problems);
+    let inputs: Vec<&str> = ACCENT.iter().chain(EDITABLE).copied().collect();
+    for input in &inputs {
+        if !fields.iter().any(|f| f.name == *input && f.kind == Kind::Color) {
+            problems.push(format!("{input}: не цвет темы, а входит в INPUTS"));
+        }
+    }
+    let derivations: Vec<Derivation> = themes.iter().map(|theme| derivation(theme, &fields, &inputs, &mut problems)).collect();
+    // Нерешённые токены не роняют сборку, но видны в выводе cargo.
+    for problem in &problems {
+        println!("cargo:warning=токен {problem}");
+    }
+    let out = generate(&themes, &fields, &consts, &inputs, &derivations);
+    let out_path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("tokens.rs");
+    std::fs::write(out_path, out).unwrap();
+}
 
-    let mut light = BTreeMap::new();
-    let mut dark_overrides = BTreeMap::new();
+fn theme_id(selector: &str) -> Option<&str> {
+    selector.trim().strip_prefix("[data-theme=\"")?.strip_suffix("\"]")
+}
+
+/// Встроенные темы: светлая и тёмная Aquilum, затем остальные в порядке объявления.
+fn themes(styles: &Path, problems: &mut Vec<String>) -> Vec<Built> {
+    let mut files: Vec<PathBuf> = TOKEN_FILES.iter().map(|f| styles.join("tokens").join(f)).collect();
+    files.extend(THEME_FILES.iter().map(|f| styles.join("themes").join(f)));
+    let mut root = BTreeMap::new();
+    let mut overrides: Vec<(String, BTreeMap<String, String>)> = vec![("dark".to_owned(), BTreeMap::new())];
     for file in &files {
         println!("cargo:rerun-if-changed={}", file.display());
         let css = std::fs::read_to_string(file).unwrap_or_else(|e| panic!("{}: {e}", file.display()));
         for (selector, name, value) in declarations(&css) {
-            match selector.as_str() {
-                ":root" => {
-                    light.insert(name, value);
-                }
-                "[data-theme=\"dark\"]" => {
-                    dark_overrides.insert(name, value);
-                }
-                _ => {}
+            if selector == ":root" {
+                root.insert(name, value);
+                continue;
+            }
+            for id in selector.split(',').filter_map(theme_id) {
+                let at = overrides.iter().position(|(known, _)| known == id).unwrap_or_else(|| {
+                    overrides.push((id.to_owned(), BTreeMap::new()));
+                    overrides.len() - 1
+                });
+                overrides[at].1.insert(name.clone(), value.clone());
             }
         }
     }
-    let mut dark = light.clone();
-    dark.extend(dark_overrides);
+    let mut themes = vec![Built { id: "light".to_owned(), name: "Aquilum".to_owned(), dark: false, vars: root.clone() }];
+    let mut dark_vars = root.clone();
+    for (id, mut own) in overrides {
+        let dark = own.remove("theme-scheme").is_some_and(|scheme| scheme == "dark");
+        let name = own.remove("theme-name").map(|name| name.trim_matches(['\'', '"']).to_owned());
+        if id == "dark" {
+            dark_vars.extend(own);
+            themes.push(Built { id, name: "Aquilum".to_owned(), dark: true, vars: dark_vars.clone() });
+            continue;
+        }
+        let Some(name) = name else {
+            problems.push(format!("тема {id}: нет --q-theme-name"));
+            continue;
+        };
+        let mut vars = if dark { dark_vars.clone() } else { root.clone() };
+        vars.extend(own);
+        themes.push(Built { id, name, dark, vars });
+    }
+    themes
+}
 
-    let names: Vec<&String> = light.keys().collect();
-    let mut theme_fields = Vec::new();
-    let mut consts: BTreeMap<&'static str, Vec<(String, String)>> = BTreeMap::new();
-    let mut problems = Vec::new();
-    for name in names {
-        let l = Resolver::new(&light).value(name);
-        let d = Resolver::new(&dark).value(name);
-        match (&l, &d) {
-            (Ok(l @ (Value::Color(_) | Value::Shadows(_))), Ok(d)) => {
-                theme_fields.push((ident(name), l.clone(), d.clone()));
+fn same_kind(value: &Value, kind: Kind) -> bool {
+    matches!((value, kind), (Value::Color(_), Kind::Color) | (Value::Shadows(_), Kind::Shadows) | (Value::Number(_), Kind::Number))
+}
+
+/// Поля `Theme` (зависят от темы) и константы (одинаковы во всех темах).
+fn fields(themes: &[Built], problems: &mut Vec<String>) -> (Vec<Field>, Consts) {
+    let mut fields = Vec::new();
+    let mut consts: Consts = BTreeMap::new();
+    for name in themes[0].vars.keys() {
+        let values: Vec<Result<Value, String>> = themes.iter().map(|t| Resolver::new(&t.vars).value(name)).collect();
+        let kind = match &values[0] {
+            Ok(Value::Color(_)) => Some(Kind::Color),
+            Ok(Value::Shadows(_)) => Some(Kind::Shadows),
+            Ok(Value::Number(_)) if themed_number(name) => Some(Kind::Number),
+            _ => None,
+        };
+        if let (Some(kind), Ok(first)) = (kind, &values[0]) {
+            let mut resolved = Vec::new();
+            for (theme, value) in themes.iter().zip(&values) {
+                match value {
+                    Ok(v) if same_kind(v, kind) => resolved.push(v.clone()),
+                    Ok(v) => {
+                        problems.push(format!("{name}: в теме {} {v:?}", theme.id));
+                        resolved.push(first.clone());
+                    }
+                    Err(e) => {
+                        problems.push(format!("{name}: в теме {}: {e}", theme.id));
+                        resolved.push(first.clone());
+                    }
+                }
             }
-            (Ok(l), Ok(d)) if l == d => {
+            fields.push(Field { name: name.clone(), kind, values: resolved });
+            continue;
+        }
+        match &values[0] {
+            Ok(l) if values.iter().all(|v| matches!(v, Ok(other) if other == l)) => {
                 let (module, ty, literal) = match l {
                     Value::Length(px) => ("size", "f64", float(*px)),
                     Value::Number(n) => ("number", "f64", float(*n)),
@@ -85,10 +212,7 @@ fn main() {
                     Value::Text(s) => ("text", "&str", format!("{s:?}")),
                     Value::Color(_) | Value::Shadows(_) => unreachable!(),
                 };
-                consts.entry(module).or_default().push((
-                    format!("{}: {ty}", ident(name).to_uppercase()),
-                    literal,
-                ));
+                consts.entry(module).or_default().push((format!("{}: {ty}", ident(name).to_uppercase()), literal));
                 let id = ident(name);
                 if let (Value::Time(ms), Some(short)) = (l, id.strip_prefix("duration_")) {
                     consts.entry("motion").or_default().push((format!("{}: f64", short.to_uppercase()), float(ms / 1000.0)));
@@ -99,157 +223,186 @@ fn main() {
                     consts.entry("motion").or_default().push((format!("{}: (f64, f64, f64, f64)", id.to_uppercase()), curve));
                 }
             }
-            (Ok(_), Ok(_)) => problems.push(format!("{name}: значение без цвета зависит от темы")),
-            (Err(e), _) if e == DYNAMIC => consts
+            Ok(_) if values.iter().all(Result::is_ok) => problems.push(format!("{name}: значение без цвета зависит от темы")),
+            Err(e) if e == DYNAMIC => consts
                 .entry("text")
                 .or_default()
-                .push((format!("{}: &str", ident(name).to_uppercase()), format!("{:?}", light[name.as_str()]))),
-            (Err(e), _) | (_, Err(e)) => problems.push(format!("{name}: {e}")),
+                .push((format!("{}: &str", ident(name).to_uppercase()), format!("{:?}", themes[0].vars[name.as_str()]))),
+            _ => {
+                let error = values.iter().find_map(|v| v.as_ref().err()).cloned().unwrap_or_default();
+                problems.push(format!("{name}: {error}"));
+            }
         }
     }
-    let accent_light = accent_recipes(&light, &theme_fields, &mut problems);
-    let accent_dark = accent_recipes(&dark, &theme_fields, &mut problems);
-    // Нерешённые токены не роняют сборку, но видны в выводе cargo.
-    for problem in &problems {
-        println!("cargo:warning=токен {problem}");
-    }
-
-    let mut out = String::new();
-    out.push_str("// Сгенерировано build.rs из src/styles/tokens/*.tokens — не править.\n\n");
-    out.push_str("/// Цвета и тени дизайн-системы для одной темы.\n#[derive(Clone, Copy, Debug)]\npub struct Theme {\n");
-    for (field, value, _) in &theme_fields {
-        let ty = if matches!(value, Value::Color(_)) { "Color" } else { "&'static [Shadow]" };
-        writeln!(out, "    pub {field}: {ty},").unwrap();
-    }
-    out.push_str("}\n\n");
-    for (constant, pick) in [("LIGHT", 0usize), ("DARK", 1)] {
-        writeln!(out, "pub const {constant}: Theme = Theme {{").unwrap();
-        for (field, l, d) in &theme_fields {
-            let value = if pick == 0 { l } else { d };
-            writeln!(out, "    {field}: {},", rust_value(value)).unwrap();
-        }
-        out.push_str("};\n\n");
-    }
-    out.push_str("pub fn recolor(theme: &mut Theme, dark: bool, accent: [[f32; 4]; 3]) {
-    if dark {
-");
-    for (field, recipe) in &accent_dark {
-        recipe_code(&mut out, field, recipe);
-    }
-    out.push_str("    } else {
-");
-    for (field, recipe) in &accent_light {
-        recipe_code(&mut out, field, recipe);
-    }
-    out.push_str("    }
+    (fields, consts)
 }
-
-");
-    for (module, items) in &consts {
-        writeln!(out, "pub mod {module} {{").unwrap();
-        for (decl, literal) in items {
-            writeln!(out, "    pub const {decl} = {literal};").unwrap();
-        }
-        out.push_str("}\n\n");
-    }
-    let out_path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("tokens.rs");
-    std::fs::write(out_path, out).unwrap();
-}
-
-const ACCENT: [&str; 3] = ["blue-alpha-main", "blue-500", "blue-600"];
 
 fn premultiplied(c: [f64; 4]) -> [f64; 4] {
     [c[0] * c[3], c[1] * c[3], c[2] * c[3], c[3]]
 }
 
-fn probe(vars: &BTreeMap<String, String>, name: &str, white: Option<usize>) -> Result<Value, String> {
-    let mut vars = vars.clone();
-    for (k, accent) in ACCENT.iter().enumerate() {
-        let value = if white == Some(k) { "#ffffff" } else { "transparent" };
-        vars.insert((*accent).to_owned(), value.to_owned());
-    }
-    Resolver::new(&vars).value(name)
+/// Веса входов: индекс в `INPUTS` и множитель premultiplied-цвета.
+type Weights = Vec<(usize, f64)>;
+
+/// Цвет как функция входов: premultiplied-основа и веса входов.
+enum Recipe {
+    Color([f64; 4], Weights),
+    Shadows(Vec<(Shadow, [f64; 4], Weights)>),
 }
 
-enum Recipe {
-    Color([f64; 4], [f64; 3]),
-    Shadows(Vec<(Shadow, [f64; 4], [f64; 3])>),
+impl Recipe {
+    fn uses(&self) -> Vec<usize> {
+        match self {
+            Recipe::Color(_, weights) => weights.iter().map(|(k, _)| *k).collect(),
+            Recipe::Shadows(list) => list.iter().flat_map(|(_, _, weights)| weights.iter().map(|(k, _)| *k)).collect(),
+        }
+    }
+}
+
+struct Derivation {
+    /// Значение входа без правки — в порядке вычисления (вход после тех, от которых зависит).
+    inputs: Vec<(usize, Recipe)>,
+    /// Остальные поля, зависящие от входов.
+    fields: Vec<(String, Recipe)>,
+}
+
+/// Все токены, на которые ссылается значение через `var()`, транзитивно.
+struct References<'a> {
+    vars: &'a BTreeMap<String, String>,
+    memo: HashMap<String, BTreeSet<String>>,
+}
+
+impl References<'_> {
+    fn of(&mut self, name: &str) -> BTreeSet<String> {
+        if let Some(known) = self.memo.get(name) {
+            return known.clone();
+        }
+        self.memo.insert(name.to_owned(), BTreeSet::new());
+        let raw = self.vars.get(name).cloned().unwrap_or_default();
+        let mut found = BTreeSet::new();
+        let mut rest = raw.as_str();
+        while let Some(at) = rest.find("var(--q-") {
+            let tail = &rest[at + "var(--q-".len()..];
+            let end = tail.find(|c: char| !(c.is_ascii_alphanumeric() || c == '-')).unwrap_or(tail.len());
+            found.insert(tail[..end].to_owned());
+            found.extend(self.of(&tail[..end]));
+            rest = &tail[end..];
+        }
+        self.memo.insert(name.to_owned(), found.clone());
+        found
+    }
 }
 
 fn linear(base: [f64; 4], white: [f64; 4], name: &str, problems: &mut Vec<String>) -> f64 {
     let (b, w) = (premultiplied(base), premultiplied(white));
     let delta = w[3] - b[3];
     if (0..3).any(|i| (w[i] - b[i] - delta).abs() > 1e-6) {
-        problems.push(format!("{name}: цвет зависит от акцента нелинейно"));
+        problems.push(format!("{name}: цвет зависит от входа нелинейно"));
     }
     delta
 }
 
-fn accent_recipes(
-    vars: &BTreeMap<String, String>,
-    fields: &[(String, Value, Value)],
-    problems: &mut Vec<String>,
-) -> Vec<(String, Recipe)> {
-    let mut recipes = Vec::new();
-    for (field, _, _) in fields {
-        let Some(name) = vars.keys().find(|n| ident(n) == *field) else { continue };
-        let Ok(base) = probe(vars, name, None) else { continue };
-        let whites: Vec<Value> = (0..3).filter_map(|k| probe(vars, name, Some(k)).ok()).collect();
-        if whites.len() != 3 || whites.iter().all(|w| *w == base) {
-            continue;
+/// Рецепт `name` по входам `symbolic`: пробы с прозрачными входами и с каждым входом белым.
+fn recipe(theme: &Built, name: &str, symbolic: &[usize], inputs: &[&str], problems: &mut Vec<String>) -> Option<Recipe> {
+    let resolve = |white: Option<usize>| {
+        let overlay: BTreeMap<String, String> =
+            symbolic.iter().map(|&k| (inputs[k].to_owned(), if white == Some(k) { "#ffffff" } else { "transparent" }.to_owned())).collect();
+        Resolver::layered(&theme.vars, &overlay).value(name)
+    };
+    let base = resolve(None).map_err(|e| problems.push(format!("{name} в теме {}: {e}", theme.id))).ok()?;
+    let whites: Vec<Value> = symbolic.iter().map(|&k| resolve(Some(k))).collect::<Result<_, _>>().ok()?;
+    let weights = |base: [f64; 4], white: &dyn Fn(&Value) -> Option<[f64; 4]>, problems: &mut Vec<String>| {
+        symbolic
+            .iter()
+            .zip(&whites)
+            .filter_map(|(&k, probe)| Some((k, linear(base, white(probe)?, name, problems))))
+            .filter(|(_, weight)| weight.abs() > 1e-9)
+            .collect::<Vec<_>>()
+    };
+    match &base {
+        Value::Color(b) => {
+            let w = weights(*b, &|probe| if let Value::Color(c) = probe { Some(*c) } else { None }, problems);
+            Some(Recipe::Color(premultiplied(*b), w))
         }
-        match &base {
-            Value::Color(b) => {
-                let mut weights = [0.0; 3];
-                for (k, white) in whites.iter().enumerate() {
-                    if let Value::Color(w) = white {
-                        weights[k] = linear(*b, *w, name, problems);
-                    }
-                }
-                recipes.push((field.clone(), Recipe::Color(premultiplied(*b), weights)));
+        Value::Shadows(list) => {
+            let mut shadows = Vec::new();
+            for (i, shadow) in list.iter().enumerate() {
+                let w = weights(shadow.color, &|probe| if let Value::Shadows(s) = probe { s.get(i).map(|s| s.color) } else { None }, problems);
+                shadows.push((shadow.clone(), premultiplied(shadow.color), w));
             }
-            Value::Shadows(list) => {
-                let mut shadows = Vec::new();
-                for (i, shadow) in list.iter().enumerate() {
-                    let mut weights = [0.0; 3];
-                    for (k, white) in whites.iter().enumerate() {
-                        if let Value::Shadows(w) = white
-                            && let Some(w) = w.get(i)
-                        {
-                            weights[k] = linear(shadow.color, w.color, name, problems);
-                        }
-                    }
-                    shadows.push((shadow.clone(), premultiplied(shadow.color), weights));
-                }
-                recipes.push((field.clone(), Recipe::Shadows(shadows)));
-            }
-            _ => {}
+            Some(Recipe::Shadows(shadows))
+        }
+        _ => None,
+    }
+}
+
+fn derivation(theme: &Built, fields: &[Field], inputs: &[&str], problems: &mut Vec<String>) -> Derivation {
+    let mut refs = References { vars: &theme.vars, memo: HashMap::new() };
+    let mut depends = |name: &str, own: Option<usize>| -> Vec<usize> {
+        let found = refs.of(name);
+        (0..inputs.len()).filter(|&k| Some(k) != own && found.contains(inputs[k])).collect()
+    };
+    let mut pending = Vec::new();
+    for (j, input) in inputs.iter().enumerate() {
+        let symbolic = depends(input, Some(j));
+        match recipe(theme, input, &symbolic, inputs, problems) {
+            Some(r @ Recipe::Color(..)) => pending.push((j, r)),
+            _ => problems.push(format!("{input} в теме {}: вход без рецепта", theme.id)),
         }
     }
-    recipes
+    let mut ordered: Vec<(usize, Recipe)> = Vec::new();
+    while !pending.is_empty() {
+        let ready = pending.iter().position(|(_, r)| r.uses().iter().all(|k| ordered.iter().any(|(placed, _)| placed == k)));
+        let Some(at) = ready else {
+            problems.push(format!("тема {}: входы зависят друг от друга по кругу", theme.id));
+            break;
+        };
+        ordered.push(pending.remove(at));
+    }
+    let mut derived = Vec::new();
+    for field in fields {
+        if field.kind == Kind::Number || inputs.contains(&field.name.as_str()) {
+            continue;
+        }
+        let symbolic = depends(&field.name, None);
+        if symbolic.is_empty() {
+            continue;
+        }
+        if let Some(r) = recipe(theme, &field.name, &symbolic, inputs, problems)
+            && !r.uses().is_empty()
+        {
+            derived.push((ident(&field.name), r));
+        }
+    }
+    Derivation { inputs: ordered, fields: derived }
+}
+
+fn weights_code(weights: &[(usize, f64)]) -> String {
+    let items: Vec<String> = weights.iter().map(|(k, w)| format!("({k}, {w:.6})")).collect();
+    format!("&[{}]", items.join(", "))
 }
 
 fn recipe_code(out: &mut String, field: &str, recipe: &Recipe) {
     match recipe {
         Recipe::Color(base, weights) => {
-            writeln!(out, "        theme.{field} = accent_mix({}, {}, accent);", array(base), array(weights)).unwrap();
+            writeln!(out, "    t.{field} = mix({}, {}, &v);", array(base), weights_code(weights)).unwrap();
         }
         Recipe::Shadows(list) => {
             let items: Vec<String> = list
                 .iter()
                 .map(|(s, base, weights)| {
                     format!(
-                        "Shadow {{ x: {}, y: {}, blur: {}, spread: {}, color: accent_mix({}, {}, accent) }}",
+                        "Shadow {{ x: {}, y: {}, blur: {}, spread: {}, color: mix({}, {}, &v) }}",
                         float(s.x),
                         float(s.y),
                         float(s.blur),
                         float(s.spread),
                         array(base),
-                        array(weights)
+                        weights_code(weights)
                     )
                 })
                 .collect();
-            writeln!(out, "        theme.{field} = Box::leak(Box::new([{}]));", items.join(", ")).unwrap();
+            writeln!(out, "    t.{field} = Box::leak(Box::new([{}]));", items.join(", ")).unwrap();
         }
     }
 }
@@ -257,6 +410,87 @@ fn recipe_code(out: &mut String, field: &str, recipe: &Recipe) {
 fn array<const N: usize>(values: &[f64; N]) -> String {
     let items: Vec<String> = values.iter().map(|v| format!("{:.6}", v)).collect();
     format!("[{}]", items.join(", "))
+}
+
+fn theme_const(index: usize, theme: &Built) -> String {
+    match index {
+        0 => "LIGHT".to_owned(),
+        1 => "DARK".to_owned(),
+        _ => format!("THEME_{}", ident(&theme.id).to_uppercase()),
+    }
+}
+
+fn generate(themes: &[Built], fields: &[Field], consts: &Consts, inputs: &[&str], derivations: &[Derivation]) -> String {
+    let mut out = String::new();
+    out.push_str("// Сгенерировано build.rs из assets/styles — не править.\n\n");
+    out.push_str("/// Цвета, тени и заголовки дизайн-системы для одной темы.\n#[derive(Clone, Copy, Debug)]\npub struct Theme {\n");
+    for field in fields {
+        let ty = match field.kind {
+            Kind::Color => "Color",
+            Kind::Shadows => "&'static [Shadow]",
+            Kind::Number => "f32",
+        };
+        writeln!(out, "    pub {}: {ty},", ident(&field.name)).unwrap();
+    }
+    out.push_str("}\n\n");
+    for (index, theme) in themes.iter().enumerate() {
+        writeln!(out, "pub const {}: Theme = Theme {{", theme_const(index, theme)).unwrap();
+        for field in fields {
+            writeln!(out, "    {}: {},", ident(&field.name), rust_value(&field.values[index])).unwrap();
+        }
+        out.push_str("};\n\n");
+    }
+    writeln!(out, "/// Встроенные темы: светлая и тёмная Aquilum, затем остальные.\npub static THEMES: [Builtin; {}] = [", themes.len()).unwrap();
+    for (index, theme) in themes.iter().enumerate() {
+        writeln!(out, "    Builtin {{ id: {:?}, name: {:?}, dark: {}, theme: {} }},", theme.id, theme.name, theme.dark, theme_const(index, theme)).unwrap();
+    }
+    out.push_str("];\n\n");
+    let quoted: Vec<String> = inputs.iter().map(|i| format!("{i:?}")).collect();
+    writeln!(out, "/// Входы `derive`: три цвета акцента, затем цвета, которые правит пользователь.\npub const INPUTS: [&str; {}] = [{}];\n", inputs.len(), quoted.join(", ")).unwrap();
+    writeln!(out, "pub const INPUT_COUNT: usize = {};\n", inputs.len()).unwrap();
+    out.push_str("/// Текущее значение входа в теме.\npub fn input_color(t: &Theme, index: usize) -> Color {\n    match index {\n");
+    for (k, input) in inputs.iter().enumerate() {
+        writeln!(out, "        {k} => t.{},", ident(input)).unwrap();
+    }
+    out.push_str("        _ => Color::TRANSPARENT,\n    }\n}\n\n");
+    let numbers: Vec<&Field> = fields.iter().filter(|f| f.kind == Kind::Number).collect();
+    let quoted: Vec<String> = numbers.iter().map(|f| format!("{:?}", f.name)).collect();
+    writeln!(out, "/// Числа темы, которые правит пользователь.\npub const NUMBERS: [&str; {}] = [{}];\n", numbers.len(), quoted.join(", ")).unwrap();
+    out.push_str("pub fn number_mut(t: &mut Theme, index: usize) -> Option<&mut f32> {\n    match index {\n");
+    for (k, field) in numbers.iter().enumerate() {
+        writeln!(out, "        {k} => Some(&mut t.{}),", ident(&field.name)).unwrap();
+    }
+    out.push_str("        _ => None,\n    }\n}\n\n");
+    out.push_str("/// Пересчитывает тему `theme` (индекс в `THEMES`) с заданными входами; `None` — значение темы.\n");
+    out.push_str("pub fn derive(theme: usize, t: &mut Theme, set: &[Option<[f32; 4]>; INPUT_COUNT]) {\n    match theme {\n");
+    for index in 0..themes.len() {
+        writeln!(out, "        {index} => derive_{index}(t, set),").unwrap();
+    }
+    out.push_str("        _ => {}\n    }\n}\n\n");
+    for (index, derivation) in derivations.iter().enumerate() {
+        writeln!(out, "fn derive_{index}(t: &mut Theme, set: &[Option<[f32; 4]>; INPUT_COUNT]) {{").unwrap();
+        out.push_str("    let mut v = [[0.0; 4]; INPUT_COUNT];\n");
+        for (k, recipe) in &derivation.inputs {
+            if let Recipe::Color(base, weights) = recipe {
+                writeln!(out, "    v[{k}] = input(set[{k}], {}, {}, &v);", array(base), weights_code(weights)).unwrap();
+            }
+        }
+        for (k, _) in &derivation.inputs {
+            writeln!(out, "    t.{} = color(v[{k}]);", ident(inputs[*k])).unwrap();
+        }
+        for (field, recipe) in &derivation.fields {
+            recipe_code(&mut out, field, recipe);
+        }
+        out.push_str("}\n\n");
+    }
+    for (module, items) in consts {
+        writeln!(out, "pub mod {module} {{").unwrap();
+        for (decl, literal) in items {
+            writeln!(out, "    pub const {decl} = {literal};").unwrap();
+        }
+        out.push_str("}\n\n");
+    }
+    out
 }
 
 /// Шрифты интерфейса и редактора: то же, что подключает `src/fonts/catalog.ts`.
@@ -342,6 +576,10 @@ fn declarations(css: &str) -> Vec<(String, String, String)> {
         let body = &rest[open + 1..open + close];
         for decl in body.split(';') {
             let decl = decl.trim();
+            if let Some(scheme) = decl.strip_prefix("color-scheme:") {
+                result.push((selector.clone(), "theme-scheme".to_owned(), scheme.trim().to_owned()));
+                continue;
+            }
             let Some(name) = decl.strip_prefix("--q-") else { continue };
             let Some((name, value)) = name.split_once(':') else { continue };
             let value = value.split_whitespace().collect::<Vec<_>>().join(" ");
@@ -376,19 +614,25 @@ struct Shadow {
 
 struct Resolver<'a> {
     vars: &'a BTreeMap<String, String>,
+    /// Значения поверх `vars` — для проб входов.
+    overlay: Option<&'a BTreeMap<String, String>>,
     stack: Vec<String>,
 }
 
 impl<'a> Resolver<'a> {
     fn new(vars: &'a BTreeMap<String, String>) -> Self {
-        Resolver { vars, stack: Vec::new() }
+        Resolver { vars, overlay: None, stack: Vec::new() }
+    }
+
+    fn layered(vars: &'a BTreeMap<String, String>, overlay: &'a BTreeMap<String, String>) -> Self {
+        Resolver { vars, overlay: Some(overlay), stack: Vec::new() }
     }
 
     fn value(&mut self, name: &str) -> Result<Value, String> {
         if self.stack.iter().any(|n| n == name) {
             return Err(format!("цикл через --q-{name}"));
         }
-        let raw = self.vars.get(name).ok_or_else(|| format!("нет --q-{name}"))?.clone();
+        let raw = self.overlay.and_then(|o| o.get(name)).or_else(|| self.vars.get(name)).ok_or_else(|| format!("нет --q-{name}"))?.clone();
         self.stack.push(name.to_owned());
         let result = self.expression(&raw);
         self.stack.pop();
@@ -753,7 +997,8 @@ fn rust_value(v: &Value) -> String {
                 .collect();
             format!("&[{}]", items.join(", "))
         }
-        // Значение темы обязано быть цветом или тенями; несовпадения отсеяны выше.
+        Value::Number(n) => format!("{:?}", *n as f32),
+        // Значение темы обязано быть цветом, тенями или числом; несовпадения отсеяны выше.
         other => panic!("значение темы {other:?}"),
     }
 }

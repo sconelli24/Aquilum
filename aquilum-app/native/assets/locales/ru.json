@@ -180,6 +180,7 @@
     "back": "К списку разделов",
     "nav": {
       "ui": "Интерфейс",
+      "themes": "Темы",
       "editor": "Редактор",
       "reader": "Читалка",
       "data": "Данные",
@@ -215,6 +216,38 @@
       "primaryColor": "Цвет акцента",
       "animations": "Анимации",
       "animationsHint": "Плавное появление диалогов, панелей и вкладок, переключатели, режим фокуса и переходы в графе. Если выключить, всё меняется сразу"
+    },
+    "themes": {
+      "section": "Темы",
+      "light": "Светлая тема",
+      "lightHint": "В светлом режиме",
+      "dark": "Тёмная тема",
+      "darkHint": "В тёмном и ночном режимах",
+      "colors": "Цвета темы {{theme}}",
+      "reset": "Сбросить тему",
+      "resetHint": "Вернуть исходные цвета и заголовки темы {{theme}}",
+      "resetButton": "Сбросить",
+      "heading": "Заголовок {{level}} ({{marks}})",
+      "headingColor": "Цвет",
+      "headingSize": "Размер, %",
+      "headingSizeHint": "От размера текста заметки",
+      "headingWeight": "Насыщенность",
+      "weightBold": "Жирный",
+      "weightHeavy": "Сверхжирный",
+      "color": {
+        "bg-canvas": "Фон окна",
+        "sidebar-bg": "Фон боковой панели",
+        "tabs-bg": "Фон панели вкладок",
+        "editor-bg": "Фон заметки",
+        "text-primary": "Текст",
+        "text-secondary": "Второстепенный текст",
+        "text-tertiary": "Приглушённый текст",
+        "border-default": "Границы",
+        "text-link": "Ссылки",
+        "editor-code-bg": "Фон кода",
+        "editor-strong-color": "Жирный",
+        "editor-em-color": "Курсив"
+      }
     },
     "editor": {
       "lineHeight": "Межстрочный интервал",

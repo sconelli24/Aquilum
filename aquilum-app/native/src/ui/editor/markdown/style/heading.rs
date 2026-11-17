@@ -3,18 +3,16 @@ use std::ops::Range;
 use masonry::core::{BrushIndex, StyleProperty};
 use masonry::parley::{FontWeight, RangedBuilder};
 
-use super::super::brushes::SYNTAX;
-use super::super::metrics::{Fonts, H1, H2};
+use super::super::brushes::{SYNTAX, heading_brush};
+use super::super::metrics::Fonts;
 use super::builder::{hide, push};
 
 pub(super) fn style_heading(builder: &mut RangedBuilder<'_, BrushIndex>, text: &str, from: usize, level: u8, marker: usize, shown: bool, fonts: &Fonts) {
-    let scale = match level {
-        1 => H1,
-        2 => H2,
-        _ => 1.0,
-    };
-    push(builder, StyleProperty::FontSize(fonts.size * scale), from..text.len());
-    push(builder, StyleProperty::FontWeight(FontWeight::BOLD), from..text.len());
+    let at = usize::from(level.clamp(1, 6) - 1);
+    let typography = &fonts.typography;
+    push(builder, StyleProperty::FontSize(fonts.size * typography.scale[at]), from..text.len());
+    push(builder, StyleProperty::FontWeight(FontWeight::new(typography.weight[at])), from..text.len());
+    push(builder, StyleProperty::Brush(heading_brush(level)), from..text.len());
     let closing = closing_hashes(text, from + marker);
     if shown {
         push(builder, StyleProperty::Brush(SYNTAX), from..from + marker);

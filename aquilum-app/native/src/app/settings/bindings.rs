@@ -8,8 +8,12 @@ impl App {
             match (bindings.get(&id), changed) {
                 (Some(Binding::Switch(setter)), Changed::Bool(on)) => effect = self.apply(*setter, Value::Bool(*on)),
                 (Some(Binding::Choice(setter)), Changed::Choice(index)) => effect = self.apply(*setter, Value::Index(*index)),
-                (Some(Binding::Color(_)), Changed::OpenColor(rect)) => {
-                    let hex = self.workspace.core.settings.get_config().ui.primary_color;
+                (Some(&Binding::Color(setter)), Changed::OpenColor(rect)) => {
+                    let typed = bindings.values().find_map(|b| match b {
+                        Binding::Text { setter: s, value, .. } if same_setter(*s, setter) => Some(value.clone()),
+                        _ => None,
+                    });
+                    let hex = typed.unwrap_or_else(|| self.workspace.core.settings.get_config().ui.primary_color);
                     let picker = ColorPicker::new(&hex, *rect);
                     let layer = picker.id();
                     root.add_layer(picker, Point::ZERO);
@@ -81,8 +85,8 @@ impl App {
     }
 
     pub(super) fn preview_color(&mut self, root: &mut RenderRoot, dialog: &mut SettingsDialog, swatch: WidgetId, hex: &str) {
-        self.restyle(root, false, Some(hex));
         let Some(&Binding::Color(setter)) = dialog.bindings.get(&swatch) else { return };
+        self.restyle(root, false, Some((setter, hex)));
         let shown = hex.to_uppercase();
         for (id, binding) in &mut dialog.bindings {
             if let Binding::Text { setter: s, value, .. } = binding
@@ -156,6 +160,7 @@ pub(super) fn same_setter(a: Setter, b: Setter) -> bool {
     match (a, b) {
         (Setter::Config(x), Setter::Config(y)) => std::ptr::fn_addr_eq(x, y),
         (Setter::VaultSync(x), Setter::VaultSync(y)) => std::ptr::fn_addr_eq(x, y),
+        (Setter::ThemeValue(x), Setter::ThemeValue(y)) => x == y,
         (Setter::Scale, Setter::Scale) | (Setter::HomePage, Setter::HomePage) | (Setter::Autostart, Setter::Autostart) => true,
         _ => false,
     }

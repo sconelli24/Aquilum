@@ -19,6 +19,7 @@ pub mod sync;
 mod system;
 #[cfg(test)]
 mod tests;
+mod themes;
 mod trash;
 mod types;
 
@@ -26,6 +27,7 @@ pub use appearance::reader_quick;
 pub use data::templates_path;
 pub use mcp::new_token;
 pub use section::Section;
+pub use themes::set_theme_value;
 #[cfg(test)]
 pub use system::update_row;
 pub use types::*;
@@ -36,11 +38,13 @@ use mcp::*;
 use sync::*;
 use support::*;
 use system::*;
+use themes::*;
 use trash::*;
 
 pub fn blocks(section: Section, config: &AppConfig, ctx: &Context) -> Vec<Block> {
     match section {
         Section::Ui => ui(config, ctx),
+        Section::Themes => themes(config),
         Section::Editor => editor(config),
         Section::Reader => reader(config),
         Section::Data => [templates(config, ctx), files(config)].into_iter().flatten().collect(),
