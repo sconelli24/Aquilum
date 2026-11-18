@@ -7,7 +7,9 @@ pub use fields::{Fields, parse, set};
 
 pub const BOOK_COVER: &str = "Book_cover";
 pub const PAGE_COVER: &str = "Page_cover";
-pub const BOOK_FILE: &str = "Путь к файлу";
+pub const BOOK_FILE: &str = "book_file";
+/// Original Russian key; still read and updated in place in existing notes.
+pub const LEGACY_BOOK_FILE: &str = "Путь к файлу";
 pub const PAGE_COVER_POSITION: &str = "page_cover_position";
 pub const COVER: &str = "cover";
 pub const TYPE: &str = "type";
@@ -43,7 +45,7 @@ fn aliases(key: &str) -> &'static [&'static str] {
     match key {
         BOOK_COVER => &["cover_url"],
         PAGE_COVER => &["page_cover_url"],
-        BOOK_FILE => &["book_file"],
+        BOOK_FILE => &[LEGACY_BOOK_FILE],
         _ => &[],
     }
 }
@@ -134,6 +136,6 @@ mod tests {
         assert!(is_key(" PAGE_COVER_URL ", PAGE_COVER));
         assert!(!is_key("page_cover_position", PAGE_COVER));
         assert_eq!(suggest_keys("PAGE_c"), ["Page_cover", "page_cover_position"]);
-        assert_eq!(suggest_keys("путь"), ["Путь к файлу"]);
+        assert_eq!(suggest_keys("file"), ["book_file"]);
     }
 }

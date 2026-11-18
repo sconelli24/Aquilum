@@ -1,5 +1,5 @@
 use super::*;
-use crate::frontmatter::{BOOK_FILE, PAGES, READ_PERCENT, READER_POSITION};
+use crate::frontmatter::{BOOK_FILE, LEGACY_BOOK_FILE, PAGES, READ_PERCENT, READER_POSITION};
 use crate::ui::menu::MenuChoice;
 use aquilum_core::ui_state::models::SaveReaderStateInput;
 
@@ -130,18 +130,18 @@ fn failed_book_file_import_does_not_reset_the_previous_book() {
 fn legacy_book_file_alias_is_updated_and_removed_without_duplicate_metadata_rows() {
     let mut h = Harness::new();
     let (_, page, _) = book(&mut h);
-    let legacy = h.app.text.to_string().replace(BOOK_FILE, "book_file");
+    let legacy = h.app.text.to_string().replace(&format!("{BOOK_FILE}:"), &format!("{LEGACY_BOOK_FILE}:"));
     h.app.commit_text(&mut h.root, crop::Rope::from(legacy));
     let new_file = h.vault.path().join("new.epub");
     std::fs::write(&new_file, crate::reader::tests::sample_book("epub")).unwrap();
     h.app.on_picked(&mut h.root, crate::app::book::Picked::Book(page.clone(), Some(new_file)));
     h.save_now();
     let updated = std::fs::read_to_string(&page).unwrap();
-    assert_eq!(updated.lines().filter(|line| line.starts_with("book_file:") || line.starts_with(&format!("{BOOK_FILE}:"))).count(), 1);
+    assert_eq!(updated.lines().filter(|line| line.starts_with(&format!("{LEGACY_BOOK_FILE}:")) || line.starts_with(&format!("{BOOK_FILE}:"))).count(), 1);
     assert!(h.app.fields().unwrap().text(BOOK_FILE).unwrap().ends_with("new.epub"));
     h.app.book_command(&mut h.root, crate::app::book::BookCommand::Remove);
     h.save_now();
     let removed = std::fs::read_to_string(page).unwrap();
-    assert!(!removed.contains("book_file:"));
+    assert!(!removed.contains(&format!("{LEGACY_BOOK_FILE}:")));
     assert!(!removed.contains(&format!("{BOOK_FILE}:")));
 }

@@ -73,7 +73,7 @@ mod tests {
     fn starters_keep_their_text_and_have_valid_frontmatter() {
         assert_eq!(note_starter(Language::Ru), "---\ncreated: {{date:DD-MM-YYYY}} | ({{time:HH:mm}})\ntags: []\nauthor: \nsource: \n---\n\n\n\n\n***\n\nСсылки:\n- [[]]\n");
         let book = book_starter(Language::Ru);
-        assert_eq!(book, "---\ncreated: {{date:DD-MM-YYYY}} | ({{time:HH:mm}})\ncover: true\ntype: book\nauthor: \nstatus: to-read\npages: \ntags: [книга, ]\nrating: 0\nBook_cover: \nPage_cover: pattern:tunnel\nПуть к файлу: \nreader_position: \nread_percent: \n---\n\n\n\n***\n\nСсылки:\n- [[]]\n");
+        assert_eq!(book, "---\ncreated: {{date:DD-MM-YYYY}} | ({{time:HH:mm}})\ncover: true\ntype: book\nauthor: \nstatus: to-read\npages: \ntags: [книга, ]\nrating: 0\nBook_cover: \nPage_cover: pattern:tunnel\nbook_file: \nreader_position: \nread_percent: \n---\n\n\n\n***\n\nСсылки:\n- [[]]\n");
         assert!(frontmatter::end(&book).is_some_and(|end| book[end..].starts_with("\n\n\n\n***")));
         assert!(frontmatter::parse(&book).is_some_and(|fields| fields.is_book() && fields.has_page_cover()));
     }

@@ -74,7 +74,7 @@ mod tests {
     fn several_fields_are_applied_in_order_and_a_note_without_fields_gets_a_block() {
         let doc = "---\ntype: book\n---\nтекст";
         let next = apply(doc, &[(BOOK_FILE, "Files/a.epub".into()), (COVER, "true".into())]);
-        assert_eq!(next, "---\ntype: book\nПуть к файлу: Files/a.epub\ncover: true\n---\nтекст");
+        assert_eq!(next, "---\ntype: book\nbook_file: Files/a.epub\ncover: true\n---\nтекст");
         assert_eq!(apply("текст", &[(COVER, "true".into())]), "---\ncover: true\n---\nтекст");
         assert_eq!(set(doc, &[]), None);
         assert_eq!(set(doc, &[(COVER, String::new())]), None);
