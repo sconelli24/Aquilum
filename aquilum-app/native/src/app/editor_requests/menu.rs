@@ -140,7 +140,10 @@ impl App {
                 self.paste(root, false);
             }
             EditorCommand::SelectAll => edit(root, &TextEditor::select_everything),
-            EditorCommand::InsertBook => edit(root, &|e| TextEditor::insert_text(e, "> [!book] [[Название книги]]\n")),
+            EditorCommand::InsertBook => {
+                let text = format!("> [!book] [[{}]]\n", t("editor.bookTitlePlaceholder"));
+                edit(root, &|e| TextEditor::insert_text(e, &text));
+            }
             EditorCommand::InsertTable => edit(root, &|e| TextEditor::insert_table(e, 2, 2)),
             EditorCommand::InsertFrontmatter => {
                 if !self.has_frontmatter() {

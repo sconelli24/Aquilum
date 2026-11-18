@@ -37,6 +37,7 @@
     "selectAllMatches": "Seleccionar todas las coincidencias",
     "closeSearch": "Cerrar la búsqueda",
     "insertBook": "Insertar libro",
+    "bookTitlePlaceholder": "Título del libro",
     "insertTable": "Insertar tabla",
     "insertFrontmatter": "Insertar metadatos",
     "table": {

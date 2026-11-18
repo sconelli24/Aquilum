@@ -37,6 +37,7 @@
     "selectAllMatches": "Выделить все совпадения",
     "closeSearch": "Закрыть поиск",
     "insertBook": "Вставить книгу",
+    "bookTitlePlaceholder": "Название книги",
     "insertTable": "Вставить таблицу",
     "insertFrontmatter": "Вставить метаданные",
     "table": {

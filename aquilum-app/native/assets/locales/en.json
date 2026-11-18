@@ -37,6 +37,7 @@
     "selectAllMatches": "Select all matches",
     "closeSearch": "Close search",
     "insertBook": "Insert book",
+    "bookTitlePlaceholder": "Book title",
     "insertTable": "Insert table",
     "insertFrontmatter": "Insert metadata",
     "table": {
