@@ -67,7 +67,7 @@ impl Host {
     pub(super) fn attach_output(&mut self, event_loop: &dyn ActiveEventLoop, window: std::rc::Rc<dyn Window>) {
         match crate::output::Output::new(event_loop.owned_display_handle(), window) {
             Ok(output) => self.output = Some(output),
-            Err(err) => report(&format!("вывод кадра: {err}")),
+            Err(err) => report(&format!("frame presentation: {err}")),
         }
         self.full_next = true;
     }

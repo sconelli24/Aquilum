@@ -47,7 +47,7 @@ pub fn template_text(path: &Path) -> String {
 
 pub fn write_starters(core: &Core, folder: &Path) -> Vec<PathBuf> {
     if let Err(error) = std::fs::create_dir_all(folder) {
-        report!("папка шаблонов не создана: {error}");
+        report!("templates folder not created: {error}");
         return Vec::new();
     }
     let mut created = Vec::new();
@@ -59,7 +59,7 @@ pub fn write_starters(core: &Core, folder: &Path) -> Vec<PathBuf> {
         }
         match gate::create(core, &path, &content, Source::Me, None) {
             Ok(_) => created.push(path),
-            Err(error) => report!("{} не создан: {error:?}", path.display()),
+            Err(error) => report!("{} not created: {error:?}", path.display()),
         }
     }
     created

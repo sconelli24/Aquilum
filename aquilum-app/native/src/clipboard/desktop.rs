@@ -9,7 +9,7 @@ fn access<T>(work: impl FnOnce(&mut arboard::Clipboard) -> Option<T>) -> Option<
         Err(TryLockError::WouldBlock) => return None,
     };
     if guard.is_none() {
-        *guard = arboard::Clipboard::new().map_err(|error| report!("буфер обмена недоступен: {error}")).ok();
+        *guard = arboard::Clipboard::new().map_err(|error| report!("clipboard unavailable: {error}")).ok();
     }
     work(guard.as_mut()?)
 }
@@ -19,7 +19,7 @@ fn with<T>(work: impl FnOnce(&mut arboard::Clipboard) -> Result<T, arboard::Erro
         Ok(value) => Some(value),
         Err(arboard::Error::ContentNotAvailable) => None,
         Err(error) => {
-            report!("буфер обмена: {error}");
+            report!("clipboard: {error}");
             None
         }
     })

@@ -98,7 +98,7 @@ impl App {
             ReaderView::new_pdf(session, settings, title, total)
         } else {
             let Some(session) = Session::open(file, target_position) else {
-                report!("книга не открылась: {}", file.display());
+                report!("book did not open: {}", file.display());
                 return;
             };
             ReaderView::new(session, settings, title, total, target.is_some(), active)

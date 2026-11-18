@@ -11,7 +11,7 @@ impl App {
                 if let Some(workspace) = workspace {
                     match ensure_trash_impl(&workspace) {
                         Ok(path) => system::open(&path),
-                        Err(error) => report!("корзина не открыта: {error:?}"),
+                        Err(error) => report!("trash not opened: {error:?}"),
                     }
                 }
                 Effect::None
@@ -26,13 +26,13 @@ impl App {
             Action::SyncConnect => {
                 match core.sync.connect(core, system::login_links()) {
                     Ok(url) => system::open_url(&url),
-                    Err(error) => report!("вход в Dropbox не начат: {error}"),
+                    Err(error) => report!("Dropbox sign-in not started: {error}"),
                 }
                 Effect::Content
             }
             Action::SyncDisconnect => {
                 if let Err(error) = core.sync.disconnect() {
-                    report!("Dropbox не отключён до конца: {error}");
+                    report!("Dropbox was not fully disconnected: {error}");
                 }
                 Effect::Content
             }
@@ -43,7 +43,7 @@ impl App {
             Action::Trash(path) => {
                 let Some(workspace) = workspace else { return Effect::None };
                 if let Err(error) = gate::trash(core, &workspace, &workspace.join(path)) {
-                    report!("файл не убран в корзину: {error:?}");
+                    report!("file not moved to trash: {error:?}");
                 }
                 Effect::Content
             }
@@ -60,7 +60,7 @@ impl App {
             Action::Restore(id) => {
                 let Some(workspace) = workspace else { return Effect::None };
                 if let Err(error) = gate::restore_deletion(core, &workspace, &id) {
-                    report!("заметка не восстановлена: {error:?}");
+                    report!("note not restored: {error:?}");
                 }
                 Effect::Content
             }
@@ -110,14 +110,14 @@ impl App {
             Setter::Autostart => {
                 let Value::Bool(on) = value else { return Effect::None };
                 if !crate::autostart::set(on) {
-                    report!("автозапуск не изменён");
+                    report!("autostart not changed");
                 }
                 Effect::Content
             }
             Setter::HomePage => {
                 let (Value::Text(page), Some(root)) = (value, self.tree.root()) else { return Effect::None };
                 if let Err(error) = self.workspace.core.ui_state.set_home_page(&root.to_string_lossy(), page.trim()) {
-                    report!("домашняя страница не сохранена: {error:?}");
+                    report!("home page not saved: {error:?}");
                 }
                 self.refresh_home();
                 Effect::None
@@ -166,7 +166,7 @@ impl App {
             || mcp_changed
             || retention;
         if let Err(error) = core.settings.update_config(after) {
-            report!("настройки не сохранены: {error}");
+            report!("settings not saved: {error}");
             return Effect::None;
         }
         if mcp_changed {

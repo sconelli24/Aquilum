@@ -65,7 +65,7 @@ impl App {
             }
             Err(error) => {
                 let err_str = format!("{error}");
-                report!("заметка {} не прочитана: {err_str}", path.display());
+                report!("note {} not read: {err_str}", path.display());
                 self.open_error = Some((path.clone(), err_str.clone()));
                 self.show_open_error(root, &path, &err_str);
             }

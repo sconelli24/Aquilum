@@ -82,7 +82,7 @@ fn settle(dir: &Path, version: &VersionFile) {
         delta::write(&path, None, &old.hash, &delta::whole(old.len), &text).map_err(std::io::Error::other)
     });
     if let Err(error) = settled {
-        eprintln!("[aquilum:history] версия {} не переписана перед удалением старых: {error}", path.display());
+        eprintln!("[aquilum:history] version {} not rewritten before pruning old ones: {error}", path.display());
     }
 }
 

@@ -25,7 +25,7 @@ impl Session {
         let loaded = match core.ui_state.open_session(&input) {
             Ok(loaded) => loaded,
             Err(error) => {
-                report!("сессия вкладок не открыта: {error:?}");
+                report!("tab session not opened: {error:?}");
                 return None;
             }
         };
@@ -57,7 +57,7 @@ impl Session {
             let Some(relative) = tab.path.as_deref().and_then(|p| crate::paths::relative(&self.root, p)) else { continue };
             match core.ui_state.resolve_document(self.workspace_id, &relative) {
                 Ok(document) => tab.document_id = Some(document),
-                Err(error) => report!("заметка {relative} не записана в сессию: {error:?}"),
+                Err(error) => report!("note {relative} not written to the session: {error:?}"),
             }
         }
         let stored = tabs
@@ -90,7 +90,7 @@ impl Session {
             graph_camera: None,
         };
         if let Err(error) = core.ui_state.save_batch(&batch) {
-            report!("сессия вкладок не сохранена: {error:?}");
+            report!("tab session not saved: {error:?}");
         }
     }
 
@@ -108,7 +108,7 @@ impl Session {
             graph_camera: Some(aquilum_core::ui_state::models::GraphCameraState { center_x: camera.0, center_y: camera.1, scale: camera.2 }),
         };
         if let Err(error) = core.ui_state.save_batch(&batch) {
-            report!("камера графа не сохранена: {error:?}");
+            report!("graph camera not saved: {error:?}");
         }
     }
 
@@ -143,7 +143,7 @@ impl Session {
             graph_camera: None,
         };
         if let Err(error) = core.ui_state.save_batch(&batch) {
-            report!("позиция заметки не сохранена: {error:?}");
+            report!("note position not saved: {error:?}");
         }
     }
 
@@ -156,7 +156,7 @@ impl Session {
         let (Some(document), Some(path)) = (tab.document_id, tab.path.as_deref()) else { return };
         let Some(relative) = crate::paths::relative(&self.root, path) else { return };
         if let Err(error) = core.ui_state.rename_document(document, &relative) {
-            report!("переименование {relative} не записано в сессию: {error:?}");
+            report!("rename of {relative} not written to the session: {error:?}");
         }
     }
 }

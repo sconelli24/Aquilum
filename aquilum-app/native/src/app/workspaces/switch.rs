@@ -14,7 +14,7 @@ impl App {
         let path = canonical_path(&path);
         let opened = path.is_dir() && self.workspace.core.ui_state.resolve_workspace(&path.to_string_lossy(), crate::dates::now_ms()).is_ok();
         if !opened {
-            report!("база {} не открыта", path.display());
+            report!("vault {} not opened", path.display());
             let error = t_with("workspaces.openFailed", &[("path", &path.to_string_lossy())]);
             if matches!(self.popup, Some(Popup::Workspaces(_))) || self.tree.root().is_some() {
                 self.close_workspaces(root);

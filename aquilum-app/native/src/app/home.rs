@@ -32,7 +32,7 @@ impl App {
                 return;
             }
             let path = result
-                .map_err(|error| report!("домашняя страница не найдена: {error:?}"))
+                .map_err(|error| report!("home page not found: {error:?}"))
                 .ok()
                 .and_then(|r| r.paths.into_iter().next().flatten())
                 .map(PathBuf::from);

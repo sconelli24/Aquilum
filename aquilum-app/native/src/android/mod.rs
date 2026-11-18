@@ -47,7 +47,7 @@ fn run(app: AndroidApp) -> Result<(), String> {
 
 pub fn open(target: &str) {
     if !java::send_text(jni::jni_str!("openUri"), target) {
-        report!("{target} не открыт");
+        report!("{target} not opened");
     }
 }
 

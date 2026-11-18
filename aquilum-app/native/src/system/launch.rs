@@ -50,12 +50,12 @@ pub fn launch(mut command: Command, what: &str) {
     match command.spawn() {
         Ok(mut child) => {
             std::thread::spawn(move || match child.wait() {
-                Ok(status) if !status.success() => report!("{what} не открыт: {status}"),
-                Err(error) => report!("{what} не открыт: {error}"),
+                Ok(status) if !status.success() => report!("{what} not opened: {status}"),
+                Err(error) => report!("{what} not opened: {error}"),
                 Ok(_) => {}
             });
         }
-        Err(error) => report!("{what} не открыт: {error}"),
+        Err(error) => report!("{what} not opened: {error}"),
     }
 }
 

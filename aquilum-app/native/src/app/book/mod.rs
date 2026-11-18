@@ -105,7 +105,7 @@ impl App {
         let Some(key) = self.fields().and_then(|f| f.text(BOOK_FILE).map(str::to_owned)) else { return };
         let ui = &self.workspace.core.ui_state;
         let outcome = ui.resolve_workspace(&workspace.to_string_lossy(), crate::dates::now_ms()).and_then(|workspace_id| ui.delete_reader_state(workspace_id, &key));
-        if let Err(error) = outcome { report!("позиция книги не сброшена: {error:?}"); }
+        if let Err(error) = outcome { report!("book position not reset: {error:?}"); }
     }
 
     pub(in crate::app) fn cover_action(&mut self, root: &mut RenderRoot, action: CoverAction) {

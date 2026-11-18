@@ -78,7 +78,7 @@ impl App {
             && let Some((to, name)) = file_ops::rename_target(&from, input)
         {
             state.error = self.move_vault(root, vault, &from, &to).err().map(|reason| {
-                report!("база {} не переименована: {reason}", from.display());
+                report!("vault {} not renamed: {reason}", from.display());
                 t_with("workspaces.renameFailed", &[("name", &name), ("reason", &reason)])
             });
         }
@@ -117,11 +117,11 @@ impl App {
         match self.workspace.core.ui_state.forget_workspace(vault) {
             Ok(()) => crate::disk::run(move || {
                 if let Err(error) = std::fs::remove_dir_all(&path) {
-                    report!("папка базы {} не удалена: {error}", path.display());
+                    report!("vault folder {} not removed: {error}", path.display());
                 }
             }),
             Err(error) => {
-                report!("база {} не удалена: {error:?}", path.display());
+                report!("vault {} not removed: {error:?}", path.display());
                 state.error = Some(t("workspaces.deleteFailed"));
             }
         }
@@ -145,7 +145,7 @@ impl App {
         let path = match made {
             Ok(path) => canonical_path(&path),
             Err(reason) => {
-                report!("база не создана: {reason}");
+                report!("vault not created: {reason}");
                 if self.popup.is_none() || matches!(self.popup, Some(Popup::Workspaces(_))) {
                     self.close_workspaces(root);
                     self.show_workspaces(root, Some(t_with("workspaces.createFailed", &[("reason", &reason)])));
@@ -173,7 +173,7 @@ impl App {
         let mut sync = core.ui_state.workspace(path).map(|known| known.sync).unwrap_or_default();
         set(&mut sync);
         if let Err(error) = core.ui_state.set_sync(&path.to_string_lossy(), &sync) {
-            report!("настройки синхронизации базы не сохранены: {error:?}");
+            report!("vault sync settings not saved: {error:?}");
         }
         if self.is_current(path) {
             self.bind_sync();

@@ -121,7 +121,7 @@ impl Metrics {
             crate::stats::percentiles(&self.total, [0.95])[0],
         );
         if let Err(e) = std::fs::write(path, &json) {
-            eprintln!("не удалось записать замеры в {}: {e}", path.display());
+            eprintln!("failed to write measurements to {}: {e}", path.display());
         }
     }
 }

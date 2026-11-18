@@ -47,7 +47,7 @@ fn write(core: &Core, path: &PathBuf, text: &crop::Rope, job: &Job, disk: &Mutex
             Outcome::Copied { copy: copy.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default(), disk: current }
         }
         Err(error) => {
-            report!("{} не сохранён: {error:?}", path.display());
+            report!("{} not saved: {error:?}", path.display());
             Outcome::Failed(format!("{error}"))
         }
     }

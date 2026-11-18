@@ -81,7 +81,7 @@ impl App {
                 let pages = if crate::reader::pdf::is_pdf(file) { String::new() } else { synthetic_pages(None, bytes) };
                 self.set_fields(root, &[(BOOK_FILE, relative), (PAGES, pages), (READER_POSITION, String::new()), (READ_PERCENT, "0".into())]);
             }
-            Err(error) => report!("книга не загружена: {error:?}"),
+            Err(error) => report!("book not loaded: {error:?}"),
         }
     }
 
@@ -128,7 +128,7 @@ impl App {
             Source::Bytes(..) => "png",
         };
         vault_files::import(&self.workspace.core, &workspace, source, "cover", fallback)
-            .map_err(|error| report!("обложка не сохранена: {error:?}"))
+            .map_err(|error| report!("cover not saved: {error:?}"))
             .ok()
     }
 

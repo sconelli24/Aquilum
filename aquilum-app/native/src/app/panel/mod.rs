@@ -28,10 +28,10 @@ impl App {
         std::thread::spawn(move || {
             let canonical = aquilum_core::search::paths::canonical_path(&root);
             if let Err(error) = core.watcher.watch(&canonical) {
-                report!("наблюдение за базой не запущено: {error}");
+                report!("vault watcher not started: {error}");
             }
             if let Err(error) = core.search.prepare(&root.to_string_lossy()) {
-                report!("индекс базы не подготовлен: {error:?}");
+                report!("vault index not prepared: {error:?}");
             }
         });
     }

@@ -105,5 +105,5 @@ fn save(root: &mut RenderRoot, name: &str) {
     let dir = std::env::var_os("AQUILUM_SNAPSHOTS").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
     let path = dir.join(format!("{name}.png"));
     std::fs::write(&path, renderer.png()).expect("снимок записан");
-    eprintln!("снимок: {}", path.display());
+    eprintln!("snapshot: {}", path.display());
 }

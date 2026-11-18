@@ -187,7 +187,7 @@ impl Interface {
         let path = self.path.clone();
         crate::disk::run(move || {
             if let Err(e) = write_content_atomic(&path, &json, None) {
-                report!("состояние интерфейса не сохранено: {e}");
+                report!("UI state not saved: {e}");
             }
         });
     }

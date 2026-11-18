@@ -62,7 +62,7 @@ impl App {
         if let Some(workspace_id) = state.workspace {
             let input = SaveReaderStateInput { workspace_id, book_file: state.key.clone(), current: i64::from(current), cfi: Some(cfi.clone()), now_ms: crate::dates::now_ms() };
             if let Err(error) = self.workspace.core.ui_state.save_reader_state(&input) {
-                report!("позиция чтения не сохранена: {error:?}");
+                report!("reading position not saved: {error:?}");
             }
         }
         let Some(page) = state.page.clone() else { return };

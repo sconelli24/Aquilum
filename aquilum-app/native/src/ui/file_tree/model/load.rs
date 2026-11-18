@@ -66,7 +66,7 @@ impl TreeModel {
             }
             Err(e) => {
                 self.directories.remove(&comparable(dir));
-                report!("папка {} не прочитана: {e}", dir.display());
+                report!("folder {} not read: {e}", dir.display());
             }
         }
         let nested: Vec<PathBuf> = self.directories.get(&comparable(dir)).into_iter().flatten()

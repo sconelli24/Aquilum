@@ -85,7 +85,7 @@ impl App {
         match edited {
             Ok(edited) => edited,
             Err(error) => {
-                report!("{} не сохранён: {error:?}", path.display());
+                report!("{} not saved: {error:?}", path.display());
                 false
             }
         }

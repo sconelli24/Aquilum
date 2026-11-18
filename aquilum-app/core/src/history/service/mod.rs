@@ -133,12 +133,12 @@ fn relative_inside(root: &Path, path: &Path) -> Option<PathBuf> {
 fn move_history(from: &Path, to: &Path, placement: Placement, base: &Path) {
     match move_folder(from, to, placement) {
         Ok(()) => remove_empty_ancestors(from, base),
-        Err(error) => report(from, "не перенесена", &error.to_string()),
+        Err(error) => report(from, "was not migrated", &error.to_string()),
     }
 }
 
 fn report(dir: &Path, what: &str, error: &str) {
-    eprintln!("[aquilum:history] история {} {what}: {error}", dir.display());
+    eprintln!("[aquilum:history] history {}: {what}: {error}", dir.display());
 }
 
 fn device_id(app_data: &Path) -> String {
@@ -152,7 +152,7 @@ fn device_id(app_data: &Path) -> String {
     }
     let device = uuid::Uuid::new_v4().simple().to_string()[..8].to_owned();
     if let Err(error) = fs::create_dir_all(app_data).and_then(|()| fs::write(&path, &device)) {
-        eprintln!("[aquilum:history] идентификатор устройства не сохранён: {error}");
+        eprintln!("[aquilum:history] device id not saved: {error}");
     }
     device
 }

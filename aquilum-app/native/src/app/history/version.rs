@@ -71,7 +71,7 @@ impl App {
                 self.load_history(root);
             }
             Err(error) => {
-                report!("история: {error:?}");
+                report!("history: {error:?}");
                 self.version_notice = Some(t("history.actionFailed"));
                 self.show_version(root);
             }

@@ -77,7 +77,7 @@ impl Navigation {
             all.insert(comparable(&root), stored);
             let Ok(json) = serde_json::to_string(&all) else { return };
             if let Err(e) = write_content_atomic(&file, &json, None) {
-                report!("история переходов не сохранена: {e}");
+                report!("navigation history not saved: {e}");
             }
         });
     }

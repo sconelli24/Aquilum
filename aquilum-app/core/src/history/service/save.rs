@@ -38,7 +38,7 @@ impl HistoryService {
         match fs::create_dir_all(&located.dir).and_then(|()| fs::copy(note, &path)) {
             Ok(_) => Some(path),
             Err(error) => {
-                report(&located.dir, "не сохранила исходный текст", &error.to_string());
+                report(&located.dir, "failed to save the original text", &error.to_string());
                 None
             }
         }
@@ -60,7 +60,7 @@ impl HistoryService {
         let same_as_latest = latest.is_some_and(|version| matches(dir, &version.id, new_len, || Some(write.hash.to_owned())));
         let base = latest.map(|version| version.id.clone()).or_else(|| original.clone());
         let change = match base.as_deref().filter(|_| !write.source.is_quiet() && !same_as_latest) {
-            Some(base) => change_from(dir, base, &write).map_err(|error| report(dir, "не сравнила версию", &error.to_string())).ok(),
+            Some(base) => change_from(dir, base, &write).map_err(|error| report(dir, "failed to diff the version", &error.to_string())).ok(),
             None => None,
         };
         let latest_inserted = latest.filter(|version| is_delta(&version.id)).and_then(|version| delta::read(&dir.join(&version.id)).ok()).map(|delta| delta::inserted(&delta.regions));
@@ -92,7 +92,7 @@ impl HistoryService {
             }
             MilestonePlan::UpdateLatest { id } => {
                 *entry = Some(now);
-                update(dir, &id, regions, &write).map_err(|error| report(dir, "не обновила версию", &error.to_string())).ok().map(|()| id)
+                update(dir, &id, regions, &write).map_err(|error| report(dir, "failed to update the version", &error.to_string())).ok().map(|()| id)
             }
             MilestonePlan::CreateNew { keep_original } => {
                 *entry = Some(now);
@@ -117,7 +117,7 @@ impl HistoryService {
         match written {
             Ok(path) => path.file_name().map(|name| name.to_string_lossy().into_owned()),
             Err(error) => {
-                report(dir, "не записала версию", &error.to_string());
+                report(dir, "failed to write the version", &error.to_string());
                 None
             }
         }

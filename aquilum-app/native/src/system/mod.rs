@@ -17,7 +17,7 @@ pub fn open(target: &str) {
     use windows::core::{HSTRING, PCWSTR, w};
     let launched = unsafe { ShellExecuteW(None, w!("open"), &HSTRING::from(target), PCWSTR::null(), PCWSTR::null(), SW_SHOWNORMAL) };
     if launched.0 as usize <= 32 {
-        report!("{target} не открыт: код {}", launched.0 as usize);
+        report!("{target} not opened: exit code {}", launched.0 as usize);
     }
 }
 
@@ -77,7 +77,7 @@ pub fn reveal(path: &Path) {
         }
     };
     if let Err(error) = result {
-        report!("{} не показан в папке: {error}", path.display());
+        report!("{} not shown in folder: {error}", path.display());
     }
 }
 

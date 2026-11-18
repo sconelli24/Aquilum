@@ -66,7 +66,7 @@ pub(super) fn create(hwnd: HWND, width: u32, height: u32) -> Result<Gpu, String>
     let warp = cfg!(feature = "memory-probe") && std::env::var_os("AQ_PROBE_WARP").is_some();
     let (device, context) = if warp { device(D3D_DRIVER_TYPE_WARP) } else {
         device(D3D_DRIVER_TYPE_HARDWARE).or_else(|error| {
-            report!("видеокарта недоступна ({error}), вывод через WARP");
+            report!("GPU unavailable ({error}), presenting through WARP");
             device(D3D_DRIVER_TYPE_WARP)
         })
     }

@@ -26,7 +26,7 @@ pub fn migrate_legacy_data(target_dir: &Path) {
     let entries = match std::fs::create_dir_all(target_dir).and_then(|()| std::fs::read_dir(&legacy_dir)) {
         Ok(entries) => entries,
         Err(error) => {
-            eprintln!("[aquilum:migration] данные quantum-app не перенесены: {error}");
+            eprintln!("[aquilum:migration] quantum-app data not migrated: {error}");
             return;
         }
     };
@@ -35,7 +35,7 @@ pub fn migrate_legacy_data(target_dir: &Path) {
             continue;
         }
         if let Err(error) = copy_entry(&entry, &target_dir.join(entry.file_name())) {
-            eprintln!("[aquilum:migration] не перенесено {}: {error}", entry.path().display());
+            eprintln!("[aquilum:migration] not migrated {}: {error}", entry.path().display());
         }
     }
 }

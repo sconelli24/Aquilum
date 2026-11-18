@@ -34,7 +34,7 @@ impl Output {
     }
 
     fn lost(&mut self, err: impl std::fmt::Display) {
-        report!("вывод кадра: {err}; устройство пересоздаётся");
+        report!("frame presentation: {err}; recreating the device");
         self.gpu = None;
         self.fresh = true;
     }

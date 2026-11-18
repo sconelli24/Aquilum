@@ -57,7 +57,7 @@ impl App {
             }) {
                 Ok(()) => self.updater.handed_off(),
                 Err(error) => {
-                    report!("обновление не установлено: {error}");
+                    report!("update not installed: {error}");
                     if closed {
                         std::process::exit(1);
                     }

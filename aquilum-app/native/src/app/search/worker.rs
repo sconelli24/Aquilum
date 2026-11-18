@@ -32,7 +32,7 @@ impl Worker {
         let (asks, inbox) = channel();
         let started = std::thread::Builder::new().name("поиск Ctrl+O".into()).spawn(move || serve(&core, &inbox, &found, &*wake));
         if let Err(error) = started {
-            report!("поток поиска не запущен: {error}");
+            report!("search thread not started: {error}");
         }
         Self { asks, generation: Generation::default() }
     }

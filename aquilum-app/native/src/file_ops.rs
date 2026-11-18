@@ -83,7 +83,7 @@ pub fn rename(core: &Arc<Core>, from: PathBuf, to: PathBuf, failed: impl FnOnce(
     let core = Arc::clone(core);
     crate::disk::run(move || {
         if let Err(error) = gate::rename(&core, &from, &to) {
-            report!("{} не переименован: {error}", from.display());
+            report!("{} not renamed: {error}", from.display());
             failed();
         }
     });

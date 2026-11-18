@@ -26,8 +26,8 @@ pub fn remove_matching(dir: &std::path::Path, doomed: impl Fn(&str) -> bool) {
         let path = entry.path();
         let removed = if entry.file_type().is_ok_and(|kind| kind.is_dir()) { std::fs::remove_dir_all(&path) } else { std::fs::remove_file(&path) };
         match removed {
-            Ok(()) => eprintln!("[aquilum:cleanup] удалено {}", path.display()),
-            Err(error) => eprintln!("[aquilum:cleanup] не удалено {}: {error}", path.display()),
+            Ok(()) => eprintln!("[aquilum:cleanup] removed {}", path.display()),
+            Err(error) => eprintln!("[aquilum:cleanup] not removed {}: {error}", path.display()),
         }
     }
 }

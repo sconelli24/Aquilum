@@ -107,7 +107,7 @@ impl App {
                 self.open(root, path)
             }
             Err(error) => {
-                report!("заметка не создана: {error}");
+                report!("note not created: {error}");
                 false
             }
         }
@@ -127,7 +127,7 @@ impl App {
                 opened
             }
             Err(error) => {
-                report!("заметка не создана: {error}");
+                report!("note not created: {error}");
                 false
             }
         }
@@ -158,7 +158,7 @@ impl App {
                         self.tree.reveal(root, &path);
                         self.tree.start_rename(root, path);
                     }
-                    Err(error) => report!("папка не создана: {error}"),
+                    Err(error) => report!("folder not created: {error}"),
                 }
                 return false;
             }

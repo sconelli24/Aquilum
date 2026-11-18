@@ -26,7 +26,7 @@ impl App {
         std::thread::spawn(move || {
             let Some(dest) = crate::native_dialog::save_file("PDF", &["pdf"], &format!("{title}.pdf")) else { return };
             if let Err(error) = render(&title, body, smart, embeds).and_then(|pdf| dest.write(&pdf)) {
-                report!("{dest} не экспортирован в PDF: {error}");
+                report!("{dest} not exported to PDF: {error}");
             }
         });
     }

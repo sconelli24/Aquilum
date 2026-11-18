@@ -64,7 +64,7 @@ impl Host {
                 match request {
                     a11y::Request::Activate => {
                         if self.args.trace {
-                            eprintln!("доступность: клиент подключился");
+                            eprintln!("accessibility: client connected");
                         }
                         root.handle_window_event(MasonryWindowEvent::EnableAccessTree);
                     }

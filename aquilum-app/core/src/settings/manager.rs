@@ -28,11 +28,11 @@ impl SettingsManager {
                 Err(error) => set_aside_unreadable(path, &error),
             },
             Err(error) if error.kind() == ErrorKind::NotFound => {}
-            Err(error) => eprintln!("[aquilum:settings] не удалось прочитать {}: {error}", path.display()),
+            Err(error) => eprintln!("[aquilum:settings] failed to read {}: {error}", path.display()),
         }
         let default_config = AppConfig::default();
         if let Err(error) = write_config(path, &default_config) {
-            eprintln!("[aquilum:settings] не удалось записать настройки по умолчанию: {error}");
+            eprintln!("[aquilum:settings] failed to write default settings: {error}");
         }
         default_config
     }
@@ -79,12 +79,12 @@ fn write_config(path: &Path, config: &AppConfig) -> Result<(), String> {
 fn set_aside_unreadable(path: &Path, error: &serde_json::Error) {
     let backup = path.with_extension("json.unreadable");
     eprintln!(
-        "[aquilum:settings] {} не разобран ({error}), копия сохранена в {}",
+        "[aquilum:settings] {} could not be parsed ({error}), a copy was saved to {}",
         path.display(),
         backup.display()
     );
     if let Err(copy_error) = fs::copy(path, &backup) {
-        eprintln!("[aquilum:settings] не удалось сохранить копию: {copy_error}");
+        eprintln!("[aquilum:settings] failed to save a copy: {copy_error}");
     }
 }
 

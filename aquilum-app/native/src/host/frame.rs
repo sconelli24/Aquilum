@@ -25,7 +25,7 @@ impl Host {
         let scene = t0.elapsed();
         if let (Some(update), Some(accessibility)) = (access_update, self.accessibility.as_mut()) {
             if self.args.trace {
-                eprintln!("доступность: обновление дерева, узлов {}", update.nodes.len());
+                eprintln!("accessibility: tree update, {} nodes", update.nodes.len());
             }
             accessibility.update(update);
         }
@@ -49,7 +49,7 @@ impl Host {
         let drawn = match self.renderer.draw(&layers, width, height, scale, background, full, output) {
             Ok(drawn) => drawn,
             Err(err) => {
-                report(&format!("кадр не нарисован: {err}"));
+                report(&format!("frame not drawn: {err}"));
                 self.full_next = true;
                 return;
             }
@@ -82,7 +82,7 @@ impl Host {
             Ok(areas) if !areas.is_empty() => output.present(&areas),
             Ok(_) => {}
             Err(err) => {
-                report(&format!("живой слой не нарисован: {err}"));
+                report(&format!("live layer not drawn: {err}"));
                 self.full_next = true;
             }
         }

@@ -56,7 +56,7 @@ pub fn remove_files(paths: &[PathBuf]) -> u64 {
         .filter(|path| match fs::remove_file(path) {
             Ok(()) => true,
             Err(error) => {
-                eprintln!("[aquilum:files] файл не удалён {}: {error}", path.display());
+                eprintln!("[aquilum:files] file not deleted {}: {error}", path.display());
                 false
             }
         })
@@ -78,7 +78,7 @@ pub fn remove_empty_folders(root: &Path) {
             continue;
         }
         if let Err(error) = fs::remove_dir(&folder) {
-            eprintln!("[aquilum:files] пустая папка не удалена {}: {error}", folder.display());
+            eprintln!("[aquilum:files] empty folder not removed {}: {error}", folder.display());
         }
     }
 }
@@ -157,7 +157,7 @@ fn record_moved(
             .open(entry.path())
             .and_then(|file| file.set_modified(deleted_at));
         if let Err(error) = stamped {
-            eprintln!("[aquilum:trash] дата удаления не проставлена {}: {error}", entry.path().display());
+            eprintln!("[aquilum:trash] deletion date not set {}: {error}", entry.path().display());
         }
     }
 }

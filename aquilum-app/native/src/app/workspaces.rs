@@ -65,7 +65,7 @@ impl App {
 
     fn vault_rows(&self, renaming: Option<Uuid>, error: &mut Option<String>) -> (Vec<KnownWorkspace>, Rows, NewWidget<dyn Widget>) {
         let vaults = self.workspace.core.ui_state.list_workspaces().unwrap_or_else(|failure| {
-            report!("список баз: {failure:?}");
+            report!("vault list: {failure:?}");
             *error = Some(t_with("workspaces.listFailed", &[("reason", &format!("{failure:?}"))]));
             Vec::new()
         });

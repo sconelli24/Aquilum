@@ -40,7 +40,7 @@ pub fn pick(extensions: &[&str]) -> Option<PathBuf> {
     let name = java::ask_text(jni_str!("documentName"), &uri).unwrap_or_default();
     let path = dir.join(Path::new(&name).file_name().unwrap_or(OsStr::new("document")));
     let copied = std::fs::create_dir_all(&dir).and_then(|()| std::io::copy(&mut open(&uri, "r")?, &mut File::create(&path)?));
-    copied.map(|_| path).map_err(|error| report!("{name} не загружен: {error}")).ok()
+    copied.map(|_| path).map_err(|error| report!("{name} not loaded: {error}")).ok()
 }
 
 pub fn create(name: &str) -> Option<String> {

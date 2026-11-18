@@ -87,7 +87,7 @@ impl WindowState {
         let Some(state) = self.state else { return };
         let Ok(json) = serde_json::to_string(&state) else { return };
         if let Err(error) = write_content_atomic(&self.path, &json, None) {
-            report!("размер окна не сохранён: {error}");
+            report!("window size not saved: {error}");
         }
     }
 }

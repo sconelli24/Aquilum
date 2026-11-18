@@ -63,7 +63,7 @@ impl App {
 
     pub(in crate::app) fn join_cloud(&mut self, root: &mut RenderRoot, path: PathBuf) -> Outcome {
         if let Err(error) = std::fs::create_dir_all(&path) {
-            report!("папка базы {} не создана: {error}", path.display());
+            report!("vault folder {} not created: {error}", path.display());
         }
         let outcome = self.switch_workspace(root, path.clone());
         if self.is_current(&path) {

@@ -40,12 +40,12 @@ impl SearchService {
         }
         let previous = self.guest.write().map_err(SearchError::task)?.take();
         if let Some(previous) = previous {
-            eprintln!("[aquilum:guest] закрыта {}: агенту нужна другая база", previous.index.root.display());
+            eprintln!("[aquilum:guest] closed {}: the agent needs another vault", previous.index.root.display());
         }
         let started = Instant::now();
         let opened = self.open_index(root, false)?;
         eprintln!(
-            "[aquilum:guest] открыта {} за {} мс",
+            "[aquilum:guest] opened {} in {} ms",
             opened.root.display(),
             started.elapsed().as_millis()
         );
@@ -88,7 +88,7 @@ impl SearchService {
                 }
             });
         if let Err(error) = spawned {
-            eprintln!("[aquilum:guest] таймер простоя не запущен: {error}");
+            eprintln!("[aquilum:guest] idle timer not started: {error}");
         }
     }
 
@@ -106,7 +106,7 @@ impl SearchService {
             slot.take()?
         };
         eprintln!(
-            "[aquilum:guest] закрыта {} после {} с простоя",
+            "[aquilum:guest] closed {} after {} s idle",
             closed.index.root.display(),
             limit.as_secs()
         );

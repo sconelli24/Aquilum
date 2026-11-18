@@ -32,7 +32,7 @@ pub enum VersionView {
 
 impl HistoryService {
     pub(super) fn write_name(&self, dir: &Path, id: &str, name: &str, at: SystemTime) -> Option<()> {
-        store::write_name(dir, &self.device, id, name, at).map_err(|error| report(dir, "не записала название версии", &error.to_string())).ok()
+        store::write_name(dir, &self.device, id, name, at).map_err(|error| report(dir, "failed to write the version name", &error.to_string())).ok()
     }
 
     pub fn name(&self, roots: Roots<'_>, note: &Path, id: Option<&str>, name: &str) -> Option<String> {

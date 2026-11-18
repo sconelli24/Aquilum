@@ -19,7 +19,7 @@ impl App {
                 state.failed = false;
             }
             Err(error) => {
-                report!("поиск не выполнен: {error}");
+                report!("search failed: {error}");
                 state.failed = true;
             }
         }

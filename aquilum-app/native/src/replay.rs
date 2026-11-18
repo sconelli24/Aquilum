@@ -138,7 +138,7 @@ impl Replay {
             intervals.iter().enumerate().filter(|(_, i)| **i > 30.0).map(|(n, i)| (n, i.round())).collect::<Vec<_>>(),
         );
         if let Err(error) = std::fs::write(&self.output, json) {
-            eprintln!("замер прокрутки не записан: {error}");
+            eprintln!("scroll measurement not written: {error}");
         }
     }
 }

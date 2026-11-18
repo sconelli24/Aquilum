@@ -23,6 +23,6 @@ pub fn preserve_copy(core: &Core, path: &Path, body: &dyn Content, report: Confl
     let content = copy_content(&note, &stem, &report, &moment, body)?;
     let label = copy_stem(&stem, &moment, core.history.device());
     free_copy(path, &label, ".md", |target| gate::create(core, target, &content, Source::Me, None))
-        .map_err(|error| eprintln!("[aquilum:documents] копия-конфликт {label} не записана: {error}"))
+        .map_err(|error| eprintln!("[aquilum:documents] conflict copy {label} not written: {error}"))
         .ok()
 }

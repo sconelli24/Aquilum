@@ -15,7 +15,7 @@ pub fn rename(core: &Core, from: &Path, to: &Path) -> Result<FileRenameResult, F
         .into_iter()
         .filter(|rewrite| {
             edit(core, &rewrite.path, &rewrite.changes, Some(&rewrite.original_hash), Source::Links, None)
-                .map_err(|error| eprintln!("[aquilum:files] ссылки в {} не переписаны: {error}", rewrite.path.display()))
+                .map_err(|error| eprintln!("[aquilum:files] links in {} not rewritten: {error}", rewrite.path.display()))
                 .is_ok()
         })
         .map(|rewrite| rewrite.path)

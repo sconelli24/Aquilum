@@ -32,7 +32,7 @@ pub fn adopt_quantum_history(base: &Path) {
             .map_or(Ok(()), fs::create_dir_all)
             .and_then(|()| fs::rename(&file, &destination));
         if let Err(error) = moved {
-            eprintln!("[aquilum:history] версия не перенесена из {}: {error}", file.display());
+            eprintln!("[aquilum:history] version not migrated from {}: {error}", file.display());
         }
     }
     remove_empty_folders(&legacy);

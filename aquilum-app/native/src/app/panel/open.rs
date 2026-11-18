@@ -56,7 +56,7 @@ impl App {
             let _ = std::fs::create_dir_all(parent);
         }
         if let Err(error) = gate::create(&self.workspace.core, path, &"", Source::Me, None) {
-            report!("{} не создана: {error:?}", path.display());
+            report!("{} not created: {error:?}", path.display());
             return false;
         }
         self.tree.paths_changed(root, std::slice::from_ref(&path.to_path_buf()));

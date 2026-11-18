@@ -49,7 +49,7 @@ impl Workspace {
         };
         if let Some(root) = &root {
             if let Err(e) = core.ui_state.resolve_workspace(&root.to_string_lossy(), crate::dates::now_ms()) {
-                report!("база {} не запомнена: {e:?}", root.display());
+                report!("vault {} not remembered: {e:?}", root.display());
             }
         }
         Ok(Workspace { core, data_dir, root, wake, events })
