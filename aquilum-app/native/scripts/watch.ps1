@@ -1,11 +1,11 @@
-﻿# Пересборка и перезапуск нативного окна при правке кода.
+﻿# Rebuilds and restarts the native window whenever the code changes.
 #
-# Следит за исходниками окна, ядра, токенами стилей и переводами. После сохранения собирает
-# профиль native-watch (оптимизация как в релизе, но без LTO — пересборка за секунды) и перезапускает окно:
-# старое закрывается штатно — дописывает несохранённое, запоминает размер, положение и
-# открытую заметку. Если сборка упала, старое окно остаётся работать.
+# Watches the window and core sources, style tokens and translations. After a save it builds
+# the native-watch profile (release-level optimization but no LTO, so rebuilds take seconds) and restarts the window:
+# the old one closes normally, so it flushes unsaved edits and remembers its size, position and
+# open note. If the build fails, the old window keeps running.
 #
-# Запуск: npm run dev (из aquilum-app) или native\watch.bat [аргументы окна]; без аргументов — последняя открытая база.
+# Usage: npm run dev (from aquilum-app) or native\watch.bat [window arguments]; with no arguments it opens the last used vault.
 
 param([Parameter(ValueFromRemainingArguments = $true)][string[]]$AppArgs)
 
@@ -19,7 +19,7 @@ if (-not $AppArgs) {
 }
 $AppArgs += '--keep-position'
 
-# Профиль задаётся флагами, чтобы не трогать Cargo.toml рабочей версии.
+# The profile is defined with flags so the working Cargo.toml stays untouched.
 $cargoArgs = @(
     'build', '-p', 'aquilum-native', '--profile', 'native-watch',
     '--config', "profile.native-watch.inherits='dev'",
@@ -55,14 +55,14 @@ function Quote([string]$arg) {
 
 function Stop-App($process) {
     if (-not $process -or $process.HasExited) { return }
-    # Штатное закрытие (WM_CLOSE): окно сохраняет правку, размер и открытую заметку.
+    # Normal close (WM_CLOSE): the window saves the edit, its size and the open note.
     [void]$process.CloseMainWindow()
     if (-not $process.WaitForExit(5000)) { $process.Kill() }
 }
 
 function Build {
     Write-Host ''
-    Write-Host ("[{0:HH:mm:ss}] сборка..." -f (Get-Date)) -ForegroundColor Cyan
+    Write-Host ("[{0:HH:mm:ss}] building..." -f (Get-Date)) -ForegroundColor Cyan
     Push-Location $app
     try { & cargo @cargoArgs } finally { Pop-Location }
     $LASTEXITCODE -eq 0
@@ -76,11 +76,11 @@ try {
         if (Build) {
             Stop-App $process
             $process = Start-Process $exe -ArgumentList (($AppArgs | ForEach-Object { Quote $_ }) -join ' ') -PassThru
-            Write-Host ("[{0:HH:mm:ss}] окно запущено, жду правок (Ctrl+C — выход)" -f (Get-Date)) -ForegroundColor Green
+            Write-Host ("[{0:HH:mm:ss}] window started, waiting for changes (Ctrl+C to exit)" -f (Get-Date)) -ForegroundColor Green
         } else {
-            Write-Host 'Сборка не удалась — прежнее окно работает, жду исправления.' -ForegroundColor Yellow
+            Write-Host 'Build failed: the previous window keeps running, waiting for a fix.' -ForegroundColor Yellow
         }
-        # Ждём правку, затем ещё полсекунды тишины: редактор может сохранять несколько файлов.
+        # Wait for a change, then for half a second of quiet: the editor may save several files.
         do {
             Start-Sleep -Milliseconds 500
             $next = Get-Stamp
