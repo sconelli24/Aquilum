@@ -32,6 +32,7 @@ pub struct Chrome {
     pub pages: Handle<IndexedStack>,
     pub version_page: Handle<Slot>,
     pub create_note: WidgetId,
+    pub create_canvas: WidgetId,
     pub open_file: WidgetId,
     pub close_tab: WidgetId,
     pub workspaces: WidgetId,
@@ -45,6 +46,7 @@ pub struct Chrome {
     pub home_slot: Handle<Slot>,
     pub home_button: Option<WidgetId>,
     pub graph_page: Handle<Slot>,
+    pub canvas_page: Handle<Slot>,
     pub notice: Handle<Slot>,
     pub graph_button: Option<WidgetId>,
     pub focus_hidden: Vec<Handle<Slot>>,
@@ -101,7 +103,8 @@ pub fn root(tree: NewWidget<impl Widget>, parts: RootParts<'_>) -> (NewWidget<im
     let titlebar = titlebar(tabs, active_tab, tab_title, panel_open, panel_from, focus_mode, screen.compact);
     let focus_hidden = vec![titlebar.toggle_shown];
     let (panel, panel_handle, panel_parts) = backlinks::panel(panel_mode, has_analysis, panel_width, panel_open, panel_from);
-    let (empty, create_note, open_file, close_tab) = new_tab_view();
+    let new_tab = new_tab_view();
+    let (empty, create_note, create_canvas, open_file, close_tab) = (new_tab.widget, new_tab.create_note, new_tab.create_canvas, new_tab.open_file, new_tab.close_tab);
     let version_page = Slot::new(NewWidget::new(Flex::column()).erased());
     let version_handle = Handle::of(&version_page);
     let (no_vault, vault_buttons) = workspaces::no_vault(vault_error);
@@ -114,7 +117,9 @@ pub fn root(tree: NewWidget<impl Widget>, parts: RootParts<'_>) -> (NewWidget<im
     };
     let graph_page = Slot::new(graph.unwrap_or_else(|| NewWidget::new(SizedBox::empty()).erased()));
     let graph_handle = Handle::of(&graph_page);
-    let pages = IndexedStack::new().with(note_page).with(empty).with(version_page).with(no_vault).with(graph_page).with_active_child(active);
+    let canvas_page = Slot::new(NewWidget::new(SizedBox::empty()).erased());
+    let canvas_handle = Handle::of(&canvas_page);
+    let pages = IndexedStack::new().with(note_page).with(empty).with(version_page).with(no_vault).with(graph_page).with(canvas_page).with_active_child(active);
     let pages = NewWidget::new(pages);
     let pages_handle = Handle::of(&pages);
     let notice = Slot::fit(NewWidget::new(SizedBox::empty()).erased());
@@ -143,6 +148,7 @@ pub fn root(tree: NewWidget<impl Widget>, parts: RootParts<'_>) -> (NewWidget<im
         pages: pages_handle,
         version_page: version_handle,
         create_note,
+        create_canvas,
         open_file,
         close_tab,
         workspaces: sidebar.workspaces,
@@ -156,6 +162,7 @@ pub fn root(tree: NewWidget<impl Widget>, parts: RootParts<'_>) -> (NewWidget<im
         home_slot: rail.home_slot,
         home_button: rail.home_button,
         graph_page: graph_handle,
+        canvas_page: canvas_handle,
         notice: notice_handle,
         graph_button: rail.graph_button,
         focus_hidden,

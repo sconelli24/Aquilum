@@ -11,6 +11,7 @@ mod args;
 mod autostart;
 mod app;
 mod clipboard;
+mod canvas;
 mod cover;
 mod poster;
 mod graph;

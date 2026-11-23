@@ -35,6 +35,18 @@ fn a_text_file_moves_and_disappears_like_a_note() {
 }
 
 #[test]
+fn a_canvas_moves_and_disappears_like_a_note() {
+    let directory = tempfile::tempdir().unwrap();
+    let board = directory.path().join("Board.canvas");
+    fs::write(&board, crate::canvas::EMPTY).unwrap();
+    let target = directory.path().join("Archive").join("Board.canvas");
+
+    let relocation = relocated(&notes_under(&board), &board, &target);
+    assert_eq!(relocation.moves.len(), 1);
+    assert_eq!(removed(notes_under(&board).iter()).removed, vec![board.to_string_lossy().into_owned()]);
+}
+
+#[test]
 fn a_folder_moves_as_every_note_inside_it() {
     let directory = tempfile::tempdir().unwrap();
     let folder = directory.path().join("Проекты");

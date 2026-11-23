@@ -115,7 +115,7 @@ impl Host {
                 self.pointer_button(state, position, button);
             }
             WindowEvent::PinchGesture { delta, .. } => self.pinch(delta),
-            WindowEvent::MouseWheel { delta, .. } if crate::ui::keymap::pointer::zoom(self.modifiers) && !self.app.graph_shown() => {
+            WindowEvent::MouseWheel { delta, .. } if crate::ui::keymap::pointer::zoom(self.modifiers) && !self.app.graph_shown() && !self.app.canvas_shown() => {
                 let Some(up) = wheel_up(delta) else { return };
                 self.wheel_zoom(up);
             }

@@ -48,6 +48,13 @@ impl Camera {
         self.target_scale = (self.target_scale * factor).clamp(MIN_SCALE, MAX_SCALE);
     }
 
+    /// Narrows the zoom range for views that need less than the graph's (the canvas).
+    pub fn limit(&mut self, min: f64, max: f64) {
+        self.target_scale = self.target_scale.clamp(min, max);
+        self.scale = self.scale.clamp(min, max);
+        self.hold_anchor();
+    }
+
     pub fn pan_by(&mut self, dx: f64, dy: f64) {
         self.target = None;
         let (wx, wy) = (dx / self.scale, dy / self.scale);

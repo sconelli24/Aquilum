@@ -5,7 +5,7 @@ use crate::search::paths::is_hidden_name;
 use std::fs;
 use std::path::Path;
 
-const DOCUMENT_EXTENSIONS: &[&str] = &["pdf", "epub", "mobi", "azw3", "fb2", "txt"];
+const DOCUMENT_EXTENSIONS: &[&str] = &["pdf", "epub", "mobi", "azw3", "fb2", "txt", crate::canvas::EXTENSION];
 
 fn is_attachment(extension: &str) -> bool {
     MEDIA_EXTENSIONS.contains(&extension) || DOCUMENT_EXTENSIONS.contains(&extension)

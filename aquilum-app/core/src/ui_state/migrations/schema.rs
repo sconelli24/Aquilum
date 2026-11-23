@@ -68,4 +68,14 @@ pub const SCHEMA: &str = "CREATE TABLE workspaces (
          updated_at_ms INTEGER NOT NULL,
          PRIMARY KEY(workspace_id, book_file),
          FOREIGN KEY(workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+     );
+     CREATE TABLE canvas_views (
+         workspace_id TEXT NOT NULL,
+         canvas_file TEXT NOT NULL,
+         center_x REAL NOT NULL,
+         center_y REAL NOT NULL,
+         scale REAL NOT NULL,
+         updated_at_ms INTEGER NOT NULL,
+         PRIMARY KEY(workspace_id, canvas_file),
+         FOREIGN KEY(workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
      );";

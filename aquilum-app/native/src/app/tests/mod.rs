@@ -1,4 +1,5 @@
 mod adaptive;
+mod canvas;
 mod damage;
 mod dataview_scroll;
 mod dialogs;

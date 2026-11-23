@@ -122,7 +122,7 @@ impl FileTree {
 
     fn context_menu(&mut self, root: &mut RenderRoot, index: usize, at: Point) -> Option<TreeAction> {
         let row = self.model.rows()[index].clone();
-        let note = aquilum_core::search::paths::is_markdown(&row.path) || aquilum_core::search::paths::is_plain_text(&row.path);
+        let note = aquilum_core::search::paths::is_note(&row.path) || aquilum_core::search::paths::is_canvas(&row.path);
         if !row.folder && !note {
             return None;
         }

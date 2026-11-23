@@ -34,6 +34,9 @@ impl App {
             let title = self.on_graph_action(root, id, &action);
             return Outcome { title, ..Outcome::default() };
         }
+        if let Some(outcome) = self.on_canvas_action(root, id, &action) {
+            return outcome;
+        }
         if let Some(outcome) = self.on_panel_action(root, id, &action) {
             return outcome;
         }
@@ -71,6 +74,11 @@ impl App {
             }
             if id == chrome.create_note {
                 let title = self.create_note_titled(root, None);
+                return Outcome { title, ..Outcome::default() };
+            }
+            if id == chrome.create_canvas {
+                let folder = self.tree.root().map(std::path::Path::to_path_buf);
+                let title = folder.is_some_and(|folder| self.create_canvas_in(root, &folder));
                 return Outcome { title, ..Outcome::default() };
             }
             if id == chrome.open_file {

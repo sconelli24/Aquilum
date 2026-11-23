@@ -15,6 +15,7 @@ impl App {
             self.tree.set_active(root, Some(note.path.clone()));
             self.refresh_note_names(root);
         }
+        self.canvas_moved(from, to);
         self.relocate_tabs(root, from, to);
     }
 

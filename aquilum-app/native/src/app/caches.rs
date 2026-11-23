@@ -38,6 +38,7 @@ const CATALOG: &[Cache] = &[
     Cache { name: "граф ссылок для анализа", when: &[Tab, Vault], clear: |app, _| app.workspace.core.search.forget_analysis() },
     Cache { name: "Wikixiv", when: &[Tab, Vault], clear: |app, _| app.workspace.core.wikixiv.forget() },
     Cache { name: "граф базы", when: &[Vault], clear: |app, _| app.graph = GraphState::default() },
+    Cache { name: "открытый холст", when: &[Vault], clear: |app, root| app.leave_canvas(root) },
     Cache { name: "открытые версии", when: &[Vault], clear: |app, _| {
         app.opened_versions.clear();
         app.version_notice = None;

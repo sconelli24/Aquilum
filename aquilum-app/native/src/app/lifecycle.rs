@@ -2,14 +2,15 @@ use super::*;
 
 impl App {
     pub fn title(&self) -> String {
-        match &self.note {
-            Some(note) => format!("{} — Aquilum", note.path.file_stem().unwrap_or_default().to_string_lossy()),
-            None => "Aquilum".to_owned(),
+        match (&self.note, self.canvas_title()) {
+            (Some(note), _) => format!("{} — Aquilum", note.path.file_stem().unwrap_or_default().to_string_lossy()),
+            (None, Some(canvas)) => format!("{canvas} — Aquilum"),
+            (None, None) => "Aquilum".to_owned(),
         }
     }
 
     pub fn deadline(&self) -> Option<Instant> {
-        [self.note.as_ref().and_then(Note::deadline), self.view_due, self.hold, self.reader_due()].into_iter().flatten().min()
+        [self.note.as_ref().and_then(Note::deadline), self.view_due, self.hold, self.reader_due(), self.canvas_deadline()].into_iter().flatten().min()
     }
 
     pub fn tick(&mut self, root: &mut RenderRoot, now: Instant) {
@@ -17,6 +18,7 @@ impl App {
             self.flush_view();
         }
         self.settle_reader(root, now);
+        self.canvas_tick(root, now);
         if let Some(note) = self.note.as_mut()
             && note.tick(&self.workspace.core, &self.text, now)
         {
@@ -39,10 +41,12 @@ impl App {
 
     pub fn window_unfocused(&mut self) {
         self.commit_note();
+        self.commit_canvas();
     }
 
     pub fn persist(&mut self) {
         self.flush_view();
+        self.flush_canvas();
         match &mut self.note {
             Some(note) => note.flush(&self.workspace.core, &self.text),
             None => crate::disk::wait(),

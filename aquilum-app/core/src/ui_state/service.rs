@@ -171,6 +171,24 @@ impl UiStateService {
         self.with_database(|database| database.delete_reader_state(workspace_id, book_file))
     }
 
+    pub fn load_canvas_view(
+        &self,
+        workspace_id: Uuid,
+        canvas_file: &str,
+    ) -> Result<Option<super::models::CanvasView>, UiStateError> {
+        self.with_database(|database| database.load_canvas_view(workspace_id, canvas_file))
+    }
+
+    pub fn save_canvas_view(
+        &self,
+        workspace_id: Uuid,
+        canvas_file: &str,
+        view: super::models::CanvasView,
+        now_ms: i64,
+    ) -> Result<(), UiStateError> {
+        self.with_database(|database| database.save_canvas_view(workspace_id, canvas_file, view, now_ms))
+    }
+
     pub fn save_reader_state(
         &self,
         input: &super::models::SaveReaderStateInput,

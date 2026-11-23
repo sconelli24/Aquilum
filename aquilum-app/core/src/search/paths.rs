@@ -118,6 +118,20 @@ pub fn markdown_files(root: &Path) -> impl Iterator<Item = PathBuf> {
         .map(DirEntry::into_path)
 }
 
+/// Files the search index reads: Markdown notes and canvases.
+pub fn indexed_files(root: &Path) -> impl Iterator<Item = PathBuf> {
+    WalkDir::new(root)
+        .into_iter()
+        .filter_entry(is_visible_entry)
+        .filter_map(Result::ok)
+        .filter(|entry| entry.file_type().is_file() && is_indexed(entry.path()))
+        .map(DirEntry::into_path)
+}
+
+pub fn is_indexed(path: &Path) -> bool {
+    is_markdown(path) || is_canvas(path)
+}
+
 pub fn is_markdown(path: &Path) -> bool {
     path.extension()
         .and_then(|extension| extension.to_str())
@@ -126,6 +140,17 @@ pub fn is_markdown(path: &Path) -> bool {
 
 pub fn is_note(path: &Path) -> bool {
     is_markdown(path) || is_plain_text(path)
+}
+
+pub fn is_canvas(path: &Path) -> bool {
+    path.extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| extension.eq_ignore_ascii_case(crate::canvas::EXTENSION))
+}
+
+/// Files whose versions are kept in history and follow them through moves and the trash.
+pub fn is_versioned(path: &Path) -> bool {
+    is_note(path) || is_canvas(path)
 }
 
 pub fn is_plain_text(path: &Path) -> bool {

@@ -161,6 +161,13 @@ pub struct LoadedReaderState {
     pub cfi: Option<String>,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct CanvasView {
+    pub center_x: f64,
+    pub center_y: f64,
+    pub scale: f64,
+}
+
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SaveReaderStateInput {
