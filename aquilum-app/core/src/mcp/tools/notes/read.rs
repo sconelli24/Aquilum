@@ -8,7 +8,7 @@ pub(super) fn read_note(core: &Core, arguments: &Value) -> Result<Value, String>
     };
     if many.len() > BATCH_LIMIT {
         return Err(format!(
-            "За один вызов читается не больше {BATCH_LIMIT} заметок, запрошено {}",
+            "At most {BATCH_LIMIT} notes are read per call, {} requested",
             many.len()
         ));
     }
@@ -61,10 +61,10 @@ pub(super) fn note_outline(core: &Core, arguments: &Value) -> Result<Value, Stri
 pub(super) fn single_heading<'a>(outline: &'a [Heading], wanted: &str) -> Result<&'a Heading, String> {
     let found = headings::matching(outline, wanted);
     match found.len() {
-        0 => Err(format!("Заголовок не найден: {wanted}")),
+        0 => Err(format!("Heading not found: {wanted}")),
         1 => Ok(found[0]),
         count => Err(format!(
-            "Заголовок «{wanted}» встречается в заметке больше одного раза (всего: {count}) — правьте через findReplace или переименуйте один из разделов"
+            "Heading “{wanted}” occurs in the note more than once ({count} in total): edit via findReplace or rename one of the sections"
         )),
     }
 }

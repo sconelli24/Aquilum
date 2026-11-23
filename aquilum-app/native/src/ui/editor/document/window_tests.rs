@@ -27,7 +27,7 @@ fn a_far_position_moves_the_window_instead_of_stretching_it() {
     doc.include(text.len() - 3);
     let (base, end) = doc.loaded_range();
     assert!(base <= text.len() - 3 && text.len() - 3 <= end);
-    assert!(end - base <= size * 2, "окно растянулось: {} байт", end - base);
+    assert!(end - base <= size * 2, "window grew: {} bytes", end - base);
     agrees(&doc, &text);
 }
 
@@ -58,7 +58,7 @@ fn a_window_inside_a_long_code_block_knows_it_is_code() {
         doc.track((0.0, 0.0));
         doc.block(0).is_code()
     });
-    assert!(code, "окно в середине блока кода разобрано как текст: {:?}", doc.block(0));
+    assert!(code, "window in the middle of a code block was parsed as text: {:?}", doc.block(0));
     assert!(matches!(doc.block(doc.line_count() - 1), Block::Code { .. } | Block::Text));
 }
 
@@ -74,6 +74,6 @@ fn lines_in_view_stay_laid_when_the_window_starts_below_the_top() {
     doc.keep = (y - 400.0, y + 400.0);
     doc.layout(&mut fcx, &mut lcx, &styles, Some(600.0), None, None);
     let line = doc.at_y(y);
-    assert!(doc.above > 0.0, "окно не ушло от начала заметки");
-    assert!(doc.laid.get(line).is_some(), "видимая строка выброшена из раскладки: keep в координатах заметки, высоты — в координатах окна");
+    assert!(doc.above > 0.0, "window did not move away from the start of the note");
+    assert!(doc.laid.get(line).is_some(), "visible line was dropped from the layout: keep is in note coordinates, heights are in window coordinates");
 }

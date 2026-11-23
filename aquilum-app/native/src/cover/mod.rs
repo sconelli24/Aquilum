@@ -144,13 +144,13 @@ mod tests {
                 let fast = super::raster::expand(&super::render_pattern(id, width, height, scale).unwrap(), width, height);
                 assert_eq!(whole.len(), fast.len());
                 let differ = whole.iter().zip(&fast).filter(|(a, b)| a.abs_diff(**b) > 70).count();
-                assert!(differ * 1000 < whole.len(), "{id} {width}x{height}@{scale}: {differ} из {} значений каналов отличаются", whole.len());
+                assert!(differ * 1000 < whole.len(), "{id} {width}x{height}@{scale}: {differ} of {} channel values differ", whole.len());
                 if let Some(cell) = super::raster::tile(&backgrounds, width, height, scale) {
                     tiled.push(format!("{id}@{scale}: {}x{}", cell.0, cell.1));
                 }
             }
         }
-        assert!(tiled.len() >= 30, "почти все узоры должны запекаться плиткой: {tiled:?}");
+        assert!(tiled.len() >= 30, "almost all patterns must bake into tiles: {tiled:?}");
     }
 
     #[test]
@@ -188,7 +188,7 @@ mod tests {
                 let mut target = super::MotionTarget { pixels: data, width: w, height: h, origin: (0.0, 0.0), scale, size: (w as f64 / scale, h as f64 / scale), radius: 12.0 };
                 super::render_motion(id, &mut target, f64::from(frame) / 45.0, 900.0);
             }
-            eprintln!("{id}: {:.3} мс на кадр", started.elapsed().as_secs_f64() * 1000.0 / 200.0);
+            eprintln!("{id}: {:.3} ms per frame", started.elapsed().as_secs_f64() * 1000.0 / 200.0);
         }
     }
 
@@ -197,7 +197,7 @@ mod tests {
     fn pattern_cost() {
         let started = std::time::Instant::now();
         let _ = super::patterns();
-        eprintln!("разбор всего CSS: {:?}", started.elapsed());
+        eprintln!("parsing all CSS: {:?}", started.elapsed());
         let (w, h, scale) = (1793u32, 359u32, 1.75);
         let mut all = Vec::new();
         for id in super::PATTERN_IDS {
@@ -208,10 +208,10 @@ mod tests {
         }
         all.sort_by(|a, b| b.0.total_cmp(&a.0));
         for (ms, id, bytes) in &all {
-            eprintln!("{id:<12} {ms:>7.1} мс  {:.1} МБ", crate::stats::mb(*bytes));
+            eprintln!("{id:<12} {ms:>7.1} ms  {:.1} MB", crate::stats::mb(*bytes));
         }
         let total: f64 = all.iter().map(|a| a.0).sum();
-        eprintln!("итого {total:.0} мс на {} узоров, в среднем {:.0} мс", all.len(), total / all.len() as f64);
+        eprintln!("total {total:.0} ms for {} patterns, average {:.0} ms", all.len(), total / all.len() as f64);
     }
 
     #[test]
@@ -221,7 +221,7 @@ mod tests {
             let pattern = super::patterns().get(*id).unwrap();
             let backgrounds = [&pattern.base, &pattern.overlay];
             if super::raster::tile(&backgrounds, 1793, 359, 1.75).is_none() {
-                let sizes: Vec<String> = backgrounds.iter().flat_map(|b| &b.layers).map(|l| match l.size { None => "авто".to_owned(), Some((w, h)) => format!("{}/{}%x{}/{}%", w.px, w.pct, h.px, h.pct) }).collect();
+                let sizes: Vec<String> = backgrounds.iter().flat_map(|b| &b.layers).map(|l| match l.size { None => "auto".to_owned(), Some((w, h)) => format!("{}/{}%x{}/{}%", w.px, w.pct, h.px, h.pct) }).collect();
                 eprintln!("{id}: {}", sizes.join(", "));
             }
         }

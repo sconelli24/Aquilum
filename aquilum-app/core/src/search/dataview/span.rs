@@ -133,7 +133,7 @@ mod tests {
 
     #[test]
     fn a_month_starts_on_the_first_and_ends_on_the_next_first() {
-        let (start, end) = bounds(&builtin("month").expect("месяц есть")).expect("границы");
+        let (start, end) = bounds(&builtin("month").expect("month exists")).expect("bounds");
         assert_eq!(note_date::to_civil(start).2, 1);
         assert_eq!(note_date::to_civil(end).2, 1);
         assert!(end > start);
@@ -141,7 +141,7 @@ mod tests {
 
     #[test]
     fn a_week_starts_on_monday() {
-        let (start, _) = bounds(&builtin("week").expect("неделя есть")).expect("границы");
+        let (start, _) = bounds(&builtin("week").expect("week exists")).expect("bounds");
         assert_eq!(note_date::weekday(start), 1);
     }
 
@@ -155,14 +155,14 @@ mod tests {
     fn every_builtin_period_covers_the_present_moment() {
         let now = note_date::now();
         for name in ["day", "week", "month", "season", "year"] {
-            let (start, end) = bounds(&builtin(name).expect(name)).expect("границы");
-            assert!(start <= now && now < end, "период «{name}» не содержит сейчас");
+            let (start, end) = bounds(&builtin(name).expect(name)).expect("bounds");
+            assert!(start <= now && now < end, "period '{name}' does not contain now");
         }
     }
 
     #[test]
     fn ever_and_zero_spans_have_no_previous_period() {
-        let ever = builtin("ever").expect("ever есть");
+        let ever = builtin("ever").expect("ever exists");
         assert_eq!(previous(&ever), None);
         assert_eq!(previous(&of(0, 100)), None);
         assert_eq!(previous(&of(200, 100)), None);

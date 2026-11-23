@@ -94,7 +94,7 @@ pub fn read(path: &Path) -> io::Result<Delta> {
         body += reader.read_line(line)? as u64;
         Ok(())
     };
-    let broken = || io::Error::new(io::ErrorKind::InvalidData, "повреждённая версия");
+    let broken = || io::Error::new(io::ErrorKind::InvalidData, "corrupted version");
     next(&mut reader, &mut line)?;
     if line.trim_end() != MAGIC {
         return Err(broken());

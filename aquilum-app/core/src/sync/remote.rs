@@ -39,9 +39,9 @@ impl RemoteError {
 impl fmt::Display for RemoteError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Auth => formatter.write_str("облако отклонило вход, нужно подключиться заново"),
-            Self::Stale => formatter.write_str("файл в облаке изменился во время синхронизации"),
-            Self::Missing => formatter.write_str("файла или версии в облаке уже нет"),
+            Self::Auth => formatter.write_str("the cloud rejected the sign-in, reconnect required"),
+            Self::Stale => formatter.write_str("the file in the cloud changed during sync"),
+            Self::Missing => formatter.write_str("the file or version no longer exists in the cloud"),
             Self::Offline(message) | Self::Failed(message) => formatter.write_str(message),
         }
     }

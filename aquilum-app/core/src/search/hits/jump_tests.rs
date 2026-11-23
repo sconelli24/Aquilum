@@ -37,9 +37,9 @@ fn the_matching_page_is_read_directly_with_its_offset_and_section() {
     let text = note("\n");
     std::fs::write(&path, &text).unwrap();
     let (pages, hits) = placed(&path);
-    assert!(pages.len() > 2, "заметка из нескольких страниц, страниц {}", pages.len());
+    assert!(pages.len() > 2, "note spans several pages, pages: {}", pages.len());
 
-    let found = locate(&path, &pages, &hits, &query_matcher(&stems(WORD))).expect("прыжок к странице");
+    let found = locate(&path, &pages, &hits, &query_matcher(&stems(WORD))).expect("jump to page");
     assert_eq!(found.utf16, utf16_len(&text[..text.find(WORD).unwrap()]));
     assert_eq!(found.heading.as_deref(), Some("Финал"));
     assert!(found.snippet.contains(WORD));
@@ -52,12 +52,12 @@ fn a_shifted_or_changed_file_is_not_trusted() {
     let crlf = directory.path().join("Windows.md");
     std::fs::write(&crlf, note("\r\n")).unwrap();
     let (pages, hits) = placed(&crlf);
-    assert!(locate(&crlf, &pages, &hits, &matcher).is_none(), "сдвиги страниц считаются без \\r — прыгать нельзя");
+    assert!(locate(&crlf, &pages, &hits, &matcher).is_none(), "page offsets are computed without \\r - jumping is not allowed");
 
     let changed = directory.path().join("Изменённая.md");
     std::fs::write(&changed, note("\n")).unwrap();
     let (pages, hits) = placed(&changed);
     std::fs::write(&changed, format!("Новая первая строка\n{}", note("\n"))).unwrap();
-    assert!(locate(&changed, &pages, &hits, &matcher).is_none(), "файл изменился после индексации — страница не та");
+    assert!(locate(&changed, &pages, &hits, &matcher).is_none(), "file changed after indexing - the page is not the same");
 }
 

@@ -8,12 +8,12 @@ use std::sync::atomic::AtomicBool;
 use std::time::Duration;
 
 fn dropbox(folder: &str) -> Dropbox {
-    let path = PathBuf::from(env::var("AQUILUM_DROPBOX_ACCOUNT").expect("путь к файлу токенов в AQUILUM_DROPBOX_ACCOUNT"));
+    let path = PathBuf::from(env::var("AQUILUM_DROPBOX_ACCOUNT").expect("path to the tokens file in AQUILUM_DROPBOX_ACCOUNT"));
     let account = match Account::open(CLIENT, web_agent("sync"), path.clone()).unwrap() {
         Some(account) => account,
         None => {
             let login = CLIENT.login(None).unwrap();
-            eprintln!("ВОЙТИ: {}", login.url);
+            eprintln!("SIGN IN: {}", login.url);
             let tokens = login.finish(&web_agent("sync"), &AtomicBool::new(false)).unwrap();
             Account::new(CLIENT, web_agent("sync"), path, tokens).unwrap()
         }
@@ -26,7 +26,7 @@ struct Remove<'a>(&'a Dropbox);
 impl Drop for Remove<'_> {
     fn drop(&mut self) {
         if let Err(error) = self.0.remove() {
-            eprintln!("папка проверки в Dropbox не удалена: {error}");
+            eprintln!("the test folder in Dropbox was not removed: {error}");
         }
     }
 }
@@ -38,7 +38,7 @@ fn clean(outcome: Outcome) {
 #[test]
 #[ignore]
 fn two_devices_sync_through_dropbox() {
-    let remote = dropbox(&format!("Проверка {}", uuid::Uuid::new_v4().simple()));
+    let remote = dropbox(&format!("Check {}", uuid::Uuid::new_v4().simple()));
     let _remove = Remove(&remote);
     let (laptop, phone) = (Device::new(), Device::new());
     laptop.write("Заметка.md", "один\nдва\nтри\n");

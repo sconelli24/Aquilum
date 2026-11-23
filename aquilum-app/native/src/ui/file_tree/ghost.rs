@@ -1,5 +1,5 @@
-//! Плашка перетаскивания (`.q-drag-ghost`): акцентный фон, текст на акценте, тень, прозрачность
-//! 0.9. Слой над окном, указатель не перехватывает.
+//! Drag ghost (`.q-drag-ghost`): accent background, text on accent, shadow, opacity
+//! 0.9. A layer above the window that does not capture the pointer.
 
 use masonry::accesskit::{Node, Role};
 use masonry::core::{
@@ -14,9 +14,9 @@ use crate::ui::menu::box_shadow;
 use crate::ui::tokens::size;
 use crate::ui::{text, theme};
 
-/// Смещение плашки от указателя.
+/// Offset of the ghost from the pointer.
 pub const OFFSET: f64 = 12.0;
-/// Длиннее — обрезается многоточием, как `GHOST_LABEL_LIMIT`.
+/// Longer labels are truncated with an ellipsis, like `GHOST_LABEL_LIMIT`.
 const LABEL_LIMIT: usize = 25;
 
 pub struct DragGhost {

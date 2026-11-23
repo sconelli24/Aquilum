@@ -149,7 +149,7 @@ impl Harness {
     }
 
     pub(super) fn choose(&mut self, index: usize) -> Outcome {
-        let Some(Popup::Settings { menu: Some(menu), .. }) = &self.app.popup else { panic!("список выбора не открыт") };
+        let Some(Popup::Settings { menu: Some(menu), .. }) = &self.app.popup else { panic!("selection list not open") };
         let layer = menu.layer;
         self.act(layer, crate::ui::menu::MenuChoice::Item(index))
     }

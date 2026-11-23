@@ -29,9 +29,9 @@ fn answer(stream: &TcpStream, state: &str) -> Result<Option<String>, RemoteError
         .map(|url| url.query_pairs().into_owned().collect())
         .unwrap_or_default();
     let (message, outcome) = match (query.get("code"), query.get("error")) {
-        (Some(code), _) if query.get("state").map(String::as_str) == Some(state) => ("Вход выполнен, вкладку можно закрыть.", Ok(Some(code.clone()))),
-        (Some(_), _) => ("Вход не удался, вернитесь в Aquilum.", Err(RemoteError::Failed("ответ входа не совпал с запросом".into()))),
-        (None, Some(error)) => ("Вход не удался, вернитесь в Aquilum.", Err(RemoteError::Failed(format!("облако отказало во входе: {error}")))),
+        (Some(code), _) if query.get("state").map(String::as_str) == Some(state) => ("Signed in. You can close this tab.", Ok(Some(code.clone()))),
+        (Some(_), _) => ("Sign-in failed. Return to the app.", Err(RemoteError::Failed("sign-in response did not match the request".into()))),
+        (None, Some(error)) => ("Sign-in failed. Return to the app.", Err(RemoteError::Failed(format!("the cloud refused the sign-in: {error}")))),
         (None, None) => ("", Ok(None)),
     };
     connection.send(&Response::text(200, message), false)?;

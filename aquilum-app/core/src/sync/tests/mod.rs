@@ -127,7 +127,7 @@ fn without_a_common_version_both_texts_survive() {
     phone.sync(&remote);
 
     assert_eq!(remote.text("Спор.md").as_deref(), Some("версия телефона"));
-    let copy = phone.files().into_iter().find(|path| path.contains("(конфликт")).expect("копия");
+    let copy = phone.files().into_iter().find(|path| path.contains("(conflict")).expect("copy");
     assert_eq!(phone.read(&copy).as_deref(), Some("версия ноутбука"));
     assert_eq!(remote.text(&copy).as_deref(), Some("версия ноутбука"));
 }

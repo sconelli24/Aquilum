@@ -1,7 +1,7 @@
-//! Живые слои: анимация, которую рендер дорисовывает сам, без пересборки сцены Masonry.
-//! Виджет рисует в сцене неизменную метку — кисть-картинку из этого реестра. Обычный кадр
-//! рисует на её месте узор на текущий момент, кадр анимации склеивает кэши «под» и «над»
-//! меткой с узором (`Renderer::live`).
+//! Live layers: animation the renderer draws itself, without rebuilding the Masonry scene.
+//! The widget draws an unchanging marker in the scene - an image brush from this registry. A normal frame
+//! draws the pattern for the current moment in its place; an animation frame stitches the caches "under" and "over"
+//! the marker with the pattern (`Renderer::live`).
 
 use std::cell::RefCell;
 use std::collections::HashMap;

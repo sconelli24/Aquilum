@@ -61,7 +61,7 @@ pub fn tokenize(text: &str) -> Result<Vec<Token>, String> {
             let rest = &text[cursor + 2..];
             let end = rest
                 .find("]]")
-                .ok_or_else(|| "Ссылка не закрыта: не хватает «]]»".to_owned())?;
+                .ok_or_else(|| "Link is not closed: missing ']]'".to_owned())?;
             tokens.push(Token {
                 piece: Piece::WikiLink(rest[..end].trim().to_owned()),
                 from: start,
@@ -83,7 +83,7 @@ pub fn tokenize(text: &str) -> Result<Vec<Token>, String> {
         if symbol == b'#' {
             let length = tag_length(&text[cursor + 1..]);
             if length == 0 {
-                return Err("После «#» ожидается имя тега".to_owned());
+                return Err("A tag name is expected after '#'".to_owned());
             }
             tokens.push(Token {
                 piece: Piece::Tag(text[cursor + 1..cursor + 1 + length].to_owned()),
@@ -98,7 +98,7 @@ pub fn tokenize(text: &str) -> Result<Vec<Token>, String> {
             let raw = &text[cursor..cursor + length];
             let value = raw
                 .parse::<f64>()
-                .map_err(|_| format!("Не похоже на число: «{raw}»"))?;
+                .map_err(|_| format!("Not a valid number: '{raw}'"))?;
             tokens.push(Token {
                 piece: Piece::Number(value),
                 from: start,
@@ -120,7 +120,7 @@ pub fn tokenize(text: &str) -> Result<Vec<Token>, String> {
         let length = word_length(&text[cursor..]);
         if length == 0 {
             let found = text[cursor..].chars().next().unwrap_or(' ');
-            return Err(format!("Непонятный символ «{found}»"));
+            return Err(format!("Unexpected character '{found}'"));
         }
         tokens.push(Token {
             piece: Piece::Word(text[cursor..cursor + length].to_owned()),
@@ -151,7 +151,7 @@ fn read_text(rest: &str) -> Result<(String, usize), String> {
             _ => value.push(symbol),
         }
     }
-    Err("Строка не закрыта кавычкой".to_owned())
+    Err("String is not closed with a quote".to_owned())
 }
 
 fn read_symbol(rest: &str) -> Option<(Symbol, usize)> {
@@ -226,7 +226,7 @@ mod tests {
 
     fn pieces(text: &str) -> Vec<Piece> {
         tokenize(text)
-            .expect("разбор удался")
+            .expect("parsing succeeded")
             .into_iter()
             .map(|token| token.piece)
             .collect()
@@ -292,7 +292,7 @@ mod tests {
 
     #[test]
     fn keeps_source_bounds_for_column_titles() {
-        let tokens = tokenize("file.ctime DESC").expect("разбор удался");
+        let tokens = tokenize("file.ctime DESC").expect("parsing succeeded");
         assert_eq!(tokens[0].from, 0);
         assert_eq!(tokens[2].to, "file.ctime".len());
     }

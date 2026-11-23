@@ -7,8 +7,8 @@ fn the_caret_lands_on_both_sides_of_the_space_between_two_tags() {
         let mut root = markdown_root("#один #два");
         click(&mut root, f64::from(x), 12.0);
         typing(&mut root, "X");
-        seen.insert(text(&root).find('X').expect("буква вставлена"));
+        seen.insert(text(&root).find('X').expect("letter is inserted"));
     }
     let first_end = "#один".len();
-    assert!(seen.contains(&first_end) && seen.contains(&(first_end + 1)), "каретку нельзя поставить рядом с пробелом между тегами: {seen:?}");
+    assert!(seen.contains(&first_end) && seen.contains(&(first_end + 1)), "the caret cannot be placed next to the space between tags: {seen:?}");
 }

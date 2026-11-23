@@ -149,7 +149,7 @@ impl App {
         root.handle_pointer_event(event);
     }
 
-    /// Действие в основном окне; `true` — сменилась открытая заметка (и заголовок окна).
+    /// Action in the main window; `true` means the open note changed (and so did the window title).
     pub(super) fn on_main_action(&mut self, root: &mut RenderRoot, id: WidgetId, action: &ErasedAction) -> bool {
         match self.tree.on_action(root, id, action) {
             Some(TreeAction::Open { path, new_tab }) => return self.open_in(root, path, new_tab),

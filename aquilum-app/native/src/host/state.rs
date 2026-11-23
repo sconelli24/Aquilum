@@ -2,7 +2,7 @@ use super::*;
 
 impl Host {
     pub(super) fn window(&self) -> &dyn Window {
-        self.window.as_deref().expect("окно создано")
+        self.window.as_deref().expect("window created")
     }
 
     pub(super) fn scale(&self) -> f64 {
@@ -82,7 +82,7 @@ impl Host {
             self.handle_signals(event_loop);
             return;
         }
-        aq_trace::counter("тачпад: пиксели", f64::from(dy));
+        aq_trace::counter("touchpad: pixels", f64::from(dy));
         let state = self.pointer_state();
         let delta = ScrollDelta::PixelDelta(winit::dpi::PhysicalPosition::new(f64::from(dx), f64::from(dy)));
         self.pointer_event(PointerEvent::Scroll(PointerScrollEvent { pointer: PRIMARY_MOUSE, delta, state }));

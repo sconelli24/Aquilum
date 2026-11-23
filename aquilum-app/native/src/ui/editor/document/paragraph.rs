@@ -34,7 +34,7 @@ impl<'a> Paragraph<'a> {
     }
 
     pub fn layout(&self) -> &'a Layout<BrushIndex> {
-        self.laid().expect("абзац сверстан")
+        self.laid().expect("paragraph is laid out")
     }
 
     pub fn decor(&self) -> &'a Decor {

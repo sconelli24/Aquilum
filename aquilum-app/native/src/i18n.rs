@@ -1,12 +1,12 @@
-//! Строки интерфейса — локали `assets/locales/*.json`: язык по настройке `ui.language` (`ru`, `es`, иначе `en`); ключ без
-//! перевода ищется в английской локали, потом возвращается как есть; `{{имя}}` подставляется.
+//! Interface strings - the `assets/locales/*.json` locales: the language comes from the `ui.language` setting (`ru`, `es`, otherwise `en`); a key without a
+//! translation is looked up in the English locale, then returned as is; `{{name}}` is substituted.
 
 use std::sync::OnceLock;
 use std::sync::atomic::{AtomicU8, Ordering};
 
 use serde_json::Value;
 
-/// Язык интерфейса.
+/// Interface language.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Language {
     En = 0,
@@ -15,10 +15,10 @@ pub enum Language {
 }
 
 impl Language {
-    /// Порядок в списке языков в настройках.
+    /// Order in the language list in settings.
     pub const ALL: [Language; 3] = [Language::Ru, Language::En, Language::Es];
 
-    /// Язык по значению настройки `ui.language`; пустое и незнакомое значение — английский.
+    /// Language for the `ui.language` setting value; an empty or unknown value gives English.
     pub fn from_setting(setting: &str) -> Language {
         match setting {
             "ru" => Language::Ru,
@@ -27,7 +27,7 @@ impl Language {
         }
     }
 
-    /// Значение для настройки `ui.language`.
+    /// Value for the `ui.language` setting.
     pub fn code(self) -> &'static str {
         match self {
             Language::En => "en",
@@ -36,7 +36,7 @@ impl Language {
         }
     }
 
-    /// Название языка на нём самом — для списка в настройках.
+    /// The language's name in itself - for the list in settings.
     pub fn native_name(self) -> &'static str {
         match self {
             Language::En => "English",
@@ -58,15 +58,15 @@ static LANGUAGE: AtomicU8 = AtomicU8::new(Language::En as u8);
 
 fn locale(language: Language) -> &'static Value {
     static LOCALES: [OnceLock<Value>; 3] = [const { OnceLock::new() }; 3];
-    LOCALES[language as usize].get_or_init(|| serde_json::from_str(language.source()).expect("локаль фронтенда — корректный JSON"))
+    LOCALES[language as usize].get_or_init(|| serde_json::from_str(language.source()).expect("frontend locale is valid JSON"))
 }
 
-/// Язык по настройке `ui.language`, как `resolveLocale`.
+/// Language from the `ui.language` setting, like `resolveLocale`.
 pub fn set_language(setting: &str) {
     LANGUAGE.store(Language::from_setting(setting) as u8, Ordering::Relaxed);
 }
 
-/// Текущий язык интерфейса.
+/// Current interface language.
 pub fn language() -> Language {
     match LANGUAGE.load(Ordering::Relaxed) {
         1 => Language::Ru,
@@ -87,17 +87,17 @@ fn translate(key: &str) -> Option<&'static str> {
     translate_in(language(), key)
 }
 
-/// Строка по ключу.
+/// String by key.
 pub fn t(key: &str) -> String {
     translate(key).unwrap_or(key).to_owned()
 }
 
-/// Строка по ключу на заданном языке, а не на языке интерфейса.
+/// String by key in the given language rather than the interface language.
 pub fn t_in(language: Language, key: &str) -> String {
     translate_in(language, key).unwrap_or(key).to_owned()
 }
 
-/// Строка по ключу с подстановкой `{{имя}}`.
+/// String by key with `{{name}}` substitution.
 pub fn t_with(key: &str, params: &[(&str, &str)]) -> String {
     let mut text = t(key);
     for (name, value) in params {
@@ -106,10 +106,10 @@ pub fn t_with(key: &str, params: &[(&str, &str)]) -> String {
     text
 }
 
-/// Форма множественного числа по CLDR для целых.
+/// CLDR plural form for integers.
 fn plural_form(language: Language, count: u64) -> &'static str {
     match language {
-        // 1, 21, 31… — one; 2–4, 22–24… — few; остальное — many.
+        // 1, 21, 31… — one; 2–4, 22–24… — few; the rest - many.
         Language::Ru => match (count % 10, count % 100) {
             (1, n) if n != 11 => "one",
             (2..=4, n) if !(12..=14).contains(&n) => "few",
@@ -126,7 +126,7 @@ fn plural_in(language: Language, key: &str, count: u64) -> String {
     template.replace("{{count}}", &count.to_string())
 }
 
-/// Форма множественного числа (`.one`, `.few`, `.many`, `.other`) с `{{count}}`.
+/// Plural form (`.one`, `.few`, `.many`, `.other`) with `{{count}}`.
 pub fn plural(key: &str, count: u64) -> String {
     plural_in(language(), key, count)
 }
@@ -137,14 +137,14 @@ mod tests {
 
     use super::*;
 
-    // Тесты не переключают язык всего процесса: от него зависят строки и имена новых файлов в параллельных тестах.
+    // Tests do not switch the process-wide language: strings and new file names in parallel tests depend on it.
     #[test]
     fn russian_plurals_and_params() {
         assert_eq!(plural_in(Language::Ru, "fileTree.dragCount", 1), "1 заметка");
         assert_eq!(plural_in(Language::Ru, "fileTree.dragCount", 3), "3 заметки");
         assert_eq!(plural_in(Language::Ru, "fileTree.dragCount", 12), "12 заметок");
         assert_eq!(translate_in(Language::Ru, "confirm.deleteMany").map(|text| text.replace("{{count}}", "5")).as_deref(), Some("Удалить 5"));
-        assert_eq!(t_with("нет.такого.{{ключа}}", &[("ключа", "ключа")]), "нет.такого.ключа");
+        assert_eq!(t_with("no.such.{{key}}", &[("key", "key")]), "no.such.key");
         assert_eq!(translate_in(Language::En, "common.delete"), Some("Delete"));
     }
 
@@ -177,7 +177,7 @@ mod tests {
             Value::String(text) => {
                 out.insert(prefix.to_owned(), text.clone());
             }
-            other => panic!("{prefix}: в локали не строка, а {other}"),
+            other => panic!("{prefix}: the locale value is not a string but {other}"),
         }
     }
 
@@ -187,7 +187,7 @@ mod tests {
         found
     }
 
-    /// Каждая локаль переводит все английские ключи и сохраняет их подстановки `{{имя}}`.
+    /// Every locale translates all English keys and keeps their `{{name}}` substitutions.
     #[test]
     fn every_locale_covers_the_english_keys_with_the_same_params() {
         let mut english = BTreeMap::new();
@@ -196,15 +196,15 @@ mod tests {
             let mut other = BTreeMap::new();
             flat("", locale(language), &mut other);
             for (key, text) in &english {
-                // Формы множественного числа у языков разные: сверяется только наличие `.other` или `.many`.
+                // Plural forms differ between languages: only the presence of `.other` or `.many` is checked.
                 let Some(translated) = other.get(key).or_else(|| key.strip_suffix(".other").and_then(|base| other.get(&format!("{base}.many")))) else {
-                    panic!("{}: нет ключа {key}", language.code());
+                    panic!("{}: missing key {key}", language.code());
                 };
-                assert_eq!(params(translated), params(text), "{}: подстановки в {key}", language.code());
+                assert_eq!(params(translated), params(text), "{}: substitutions in {key}", language.code());
             }
             for key in other.keys() {
                 let base = key.rsplit_once('.').map_or(key.as_str(), |(base, _)| base);
-                assert!(english.contains_key(key) || english.contains_key(&format!("{base}.other")), "{}: лишний ключ {key}", language.code());
+                assert!(english.contains_key(key) || english.contains_key(&format!("{base}.other")), "{}: extra key {key}", language.code());
             }
         }
     }

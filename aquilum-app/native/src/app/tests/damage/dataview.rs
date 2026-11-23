@@ -17,8 +17,8 @@ fn scrolling_a_wide_dataview_table_repaints_what_moved() {
         wheel(&mut h, ScrollDelta::LineDelta(0.0, if step < 4 { -1.0 } else { 1.0 }), Modifiers::SHIFT, spec.scale);
         let before = offset(&h);
         let report = frames.draw(&mut h);
-        assert_eq!(report.differ, 0, "шаг {step}: частичный кадр расходится с полным в {} пикселях, смещение {before:?}", report.differ);
-        assert!(report.raster > 0, "шаг {step}: прокрутка таблицы ничего не перерисовала");
+        assert_eq!(report.differ, 0, "step {step}: partial frame differs from the full one in {} pixels, offset {before:?}", report.differ);
+        assert!(report.raster > 0, "step {step}: table scroll repainted nothing");
     }
 }
 
@@ -38,7 +38,7 @@ fn narrowing_the_column_keeps_a_scrolled_dataview_table_steady() {
         pointer(&mut h, at.x + f64::from(i) * 7.0 * spec.scale, at.y, spec.scale, true);
         h.deliver();
         let report = frames.draw(&mut h);
-        assert_eq!(report.differ, 0, "шаг {i}: частичный кадр расходится с полным в {} пикселях", report.differ);
+        assert_eq!(report.differ, 0, "step {i}: partial frame differs from the full one in {} pixels", report.differ);
     }
     release(&mut h, at.x, at.y, spec.scale);
 }

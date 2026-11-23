@@ -146,7 +146,7 @@ impl Embeds {
         let key = key.to_owned();
         std::thread::spawn(move || {
             let result = {
-                let _zone = aq_trace::zone("фон: вставка");
+                let _zone = aq_trace::zone("background: embed");
                 work(&inner)
             };
             if settle(cache(&inner), &key, epoch, result) {

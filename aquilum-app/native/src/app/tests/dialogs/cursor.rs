@@ -8,7 +8,7 @@ fn a_secondary_button_shows_a_hand() {
     let mut h = Harness::new();
     h.click(242.0, 578.0);
     h.open_section(Section::System);
-    let author = h.binding("кнопка автора", |b| matches!(b, Binding::Button(Action::OpenUrl(_))));
+    let author = h.binding("author button", |b| matches!(b, Binding::Button(Action::OpenUrl(_))));
     let center = h.root.get_widget(author).unwrap().ctx().bounding_box().center();
 
     h.pointer_move(center.x, center.y);
@@ -35,5 +35,5 @@ fn a_table_scrollbar_shows_a_hand_so_a_finger_takes_the_thumb_at_once() {
     let wide = format!("| {} |\n| {} |\n| {} |\n", (1..=30).map(|i| format!("Колонка_с_длинным_названием_{i}")).collect::<Vec<_>>().join(" | "), vec!["---"; 30].join(" | "), (1..=30).map(|i| format!("значение_{i}")).collect::<Vec<_>>().join(" | "));
     let note = h.write_note("Полосы.md", &format!("{wide}\nТекст."));
     h.open(note);
-    assert!(grab_below(&mut h, "| Колонка_с_длинным_названием_1", 500.0), "у ползунка широкой таблицы нет руки — палец его не возьмёт");
+    assert!(grab_below(&mut h, "| Колонка_с_длинным_названием_1", 500.0), "the wide table thumb has no hand cursor; a finger will not grab it");
 }

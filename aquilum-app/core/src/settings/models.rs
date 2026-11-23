@@ -151,11 +151,11 @@ impl Default for ReaderSettings {
 pub struct UiSettings {
     pub theme: String,
     pub night: String,
-    /// Тема светлого режима (id встроенной темы).
+    /// Light mode theme (id of a built-in theme).
     pub light_theme: String,
-    /// Тема тёмного и ночного режимов.
+    /// Theme for the dark and night modes.
     pub dark_theme: String,
-    /// Правки пользователя поверх тем: id темы → токен → «#rrggbb» или число.
+    /// User overrides on top of the themes: theme id -> token -> "#rrggbb" or a number.
     pub theme_overrides: BTreeMap<String, BTreeMap<String, String>>,
     pub language: String,
     pub primary_color: String,

@@ -32,14 +32,14 @@ fn sync_settings_snapshot() {
     let mut h = h.restarted(1.0);
     let started = std::time::Instant::now();
     while h.app.workspace.core.sync.large().len() < 2 {
-        assert!(started.elapsed().as_secs() < 10, "список больших файлов не появился");
+        assert!(started.elapsed().as_secs() < 10, "large file list did not appear");
         std::thread::sleep(std::time::Duration::from_millis(5));
     }
     h.app.open_settings(&mut h.root);
     h.open_section(Section::Sync);
     h.snapshot("sync-settings.png");
     while h.app.workspace.core.sync.due().is_none() {
-        assert!(started.elapsed().as_secs() < 30, "проход не закончился");
+        assert!(started.elapsed().as_secs() < 30, "pass did not finish");
         std::thread::sleep(std::time::Duration::from_millis(5));
     }
     h.app.refresh_settings(&mut h.root);

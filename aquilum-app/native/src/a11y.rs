@@ -1,11 +1,11 @@
-//! Доступность: дерево AccessKit, которое строит Masonry, отдаётся платформенному адаптеру.
+//! Accessibility: the AccessKit tree built by Masonry is handed to the platform adapter.
 //!
-//! `accesskit_winit` есть только под winit 0.30, поэтому адаптер подключается к окну напрямую
-//! по его хэндлу: Windows — UIA через подмену оконной процедуры, macOS — подмена NSView,
-//! Linux и BSD — AT-SPI через D-Bus.
+//! `accesskit_winit` only exists for winit 0.30, so the adapter is attached to the window directly
+//! by its handle: Windows - UIA via window procedure subclassing, macOS - NSView subclassing,
+//! Linux and BSD - AT-SPI over D-Bus.
 //!
-//! Обработчики адаптера вызываются из оконной процедуры, где к `RenderRoot` не подобраться:
-//! они кладут запрос в канал и будят цикл winit, хост разбирает канал в `proxy_wake_up`.
+//! The adapter handlers run inside the window procedure, where `RenderRoot` is out of reach:
+//! they put a request on a channel and wake the winit loop; the host drains the channel in `proxy_wake_up`.
 
 use std::sync::mpsc::{Receiver, Sender, channel};
 
@@ -15,9 +15,9 @@ use winit::event_loop::EventLoopProxy;
 use winit::window::Window;
 
 pub enum Request {
-    /// Экранный диктор или другой клиент UIA запросил дерево: его надо построить целиком.
+    /// A screen reader or another UIA client requested the tree: it has to be built in full.
     Activate,
-    /// Действие над узлом: нажать, поставить фокус, прокрутить…
+    /// An action on a node: click, focus, scroll…
     Action(ActionRequest),
 }
 
@@ -48,7 +48,7 @@ impl Forward {
 
 impl ActivationHandler for Forward {
     fn request_initial_tree(&mut self) -> Option<TreeUpdate> {
-        // Полное дерево придёт с ближайшей перерисовкой после EnableAccessTree.
+        // The full tree arrives with the next repaint after EnableAccessTree.
         self.send(Request::Activate);
         None
     }
@@ -65,7 +65,7 @@ impl DeactivationHandler for Forward {
 }
 
 impl Accessibility {
-    /// Подключает адаптер к окну. Окно должно быть ещё невидимым: так требует Windows-адаптер.
+    /// Attaches the adapter to the window. The window must still be invisible: the Windows adapter requires it.
     pub fn attach(window: &dyn Window, proxy: EventLoopProxy) -> Option<Self> {
         let (sender, requests) = channel::<Request>();
         let activation = Forward { sender: sender.clone(), proxy: proxy.clone() };
@@ -100,7 +100,7 @@ impl Accessibility {
         self.requests.try_iter().collect()
     }
 
-    /// Передаёт адаптеру изменения дерева, если клиент доступности подключён.
+    /// Passes tree updates to the adapter if an accessibility client is connected.
     pub fn update(&mut self, update: TreeUpdate) {
         #[cfg(any(target_os = "windows", target_os = "macos"))]
         if let Some(events) = self.adapter.update_if_active(|| update) {

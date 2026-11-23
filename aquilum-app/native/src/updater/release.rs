@@ -43,14 +43,14 @@ pub(super) fn newer(candidate: &str, current: &str) -> bool {
 pub(super) fn find() -> Result<Option<Release>, String> {
     let agent = aquilum_core::web_agent::web_agent("updates");
     let manifest: serde_json::Value = serde_json::from_reader(agent.get(ENDPOINT).call().map_err(|e| e.to_string())?.into_reader()).map_err(|e| e.to_string())?;
-    let version = manifest["version"].as_str().ok_or("в latest.json нет версии")?.to_owned();
+    let version = manifest["version"].as_str().ok_or_else(|| crate::i18n::t("native.updater.manifestNoVersion"))?.to_owned();
     if !newer(&version, env!("CARGO_PKG_VERSION")) {
         return Ok(None);
     }
-    let target = target().ok_or("платформа не поддерживается")?;
+    let target = target().ok_or_else(|| crate::i18n::t("native.updater.platformUnsupported"))?;
     let platform = &manifest["platforms"][&target];
-    let url = platform["url"].as_str().ok_or_else(|| format!("в latest.json нет сборки для {target}"))?.to_owned();
-    let signature = platform["signature"].as_str().ok_or("в latest.json нет подписи")?.to_owned();
+    let url = platform["url"].as_str().ok_or_else(|| crate::i18n::t_with("native.updater.manifestNoBuild", &[("target", target.as_str())]))?.to_owned();
+    let signature = platform["signature"].as_str().ok_or_else(|| crate::i18n::t("native.updater.manifestNoSignature"))?.to_owned();
     Ok(Some(Release { version, url, signature }))
 }
 

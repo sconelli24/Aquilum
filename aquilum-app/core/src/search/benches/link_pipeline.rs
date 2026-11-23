@@ -7,7 +7,7 @@ use rusqlite::Connection;
 use std::path::{Path, PathBuf};
 
 #[test]
-#[ignore = "run with AQUILUM_BENCH_VAULT=<папка базы> or AQUILUM_BENCH_SIZES=1000 cargo test --release benchmark_link_pipeline -- --ignored --nocapture"]
+#[ignore = "run with AQUILUM_BENCH_VAULT=<vault folder> or AQUILUM_BENCH_SIZES=1000 cargo test --release benchmark_link_pipeline -- --ignored --nocapture"]
 fn benchmark_link_pipeline() {
     if let Ok(vault) = std::env::var("AQUILUM_BENCH_VAULT") {
         let threads_before = process_threads();

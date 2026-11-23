@@ -13,7 +13,7 @@ fn report(cause: ConflictCause) -> ConflictReport {
 }
 
 fn body(content: &str) -> &str {
-    let marker = "## Текст, который не попал в заметку\n";
+    let marker = "## Text that did not make it into the note\n";
     &content[content.find(marker).expect("marker") + marker.len()..]
 }
 
@@ -25,7 +25,7 @@ fn renders_the_local_minute_of_the_conflict() {
 
 #[test]
 fn names_the_copy_with_a_readable_stamp() {
-    assert_eq!(copy_stem("Идея", &moment(), "a1b2c3d4"), "Идея (конфликт 2026-08-17 08-30 a1b2c3d4)");
+    assert_eq!(copy_stem("Идея", &moment(), "a1b2c3d4"), "Идея (conflict 2026-08-17 08-30 a1b2c3d4)");
 }
 
 #[test]
@@ -46,9 +46,9 @@ fn names_the_note_the_moment_and_the_reason() {
     let content =
         collect(&copy_content("D:/База/Идея.md", "Идея", &report(ConflictCause::Diverged), &moment(), &"текст").expect("copy"));
     for expected in [
-        "конфликт: 2026-08-17 08:30",
-        "заметка: \"Идея\"",
-        "причина: \"файл и документ изменились одновременно\"",
+        "conflict: 2026-08-17 08:30",
+        "note: \"Идея\"",
+        "reason: \"file and document changed at the same time\"",
         "`D:/База/Идея.md`",
         "`hash:сверка`",
     ] {
@@ -60,14 +60,14 @@ fn names_the_note_the_moment_and_the_reason() {
 fn explains_each_cause_in_its_own_words() {
     let render = |cause| collect(&copy_content("p", "Идея", &report(cause), &moment(), &"текст").expect("copy"));
     let displaced = render(ConflictCause::Displaced);
-    assert!(displaced.contains("строки не поместились при слиянии") && displaced.contains("вытеснило строки ниже"));
+    assert!(displaced.contains("lines did not fit during the merge") && displaced.contains("displaced the lines below"));
     let reverted = render(ConflictCause::Reverted);
-    assert!(reverted.contains("причина: \"изменения версии отменены поверх более поздних правок\""));
+    assert!(reverted.contains("reason: \"version changes reverted over later edits\""));
 }
 
 #[test]
 fn leaves_out_a_fingerprint_it_was_not_given() {
     let bare = ConflictReport { cause: ConflictCause::Diverged, synced_hash: None };
     let content = collect(&copy_content("p", "Идея", &bare, &moment(), &"текст").expect("copy"));
-    assert!(!content.contains("Отпечаток"));
+    assert!(!content.contains("fingerprint"));
 }

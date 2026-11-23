@@ -27,7 +27,7 @@ fn complete(name: &str, text: &str, moves: &[NamedKey], typed: &str, what: &str)
 
 #[test]
 fn page_cover_field_suggests_pattern_names() {
-    let text = complete("Обложка.md", "---\nPage_cover:\n---\nтекст", &[NamedKey::ArrowDown, NamedKey::End], " tun", "подсказки обложек не появились");
+    let text = complete("Обложка.md", "---\nPage_cover:\n---\nтекст", &[NamedKey::ArrowDown, NamedKey::End], " tun", "cover suggestions did not appear");
     assert_eq!(text, "---\nPage_cover: tunnel\n---\nтекст");
     assert_eq!(crate::cover::pattern_id(Some("tunnel")), Some("tunnel"));
     assert_eq!(crate::cover::pattern_id(Some("pattern:Tunnel")), Some("tunnel"));
@@ -35,17 +35,17 @@ fn page_cover_field_suggests_pattern_names() {
 
 #[test]
 fn frontmatter_keys_are_suggested_whatever_the_case() {
-    let text = complete("Свойства.md", "---\n\n---\nтекст", &[NamedKey::ArrowDown], "PAGE_c", "подсказки ключей не появились");
+    let text = complete("Свойства.md", "---\n\n---\nтекст", &[NamedKey::ArrowDown], "PAGE_c", "key suggestions did not appear");
     assert_eq!(text, "---\nPage_cover: \n---\nтекст");
 }
 
 #[test]
 fn escape_closes_suggestions_without_editing() {
-    let mut h = suggesting("Свойства.md", "---\n\n---\nтекст", &[NamedKey::ArrowDown], "PAGE_c", "подсказки ключей не появились");
+    let mut h = suggesting("Свойства.md", "---\n\n---\nтекст", &[NamedKey::ArrowDown], "PAGE_c", "key suggestions did not appear");
     h.escape();
     let _ = h.root.redraw();
     h.app.on_core_events(&mut h.root);
-    assert!(h.app.suggest_layer.is_none(), "Esc не закрыл подсказки");
+    assert!(h.app.suggest_layer.is_none(), "Esc did not close the suggestions");
     assert_eq!(h.body_text(), "---\nPAGE_c\n---\nтекст");
 }
 
@@ -77,7 +77,7 @@ fn typing_suggests_notes_and_enter_links_them() {
             }
             std::thread::sleep(std::time::Duration::from_millis(10));
         }
-        assert!(shown, "список подсказок не появился ({round:?}): {:?}", text(&h));
+        assert!(shown, "suggestion list did not appear ({round:?}): {:?}", text(&h));
         if let Ok(out) = std::env::var("AQ_OUT") {
             let (layers, _) = h.root.redraw();
             let mut r = crate::render::Renderer::new(2);
@@ -88,7 +88,7 @@ fn typing_suggests_notes_and_enter_links_them() {
         let _ = h.root.redraw();
         h.app.on_core_events(&mut h.root);
         assert!(text(&h).ends_with("[[Проектирование]]"), "{:?}", text(&h));
-        assert!(h.app.suggest_layer.is_none(), "список не закрылся");
+        assert!(h.app.suggest_layer.is_none(), "list did not close");
         h.key(Key::Character(" ".into()), Modifiers::empty());
     }
     assert_eq!(text(&h), "[[Проектирование]] [[Проектирование]] ");

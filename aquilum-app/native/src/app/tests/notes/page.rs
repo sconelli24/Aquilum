@@ -62,10 +62,10 @@ fn a_new_note_renamed_from_its_title_stays_open_with_the_caret_in_the_body() {
         std::thread::sleep(std::time::Duration::from_millis(30));
         h.app.on_core_events(&mut h.root);
     }
-    assert_eq!(h.app.tabs.tabs().len(), tabs, "вкладка закрылась");
+    assert_eq!(h.app.tabs.tabs().len(), tabs, "tab closed");
     assert_eq!(h.app.tabs.active().path.as_deref(), Some(renamed.as_path()));
     assert!(h.app.shows(&renamed));
-    assert_eq!(h.root.focused_widget(), Some(body), "каретка не в тексте заметки");
+    assert_eq!(h.root.focused_widget(), Some(body), "caret is not in the note text");
 }
 
 #[test]
@@ -80,7 +80,7 @@ fn home_button_appears_only_for_resolved_home_page() {
         h.app.home.is_some()
     });
     assert!(h.app.home.as_ref().is_some_and(|p| p.ends_with("a.md")));
-    let button = h.app.chrome.as_ref().unwrap().home_button.expect("кнопка главной");
+    let button = h.app.chrome.as_ref().unwrap().home_button.expect("home button");
     h.act(button, crate::ui::widgets::Pressed);
     assert!(h.app.shows(&h.vault.path().join("a.md")));
 }
@@ -96,16 +96,16 @@ fn pasted_image_is_saved_and_embedded() {
     let ids = h.app.note_ids.as_ref().unwrap();
     let (title, body) = (ids.title.id(), ids.body.id());
     h.root.focus_on(Some(title));
-    assert!(!h.app.paste_image(&mut h.root, png.get_ref()), "картинка вставилась из заголовка");
+    assert!(!h.app.paste_image(&mut h.root, png.get_ref()), "image was pasted from the title");
     h.root.focus_on(Some(body));
     assert!(h.app.paste_image(&mut h.root, png.get_ref()));
     h.deliver();
     let text = h.body_text();
-    let embed = text.lines().find(|l| l.starts_with("![")).unwrap_or_else(|| panic!("нет встраивания: {text:?}"));
+    let embed = text.lines().find(|l| l.starts_with("![")).unwrap_or_else(|| panic!("no embed: {text:?}"));
     let path = embed.split("](<").nth(1).and_then(|p| p.strip_suffix(">)")).or_else(|| embed.split("](").nth(1).and_then(|p| p.strip_suffix(')'))).unwrap();
-    assert!(h.vault.path().join(path).is_file(), "файл не сохранён: {path}");
+    assert!(h.vault.path().join(path).is_file(), "file not saved: {path}");
     let width: f64 = embed[2..].split(['|', ']']).next().unwrap().parse().unwrap();
-    assert!(width < 2000.0, "ширина не ограничена колонкой: {embed}");
+    assert!(width < 2000.0, "width is not limited by the column: {embed}");
 }
 
 fn find(haystack: &[u8], needle: &[u8]) -> Option<usize> {
@@ -146,13 +146,13 @@ fn pdf_export_keeps_what_the_editor_shows() {
     if let Ok(out) = std::env::var("AQ_OUT") {
         std::fs::write(std::path::Path::new(&out).join("export.pdf"), &pdf).unwrap();
     }
-    assert!(pdf.starts_with(b"%PDF"), "не PDF");
+    assert!(pdf.starts_with(b"%PDF"), "not a PDF");
     let pages = pdf.windows(11).filter(|w| w.starts_with(b"/Type/Page") && w[10] != b's').count();
-    assert!(pages >= 5, "заметка на {pages} страницах — потерялась часть текста");
-    assert!(pages_with_text(&pdf) >= pages, "есть страницы без текста");
-    assert!(find(&pdf, b"/DCTDecode").is_some(), "фото в конце заметки не попало в PDF или не сжато в JPEG");
-    assert!(find(&pdf, b"/Width 2400").is_none(), "фото не уменьшено до размера на странице");
-    assert!(pdf.len() < 400_000, "PDF раздут: {} байт", pdf.len());
+    assert!(pages >= 5, "note spans {pages} pages: part of the text was lost");
+    assert!(pages_with_text(&pdf) >= pages, "there are pages without text");
+    assert!(find(&pdf, b"/DCTDecode").is_some(), "photo at the end of the note is missing from the PDF or not JPEG-compressed");
+    assert!(find(&pdf, b"/Width 2400").is_none(), "photo not downscaled to its size on the page");
+    assert!(pdf.len() < 400_000, "PDF is bloated: {} bytes", pdf.len());
 }
 
 #[test]
@@ -163,12 +163,12 @@ fn the_space_below_a_short_note_puts_the_caret_at_the_end_and_selects_upward() {
     h.open(note);
     let body = h.app.note_ids.as_ref().unwrap().body;
     let rect = h.root.get_widget(body.id()).unwrap().ctx().bounding_box();
-    assert!(rect.y1 >= f64::from(H) - 1.0, "редактор не занимает место под текстом: {rect:?}");
+    assert!(rect.y1 >= f64::from(H) - 1.0, "editor does not fill the space under the text: {rect:?}");
     let below = (rect.center().x, f64::from(H) - 10.0);
     h.click(below.0, below.1);
-    assert_eq!(caret(&h), text.len(), "щелчок под текстом не поставил каретку в конец");
+    assert_eq!(caret(&h), text.len(), "click under the text did not put the caret at the end");
     h.drag(below, (rect.center().x, rect.y0 - 10.0));
-    assert_eq!(body.get(&h.root).unwrap().inner().selection(), 0..text.len(), "выделение снизу вверх не захватило конец заметки");
+    assert_eq!(body.get(&h.root).unwrap().inner().selection(), 0..text.len(), "bottom-up selection did not include the end of the note");
 }
 
 #[test]
@@ -183,6 +183,6 @@ fn a_long_note_title_wraps_on_a_narrow_screen() {
     };
     let short = title_height(&mut h, "Коротко.md");
     let long = title_height(&mut h, "Очень длинное название заметки, которое не помещается в строку.md");
-    assert!(long.height() > short.height() * 2.5, "название не переносится: {} при одной строке {}", long.height(), short.height());
-    assert!(long.x1 <= 360.0, "название выходит за край окна: {}", long.x1);
+    assert!(long.height() > short.height() * 2.5, "title does not wrap: {} versus {} for a single line", long.height(), short.height());
+    assert!(long.x1 <= 360.0, "title goes beyond the window edge: {}", long.x1);
 }

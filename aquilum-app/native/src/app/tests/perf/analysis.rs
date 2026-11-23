@@ -22,14 +22,14 @@ fn analysis(core: &aquilum_core::Core, vault: &Path, note: &Path) {
         let (listing, ms, peak) = measured(|| crate::links::run(core, &request(vault, note, method)));
         let held = mb(crate::memory_probe::heap().saturating_sub(before));
         let reasons = listing.items.iter().map(|i| i.reasons.len()).max().unwrap_or(0);
-        eprintln!("{name}: {method:?} {ms:.1} мс, пик кучи +{peak:.1} МБ, осталось +{held:.1} МБ, найдено {}, причин до {reasons}", listing.items.len());
+        eprintln!("{name}: {method:?} {ms:.1} ms, heap peak +{peak:.1} MB, retained +{held:.1} MB, found {}, reasons before {reasons}", listing.items.len());
     }
     let head = aquilum_core::files::document::read_head(note).unwrap();
     let text = head.as_str();
     let path = note.to_string_lossy();
     let (extracted, ms, peak) = measured(|| aquilum_core::wikixiv::extract::extract_queries(text, Some(&path)));
     let (_, hash_ms, _) = measured(|| aquilum_core::wikixiv::cache::content_hash(Some(&path), text));
-    eprintln!("{name}: Wikixiv извлечение {ms:.1} мс, пик кучи +{peak:.1} МБ, хеш {hash_ms:.1} мс, запросы {:?} {:?}", extracted.body_terms, extracted.embedded_titles.len());
+    eprintln!("{name}: Wikixiv extraction {ms:.1} ms, heap peak +{peak:.1} MB, hash {hash_ms:.1} ms, queries {:?} {:?}", extracted.body_terms, extracted.embedded_titles.len());
 }
 
 fn timed_frames(b: &mut Bench, n: usize, mut step: impl FnMut(&mut Bench, usize)) -> String {
@@ -42,7 +42,7 @@ fn timed_frames(b: &mut Bench, n: usize, mut step: impl FnMut(&mut Bench, usize)
         times.push(t.elapsed().as_secs_f64() * 1000.0);
     }
     let [p50, max] = percentiles(&times, [0.5, 1.0]);
-    format!("кадров {n}, p50 {p50:.2} мс, максимум {max:.2} мс")
+    format!("frames {n}, p50 {p50:.2} ms, max {max:.2} ms")
 }
 
 fn frames(b: &mut Bench, n: usize) -> String {
@@ -62,17 +62,17 @@ fn editor(b: &mut Bench, note: PathBuf) {
     scroll.edit(&mut b.h.root, |mut area| crate::ui::scroll::ScrollArea::set_fraction(&mut area, 0.5));
     b.h.deliver();
     b.timed(false);
-    eprintln!("без подсветки: {}", frames(b, 40));
+    eprintln!("without highlight: {}", frames(b, 40));
     let body = b.h.app.note_ids.as_ref().unwrap().body.clone();
     let terms: Vec<String> = TERMS.iter().map(|t| (*t).to_owned()).collect();
     let (_, ms, peak) = measured(|| body.edit(&mut b.h.root, |mut ed| TextEditor::set_hover_terms(&mut ed, terms)));
-    eprintln!("наведение: set_hover_terms {ms:.1} мс, пик кучи +{peak:.1} МБ");
-    eprintln!("с подсветкой наведения: {}", frames(b, 10));
+    eprintln!("hover: set_hover_terms {ms:.1} ms, heap peak +{peak:.1} MB");
+    eprintln!("with hover highlight: {}", frames(b, 10));
     let orders = [TERMS.map(str::to_owned).to_vec(), TERMS.iter().rev().map(|t| (*t).to_owned()).collect()];
     let repaint = timed_frames(b, 20, |b, i| {
         body.edit(&mut b.h.root, |mut ed| TextEditor::set_hover_terms(&mut ed, orders[i % 2].clone()));
     });
-    eprintln!("наведение со сменой слов и перерисовкой: {repaint}");
+    eprintln!("hover with word change and repaint: {repaint}");
     body.edit(&mut b.h.root, |mut ed| TextEditor::set_hover_terms(&mut ed, Vec::new()));
     b.h.focus_editor();
     let smart = crate::ui::editor::Smart { matches: true, ..Default::default() };
@@ -89,13 +89,13 @@ fn editor(b: &mut Bench, note: PathBuf) {
     };
     select(b, words[0]);
     b.h.deliver();
-    eprintln!("с выделенным словом «{}»: {}", TERMS[0], frames(b, 40));
-    eprintln!("смена выделения с перерисовкой: {}", timed_frames(b, 20, |b, i| select(b, words[i % 2])));
+    eprintln!("with selected word "{}": {}", TERMS[0], frames(b, 40));
+    eprintln!("selection change with repaint: {}", timed_frames(b, 20, |b, i| select(b, words[i % 2])));
     let (_, ms, peak) = measured(|| body.edit(&mut b.h.root, |mut ed| TextEditor::find(&mut ed, TERMS[0])));
-    eprintln!("Ctrl+F «{}» по загруженному окну редактора:{ms:.1} мс, пик кучи +{peak:.1} МБ; кадр после: {}", TERMS[0], timed_frames(b, 1, |_, _| {}));
+    eprintln!("Ctrl+F "{}" over the loaded editor window: {ms:.1} ms, heap peak +{peak:.1} MB; frame after: {}", TERMS[0], timed_frames(b, 1, |_, _| {}));
     body.edit(&mut b.h.root, |mut ed| TextEditor::find(&mut ed, ""));
     let (_, ms, peak) = measured(|| b.h.app.request_panel(&mut b.h.root));
-    eprintln!("request_panel: {ms:.1} мс, пик кучи +{peak:.1} МБ");
+    eprintln!("request_panel: {ms:.1} ms, heap peak +{peak:.1} MB");
 }
 
 #[test]
@@ -107,8 +107,8 @@ fn analysis_big_note() {
     let mut b = Bench::start(Some(vault.path()));
     let core = Arc::clone(&b.h.app.workspace.core);
     let t = Instant::now();
-    assert!(wait_index(&core, &vault.path().to_string_lossy()), "индекс не готов");
-    eprintln!("индекс готов за {:?}", t.elapsed());
+    assert!(wait_index(&core, &vault.path().to_string_lossy()), "index not ready");
+    eprintln!("index ready in {:?}", t.elapsed());
     for name in [STRESS].iter().chain(&REGULAR) {
         analysis(&core, vault.path(), &vault.path().join(name));
     }
@@ -123,8 +123,8 @@ fn analysis_big_note() {
         }
     }
     slowest.sort_by(|a, b| b.0.total_cmp(&a.0));
-    let top: Vec<String> = slowest.iter().take(5).map(|(ms, name)| format!("{name} {ms:.0} мс")).collect();
-    eprintln!("заметки 16 КиБ…1 МиБ ({}): самые долгие {}", slowest.len() / 2, top.join("; "));
+    let top: Vec<String> = slowest.iter().take(5).map(|(ms, name)| format!("{name} {ms:.0} ms")).collect();
+    eprintln!("notes 16 KiB..1 MiB ({}): slowest {}", slowest.len() / 2, top.join("; "));
     if let Ok(out) = std::env::var("AQ_QUALITY") {
         std::fs::write(out, quality).unwrap();
     }

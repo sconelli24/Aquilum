@@ -30,7 +30,7 @@ pub fn main(app: AndroidApp) {
 }
 
 fn run(app: AndroidApp) -> Result<(), String> {
-    let data_dir = app.internal_data_path().ok_or("нет каталога данных приложения")?.join("aquilum");
+    let data_dir = app.internal_data_path().ok_or("no application data directory")?.join("aquilum");
     let first_run = !data_dir.exists();
     let mut args = crate::args::defaults();
     if let Some(home) = app.external_data_path() {
@@ -41,7 +41,7 @@ fn run(app: AndroidApp) -> Result<(), String> {
         args.vault = Some(vault);
     }
     args.data_dir = Some(data_dir);
-    let event_loop = EventLoop::builder().with_android_app(app).build().map_err(|e| format!("цикл событий: {e}"))?;
+    let event_loop = EventLoop::builder().with_android_app(app).build().map_err(|e| format!("event loop: {e}"))?;
     crate::host::run(args, event_loop)
 }
 
@@ -62,9 +62,9 @@ pub fn leave() {
 }
 
 pub fn install_update(payload: &[u8]) -> Result<(), String> {
-    let path = java::read_text(jni::jni_str!("updateFile")).ok_or("нет файла для обновления")?;
+    let path = java::read_text(jni::jni_str!("updateFile")).ok_or_else(|| crate::i18n::t("native.android.noUpdateFile"))?;
     std::fs::write(&path, payload).map_err(|e| format!("{path}: {e}"))?;
-    java::send_text(jni::jni_str!("installApk"), &path).then_some(()).ok_or_else(|| "установщик не открылся".into())
+    java::send_text(jni::jni_str!("installApk"), &path).then_some(()).ok_or_else(|| crate::i18n::t("native.android.installerNotOpened"))
 }
 
 pub fn set_dark_theme(dark: bool) {

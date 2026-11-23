@@ -59,7 +59,7 @@ impl WorkerHandle {
                     Ok(Ok(())) => None,
                     Ok(Err(error)) => Some(error),
                     Err(panic) => Some(SearchError::Task {
-                        message: format!("поток индексации упал: {}", panic_message(panic.as_ref())),
+                        message: format!("indexing thread panicked: {}", panic_message(panic.as_ref())),
                     }),
                 };
                 if let Some(error) = failure {
@@ -158,7 +158,7 @@ fn panic_message(payload: &(dyn std::any::Any + Send)) -> String {
         .downcast_ref::<&str>()
         .map(|text| (*text).to_owned())
         .or_else(|| payload.downcast_ref::<String>().cloned())
-        .unwrap_or_else(|| "без сообщения".to_owned())
+        .unwrap_or_else(|| "no message".to_owned())
 }
 
 #[cfg(test)]
@@ -177,11 +177,11 @@ mod tests {
             let _ = scanned.send(());
         });
         let worker = WorkerHandle::spawn(root, index, directory.path().join("documents.sqlite3"), Arc::new(IndexProgress::new(0, 1)), 1, notifier).unwrap();
-        done.recv_timeout(Duration::from_secs(20)).expect("первый проход завершился");
+        done.recv_timeout(Duration::from_secs(20)).expect("first pass finished");
 
         let started = Instant::now();
         drop(worker);
 
-        assert!(started.elapsed() < Duration::from_millis(100), "остановка ждала {:?}", started.elapsed());
+        assert!(started.elapsed() < Duration::from_millis(100), "shutdown waited {:?}", started.elapsed());
     }
 }

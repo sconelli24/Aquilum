@@ -24,13 +24,13 @@ fn root_can_be_rebuilt() {
         root_render.set_default_properties(Arc::new(theme::default_properties()));
         root_render.edit_widget_with_tag(ROOT_TAG, |mut slot| Slot::set_child(&mut slot, widget.erased()));
         let _ = root_render.redraw();
-        assert!(old.get(&root_render).is_none(), "старый редактор удалён");
+        assert!(old.get(&root_render).is_none(), "the old editor is removed");
         chrome = next;
     }
     assert!(chrome.note_page.get(&root_render).is_some());
     for _ in 0..2 {
         tree.start_rename(&mut root_render, vault.path().join("a.md"));
-        assert!(root_render.focused_widget().is_some(), "поле переименования в фокусе");
+        assert!(root_render.focused_widget().is_some(), "the rename field is focused");
         tree.refresh(&mut root_render);
     }
 }

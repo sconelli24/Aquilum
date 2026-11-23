@@ -111,7 +111,7 @@ impl Widget for DropdownButton {
 #[derive(Default)]
 pub struct Swatch {
     press: Press,
-    /// Вход темы (`tokens::INPUTS`), цвет которого показан; `None` — акцент.
+    /// Theme input (`tokens::INPUTS`) whose color is shown; `None` means the accent.
     input: Option<usize>,
 }
 

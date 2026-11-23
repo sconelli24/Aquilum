@@ -9,7 +9,7 @@ use std::time::Instant;
 const QUERIES: [&str; 8] = ["поиск заметок", "к", "markdown", "полный тест", "архитектура", "кадр замер frame", "заметк", "как настроить синхронизацию заметок с облаком dropbox"];
 
 #[test]
-#[ignore = "run with AQUILUM_BENCH_VAULT=<папка базы> or AQUILUM_BENCH_SIZES=1000,10000,100000 cargo test --release benchmark_search_pipeline -- --ignored --nocapture"]
+#[ignore = "run with AQUILUM_BENCH_VAULT=<vault folder> or AQUILUM_BENCH_SIZES=1000,10000,100000 cargo test --release benchmark_search_pipeline -- --ignored --nocapture"]
 fn benchmark_search_pipeline() {
     if let Ok(vault) = std::env::var("AQUILUM_BENCH_VAULT") {
         return real_vault(&vault);

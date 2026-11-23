@@ -78,7 +78,7 @@ impl Renderer {
         frame.paint_into(&mut Split { inner: &mut self.painter, marker, part, seen: false });
         self.painter.finish()?;
         let mut pixels = vec![0u32; usize::from(w) * usize::from(h)];
-        let pixmap = PixmapMut::new(w, h, bytemuck::cast_slice_mut(&mut pixels)).expect("кэш слоя");
+        let pixmap = PixmapMut::new(w, h, bytemuck::cast_slice_mut(&mut pixels)).expect("layer cache");
         let settings = RasterizerSettings { pixel_format: crate::render::PIXEL_FORMAT, ..Default::default() };
         self.painter.ctx.render_with(pixmap, &mut self.painter.resources, settings);
         Ok(pixels)

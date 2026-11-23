@@ -134,5 +134,5 @@ pub fn load(path: &Path) -> Option<ImageBrush> {
 
 pub fn default_book_cover() -> ImageBrush {
     static COVER: OnceLock<ImageBrush> = OnceLock::new();
-    COVER.get_or_init(|| decode(DEFAULT_BOOK_COVER).expect("обложка книги по умолчанию")).clone()
+    COVER.get_or_init(|| decode(DEFAULT_BOOK_COVER).expect("default book cover")).clone()
 }

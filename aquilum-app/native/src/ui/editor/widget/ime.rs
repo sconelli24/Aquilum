@@ -150,8 +150,8 @@ mod tests {
         (editor.anchor, editor.focus) = (3000, 3000);
         let (base, ..) = editor.surrounding(None);
         (editor.anchor, editor.focus) = (3500, 3500);
-        assert_eq!(editor.surrounding(Some(base)).0, base, "окно сдвинулось вместе с кареткой");
+        assert_eq!(editor.surrounding(Some(base)).0, base, "window moved together with the caret");
         (editor.anchor, editor.focus) = (base + 2 * AROUND - 100, base + 2 * AROUND - 100);
-        assert_ne!(editor.surrounding(Some(base)).0, base, "каретка у края, а окно не переехало");
+        assert_ne!(editor.surrounding(Some(base)).0, base, "caret is at the edge, but the window did not move");
     }
 }

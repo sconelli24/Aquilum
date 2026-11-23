@@ -12,13 +12,13 @@ fn focus_mode_sits_out_a_narrow_screen_and_comes_back() {
     assert!(h.app.interface.focus_mode() && !button_hidden(&h));
 
     resize(&mut h, 360.0);
-    assert!(!h.app.interface.focus_mode(), "на узком экране режим фокуса действует");
-    assert!(button_hidden(&h), "кнопка фокуса видна на узком экране");
+    assert!(!h.app.interface.focus_mode(), "focus mode is active on a narrow screen");
+    assert!(button_hidden(&h), "focus button visible on a narrow screen");
     h.app.toggle_focus_mode(&mut h.root);
 
     resize(&mut h, 1000.0);
-    assert!(h.app.interface.focus_mode(), "режим фокуса не вернулся на широком экране");
-    assert!(!button_hidden(&h), "кнопка фокуса не вернулась на широком экране");
+    assert!(h.app.interface.focus_mode(), "focus mode did not return on a wide screen");
+    assert!(!button_hidden(&h), "focus button did not return on a wide screen");
 }
 
 #[test]
@@ -79,21 +79,21 @@ fn focus_mode_removes_the_rail_and_puts_settings_in_the_top_left_corner() {
     };
     let bounds = |h: &Harness, id| h.root.get_widget(id).unwrap().ctx().bounding_box();
     let (before, tabs) = (bounds(&h, toggle), bounds(&h, strip));
-    assert!(bounds(&h, rail).width() > 0.0, "ряд значков слева не виден до режима фокуса");
+    assert!(bounds(&h, rail).width() > 0.0, "left icon rail not visible before focus mode");
     h.app.toggle_focus_mode(&mut h.root);
     h.settle();
-    assert_eq!(bounds(&h, rail).width(), 0.0, "ряд значков остался в режиме фокуса");
+    assert_eq!(bounds(&h, rail).width(), 0.0, "icon rail stayed in focus mode");
     let corner = bounds(&h, settings);
-    assert_eq!((corner.x0, corner.y0, corner.width(), corner.height()), (before.x0, before.y0, before.width(), before.height()), "настройки не на месте кнопки левого сайдбара");
-    assert!(bounds(&h, strip).x0 >= corner.x1, "вкладки наезжают на кнопку настроек");
+    assert_eq!((corner.x0, corner.y0, corner.width(), corner.height()), (before.x0, before.y0, before.width(), before.height()), "settings not in place of the left sidebar button");
+    assert!(bounds(&h, strip).x0 >= corner.x1, "tabs overlap the settings button");
     h.click(corner.center().x, corner.center().y);
-    assert!(h.section().is_some(), "кнопка в углу не открыла настройки");
+    assert!(h.section().is_some(), "corner button did not open settings");
     h.escape();
     h.app.toggle_focus_mode(&mut h.root);
     h.settle();
-    assert!(bounds(&h, rail).width() > 0.0, "ряд значков не вернулся");
-    assert!(h.root.get_widget(settings).unwrap().ctx().is_stashed(), "кнопка настроек в углу осталась после выхода из режима");
-    assert_eq!(bounds(&h, strip).x0, tabs.x0, "после выхода из режима вкладки сдвинуты");
+    assert!(bounds(&h, rail).width() > 0.0, "icon rail did not come back");
+    assert!(h.root.get_widget(settings).unwrap().ctx().is_stashed(), "corner settings button remained after leaving the mode");
+    assert_eq!(bounds(&h, strip).x0, tabs.x0, "tabs shifted after leaving the mode");
 }
 
 #[test]
@@ -106,15 +106,15 @@ fn note_search_button_sits_left_of_the_menu_opens_the_find_bar_and_hides_in_focu
         (ids.search, ids.more)
     };
     let bounds = |h: &Harness, id| h.root.get_widget(id).unwrap().ctx().bounding_box();
-    assert!(bounds(&h, search).x1 <= bounds(&h, more).x0, "поиск не слева от троеточия");
+    assert!(bounds(&h, search).x1 <= bounds(&h, more).x0, "search not left of the ellipsis");
     assert!(h.app.find.is_none());
     let center = bounds(&h, search).center();
     h.click(center.x, center.y);
-    assert!(h.app.find.is_some(), "кнопка не открыла поиск по заметке");
+    assert!(h.app.find.is_some(), "button did not open in-note search");
     h.app.toggle_focus_mode(&mut h.root);
     h.settle();
-    assert!(h.root.get_widget(search).unwrap().ctx().is_stashed(), "кнопка поиска осталась в режиме фокуса");
+    assert!(h.root.get_widget(search).unwrap().ctx().is_stashed(), "search button remained in focus mode");
     h.app.toggle_focus_mode(&mut h.root);
     h.settle();
-    assert!(!h.root.get_widget(search).unwrap().ctx().is_stashed(), "кнопка поиска не вернулась после режима фокуса");
+    assert!(!h.root.get_widget(search).unwrap().ctx().is_stashed(), "search button did not return after focus mode");
 }

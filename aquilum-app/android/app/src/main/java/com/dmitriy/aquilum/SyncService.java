@@ -60,7 +60,7 @@ public class SyncService extends Service {
             start.run();
             return true;
         } catch (IllegalStateException refused) {
-            Log.w("Aquilum", "служба синхронизации не запущена", refused);
+            Log.w("Aquilum", "sync service not started", refused);
             return false;
         }
     }

@@ -5,8 +5,8 @@ fn tables_without_outer_pipes() {
     let b = blocks("Заголовок 1 | Заголовок 2\n--- | ---\nА | Б\n\nтекст | с чертой\nобычный текст");
     assert_eq!(b[0], Block::Table { first: true, last: false });
     assert_eq!(b[2], Block::Table { first: false, last: true });
-    assert_eq!(b[4], Block::Text, "строка с чертой без разделителя следом стала таблицей");
-    let table = crate::ui::editor::table::parse(&["Заголовок 1 | Заголовок 2", "--- | ---", "А | Б"]).expect("таблица без крайних черт");
+    assert_eq!(b[4], Block::Text, "a line with a pipe and no delimiter row after it became a table");
+    let table = crate::ui::editor::table::parse(&["Заголовок 1 | Заголовок 2", "--- | ---", "А | Б"]).expect("table without outer pipes");
     assert_eq!(table.cells[1], ["А", "Б"]);
 }
 

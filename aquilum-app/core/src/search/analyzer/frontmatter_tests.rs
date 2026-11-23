@@ -37,16 +37,16 @@ fn rewrites_a_field_in_place_and_leaves_the_body_alone() {
     assert!(!updated.contains("Иван Ефремов"));
     assert!(
         updated.ends_with("---\nТело заметки.\n"),
-        "тело заметки не тронуто: {updated}"
+        "note body untouched: {updated}"
     );
-    assert_eq!(keys(&updated).len(), 5, "новых ключей не появилось");
+    assert_eq!(keys(&updated).len(), 5, "no new keys appeared");
 }
 
 #[test]
 fn appends_an_unknown_field_after_the_existing_ones() {
     let updated = set(BOOK, &update("rating", "5")).unwrap();
     let found = keys(&updated);
-    assert_eq!(found.first().unwrap(), "created", "порядок прежних ключей сохранён");
+    assert_eq!(found.first().unwrap(), "created", "the order of existing keys is preserved");
     assert_eq!(found.last().unwrap(), "rating");
 }
 
@@ -55,9 +55,9 @@ fn finds_the_key_regardless_of_case_and_keeps_its_original_spelling() {
     let updated = set(BOOK, &update("ПУТЬ К ФАЙЛУ", "Files/книга.epub")).unwrap();
     assert!(
         updated.contains("Путь к файлу: Files/книга.epub"),
-        "написание ключа осталось прежним: {updated}"
+        "key spelling stayed the same: {updated}"
     );
-    assert_eq!(keys(&updated).len(), 5, "дубликат ключа не создан");
+    assert_eq!(keys(&updated).len(), 5, "no duplicate key created");
 }
 
 #[test]
@@ -71,7 +71,7 @@ fn refuses_to_touch_an_unclosed_block() {
     let broken = "---\ntype: book\nтело без закрывающего разделителя\n";
     assert!(
         set(broken, &update("type", "note")).is_err(),
-        "второй блок поверх сломанного не создаётся"
+        "a second block is not created over a broken one"
     );
 }
 

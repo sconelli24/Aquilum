@@ -26,7 +26,7 @@ fn frame_parts() {
         scene += s;
         raster += r;
     }
-    eprintln!("{}x{}: сцена {:?}, растр {:?}, всего {:?}", b.w, b.hh, scene / frames, raster / frames, (scene + raster) / frames);
+    eprintln!("{}x{}: scene {:?}, raster {:?}, total {:?}", b.w, b.hh, scene / frames, raster / frames, (scene + raster) / frames);
 }
 
 #[test]
@@ -38,10 +38,10 @@ fn panel_animation_frames() {
     let mut b = Bench::start(Some(vault.path()));
     b.h.open(note);
     b.timed(true);
-    for name in ["появление", "фокус", "выход", "панель"] {
+    for name in ["appear", "focus", "exit", "panel"] {
         match name {
-            "появление" => {}
-            "панель" => {
+            "appear" => {}
+            "panel" => {
                 let toggle = b.h.app.chrome.as_ref().unwrap().toggle_sidebar;
                 b.h.act(toggle, crate::ui::widgets::Pressed);
             }
@@ -57,7 +57,7 @@ fn panel_animation_frames() {
             total += spent;
             frames += 1;
         }
-        eprintln!("{name}: средний кадр {:?}, худший {worst:?}", total / frames);
+        eprintln!("{name}: average frame {:?}, worst {worst:?}", total / frames);
     }
 }
 
@@ -84,9 +84,9 @@ fn modal_intro_frames() {
         b.renderer.draw_frame(&layers, b.w as u16, b.hh as u16, b.scale, theme::background(), false).unwrap();
         frames.push((t1 - t, t1.elapsed()));
     }
-    eprintln!("{}x{}@{}: сборка окна {built:?}", b.w, b.hh, b.scale);
+    eprintln!("{}x{}@{}: window build {built:?}", b.w, b.hh, b.scale);
     for (i, (scene, raster)) in frames.iter().enumerate() {
-        eprintln!("кадр {i}: сцена {scene:?}, растр {raster:?}");
+        eprintln!("frame {i}: scene {scene:?}, raster {raster:?}");
     }
 }
 
@@ -108,5 +108,5 @@ fn settings_scroll_frames() {
         raster += r;
         worst = worst.max(s + r);
     }
-    eprintln!("{}x{}@{}: сцена {:?}, растр {:?}, худший {worst:?}, сдвигов {shifts} из {frames}", b.w, b.hh, b.scale, scene / frames, raster / frames);
+    eprintln!("{}x{}@{}: scene {:?}, raster {:?}, worst {worst:?}, shifts {shifts} of {frames}", b.w, b.hh, b.scale, scene / frames, raster / frames);
 }

@@ -13,7 +13,7 @@ fn shift_arrows_select_whole_emoji_one_at_a_time() {
     for grapheme in SAMPLE.graphemes(true) {
         press(&mut root, Key::Named(NamedKey::ArrowRight), Modifiers::SHIFT);
         wanted.push_str(grapheme);
-        assert_eq!(selected(&root), wanted, "выделение остановилось внутри эмодзи");
+        assert_eq!(selected(&root), wanted, "selection stopped inside an emoji");
     }
 }
 
@@ -25,7 +25,7 @@ fn arrows_back_walk_over_whole_emoji() {
     for grapheme in SAMPLE.graphemes(true).rev() {
         press(&mut root, Key::Named(NamedKey::ArrowLeft), Modifiers::SHIFT);
         wanted.insert_str(0, grapheme);
-        assert_eq!(selected(&root), wanted, "выделение назад остановилось внутри эмодзи");
+        assert_eq!(selected(&root), wanted, "backward selection stopped inside an emoji");
     }
 }
 
@@ -55,10 +55,10 @@ fn a_click_never_puts_the_caret_inside_an_emoji() {
         click(&mut root, f64::from(x), 12.0);
         typing(&mut root, "X");
         let edited = text(&root);
-        let at = edited.find('X').expect("буква вставлена");
+        let at = edited.find('X').expect("letter is inserted");
         assert_eq!(edited.replacen('X', "", 1), SAMPLE);
-        assert!(GraphemeCursor::new(at, SAMPLE.len(), true).is_boundary(SAMPLE, 0).unwrap(), "клик на x={x} поставил каретку внутри эмодзи (смещение {at})");
+        assert!(GraphemeCursor::new(at, SAMPLE.len(), true).is_boundary(SAMPLE, 0).unwrap(), "click at x={x} put the caret inside an emoji (offset {at})");
         landed.insert(at);
     }
-    assert!(landed.len() >= 10, "клики попадают не в разные места: {landed:?}");
+    assert!(landed.len() >= 10, "clicks do not land in different places: {landed:?}");
 }

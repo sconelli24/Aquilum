@@ -36,7 +36,7 @@ impl SyncService {
 
     pub fn start(&self, core: Weak<Core>) {
         let shared = Arc::clone(&self.shared);
-        thread::Builder::new().name("aquilum-sync".into()).spawn(move || work(&shared, &core)).expect("поток синхронизации");
+        thread::Builder::new().name("aquilum-sync".into()).spawn(move || work(&shared, &core)).expect("sync thread");
     }
 
     pub fn status(&self) -> SyncStatus {

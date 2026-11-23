@@ -61,7 +61,7 @@ impl Head {
             return if coding.trim().eq_ignore_ascii_case("chunked") {
                 Ok(Body::Chunked)
             } else {
-                Err(refused(501, "Поддерживается только Transfer-Encoding: chunked"))
+                Err(refused(501, "Only Transfer-Encoding: chunked is supported"))
             };
         }
         match self.header("content-length") {
@@ -70,7 +70,7 @@ impl Head {
                 .trim()
                 .parse()
                 .map(Body::Sized)
-                .map_err(|_| refused(400, "Некорректный Content-Length")),
+                .map_err(|_| refused(400, "Invalid Content-Length")),
         }
     }
 }

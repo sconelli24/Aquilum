@@ -101,7 +101,7 @@ fn postfix_level(cursor: &mut Cursor<'_>) -> Result<Expr, String> {
         if cursor.take_symbol(Symbol::Dot) {
             let name = match cursor.advance().map(|token| &token.piece) {
                 Some(Piece::Word(name)) => name.clone(),
-                _ => return Err("После точки ожидается имя поля".to_owned()),
+                _ => return Err("A field name is expected after the dot".to_owned()),
             };
             base = Expr::Property {
                 base: Box::new(base),
@@ -111,7 +111,7 @@ fn postfix_level(cursor: &mut Cursor<'_>) -> Result<Expr, String> {
         }
         if cursor.take_symbol(Symbol::OpenBracket) {
             let index = expression(cursor)?;
-            cursor.expect_symbol(Symbol::CloseBracket, "закрывающая «]»")?;
+            cursor.expect_symbol(Symbol::CloseBracket, "closing ']'")?;
             base = Expr::Index {
                 base: Box::new(base),
                 index: Box::new(index),
@@ -128,7 +128,7 @@ fn primary(cursor: &mut Cursor<'_>) -> Result<Expr, String> {
     }
     if cursor.take_symbol(Symbol::OpenParen) {
         let inner = expression(cursor)?;
-        cursor.expect_symbol(Symbol::CloseParen, "закрывающая «)»")?;
+        cursor.expect_symbol(Symbol::CloseParen, "closing ')'")?;
         return Ok(inner);
     }
     if cursor.take_symbol(Symbol::OpenBracket) {
@@ -141,7 +141,7 @@ fn primary(cursor: &mut Cursor<'_>) -> Result<Expr, String> {
                 }
             }
         }
-        cursor.expect_symbol(Symbol::CloseBracket, "закрывающая «]»")?;
+        cursor.expect_symbol(Symbol::CloseBracket, "closing ']'")?;
         return Ok(Expr::Call {
             name: "list".to_owned(),
             arguments: items,
@@ -149,7 +149,7 @@ fn primary(cursor: &mut Cursor<'_>) -> Result<Expr, String> {
     }
 
     let Some(token) = cursor.advance() else {
-        return Err("Запрос кончился там, где ожидается значение".to_owned());
+        return Err("The query ended where a value is expected".to_owned());
     };
     match &token.piece {
         Piece::Number(value) => Ok(Expr::Literal(Value::Number(*value))),
@@ -185,7 +185,7 @@ fn primary(cursor: &mut Cursor<'_>) -> Result<Expr, String> {
                         }
                     }
                 }
-                cursor.expect_symbol(Symbol::CloseParen, "закрывающая «)»")?;
+                cursor.expect_symbol(Symbol::CloseParen, "closing ')'")?;
                 return Ok(Expr::Call {
                     name: word.to_lowercase(),
                     arguments,
@@ -194,7 +194,7 @@ fn primary(cursor: &mut Cursor<'_>) -> Result<Expr, String> {
             Ok(Expr::Variable(word.clone()))
         }
         Piece::Symbol(_) => Err(format!(
-            "Здесь ожидается значение, а не «{}»",
+            "A value is expected here, not '{}'",
             cursor.text_of(token)
         )),
     }
@@ -247,7 +247,7 @@ fn lambda(cursor: &mut Cursor<'_>) -> Result<Option<Expr>, String> {
 }
 
 fn raw_call_text(cursor: &mut Cursor<'_>) -> Result<String, String> {
-    cursor.expect_symbol(Symbol::OpenParen, "«(» после «dur»")?;
+    cursor.expect_symbol(Symbol::OpenParen, "'(' after 'dur'")?;
     let from = cursor.offset();
     let mut depth = 1usize;
     loop {
@@ -263,7 +263,7 @@ fn raw_call_text(cursor: &mut Cursor<'_>) -> Result<String, String> {
             }
         }
         if cursor.advance().is_none() {
-            return Err("Ожидается закрывающая «)» после «dur»".to_owned());
+            return Err("A closing ')' is expected after 'dur'".to_owned());
         }
     }
 }

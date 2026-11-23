@@ -106,7 +106,7 @@ impl Document {
     }
 
     pub fn set_markdown(&mut self, fonts: Option<Fonts>) {
-        let _zone = aq_trace::zone("документ: разбор блоков");
+        let _zone = aq_trace::zone("document: block parsing");
         self.markdown = fonts;
         self.invalidate_all();
         self.classify();

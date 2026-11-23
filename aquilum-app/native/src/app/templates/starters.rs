@@ -11,7 +11,7 @@ use crate::i18n::{self, Language, t_in};
 
 const CREATED_PLACEHOLDER: &str = "{{date:DD-MM-YYYY}} | ({{time:HH:mm}})";
 
-/// Хвост шаблона: разделитель и список ссылок с подписью на языке интерфейса.
+/// Template tail: a separator and a list of links with a caption in the interface language.
 fn tail(language: Language, blank_lines: usize) -> String {
     format!("{}***\n\n{}\n- [[]]\n", "\n".repeat(blank_lines), t_in(language, "templateDialog.starterLinks"))
 }

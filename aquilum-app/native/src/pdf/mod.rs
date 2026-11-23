@@ -45,12 +45,12 @@ fn rect(area: Rect) -> Option<krilla::geom::Path> {
 }
 
 pub fn write(layers: &VisualLayerPlan, pages: &[(f64, f64)], background: Color) -> Result<Vec<u8>, String> {
-    let Some(VisualLayerKind::Scene(scene)) = layers.root_layer().map(|l| &l.kind) else { return Err("нет сцены заметки".to_owned()) };
+    let Some(VisualLayerKind::Scene(scene)) = layers.root_layer().map(|l| &l.kind) else { return Err(crate::i18n::t("native.pdf.noScene")) };
     let mut document = Document::new();
     let mut fonts = Fonts::new();
     let c = background.to_rgba8();
     for &(start, end) in pages {
-        let settings = PageSettings::from_wh(PAGE.0 as f32, PAGE.1 as f32).ok_or("размер страницы")?;
+        let settings = PageSettings::from_wh(PAGE.0 as f32, PAGE.1 as f32).ok_or_else(|| crate::i18n::t("native.pdf.pageSize"))?;
         let mut page = document.start_page_with(settings);
         let mut surface = page.surface();
         if let Some(path) = rect(Rect::new(0.0, 0.0, PAGE.0, PAGE.1)) {

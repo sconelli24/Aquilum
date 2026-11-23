@@ -40,7 +40,7 @@ fn card(width: u32) -> RenderRoot {
 }
 
 fn span(root: &RenderRoot) -> Span {
-    root.get_widget_with_tag(TAG).unwrap().inner().card_scrollbar().expect("таблица датавью не прокручивается")
+    root.get_widget_with_tag(TAG).unwrap().inner().card_scrollbar().expect("dataview table does not scroll")
 }
 
 fn state(at: Point, buttons: PointerButtons, modifiers: Modifiers) -> PointerState {
@@ -69,9 +69,9 @@ fn mouse(root: &mut RenderRoot, at: Point, kind: &str) {
 #[test]
 fn a_dataview_table_in_a_narrow_column_keeps_readable_columns_and_scrolls() {
     let narrow = span(&card(340));
-    assert!(narrow.max() > 120.0, "таблица втиснулась в узкий экран вместо прокрутки: запас {}", narrow.max());
+    assert!(narrow.max() > 120.0, "table was squeezed into a narrow screen instead of scrolling: slack {}", narrow.max());
     let wide = card(1400);
-    assert!(wide.get_widget_with_tag(TAG).unwrap().inner().card_scrollbar().is_none(), "на широком экране таблице нечего прокручивать");
+    assert!(wide.get_widget_with_tag(TAG).unwrap().inner().card_scrollbar().is_none(), "on a wide screen there is nothing to scroll in the table");
 }
 
 #[test]
@@ -79,15 +79,15 @@ fn wheel_shift_wheel_and_a_sideways_swipe_move_the_table_but_a_vertical_swipe_do
     let mut root = card(340);
     let max = span(&root).max();
     scroll(&mut root, MOUSE, (-50.0, 0.0), Modifiers::empty());
-    assert_eq!(span(&root).offset, 50.0, "горизонтальное колесо не сдвинуло таблицу");
+    assert_eq!(span(&root).offset, 50.0, "horizontal wheel did not move the table");
     scroll(&mut root, MOUSE, (0.0, -50.0), Modifiers::SHIFT);
-    assert_eq!(span(&root).offset, 100.0, "Shift и колесо не сдвинули таблицу");
+    assert_eq!(span(&root).offset, 100.0, "Shift and wheel did not move the table");
     scroll(&mut root, TOUCH, (30.0, -4.0), Modifiers::empty());
-    assert_eq!(span(&root).offset, 70.0, "свайп вбок пальцем не вернул таблицу");
+    assert_eq!(span(&root).offset, 70.0, "sideways finger swipe did not move the table back");
     scroll(&mut root, TOUCH, (-3.0, -60.0), Modifiers::empty());
-    assert_eq!(span(&root).offset, 70.0, "вертикальный свайп сдвинул таблицу вбок");
+    assert_eq!(span(&root).offset, 70.0, "vertical swipe moved the table sideways");
     scroll(&mut root, MOUSE, (-5000.0, 0.0), Modifiers::empty());
-    assert_eq!(span(&root).offset, max, "прокрутка вышла за край таблицы");
+    assert_eq!(span(&root).offset, max, "scroll went past the table edge");
 }
 
 #[test]
@@ -99,9 +99,9 @@ fn the_scrollbar_is_dragged_after_hovering_it_and_keeps_the_card_in_place() {
     mouse(&mut root, thumb.center(), "down");
     mouse(&mut root, thumb.center() + Vec2::new(40.0, 8.0), "move");
     let dragged = span(&root);
-    assert!(dragged.offset > 0.0 && dragged.offset < start.max(), "перетаскивание полосы не сдвинуло таблицу: {}", dragged.offset);
-    assert_eq!(dragged.track, start.track, "таблица сдвинула строки редактора");
+    assert!(dragged.offset > 0.0 && dragged.offset < start.max(), "dragging the bar did not move the table: {}", dragged.offset);
+    assert_eq!(dragged.track, start.track, "table moved the editor lines");
     mouse(&mut root, thumb.center() + Vec2::new(40.0, 8.0), "up");
     mouse(&mut root, thumb.center() + Vec2::new(200.0, 0.0), "move");
-    assert_eq!(span(&root).offset, dragged.offset, "после отпускания полоса продолжила тянуться");
+    assert_eq!(span(&root).offset, dragged.offset, "bar kept dragging after release");
 }

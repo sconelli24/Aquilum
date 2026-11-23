@@ -122,14 +122,14 @@ impl Host {
     pub(super) fn wheel_delta(&mut self, delta: MouseScrollDelta) -> Option<ScrollDelta> {
         match delta {
             MouseScrollDelta::LineDelta(x, y) => {
-                aq_trace::counter("колесо: строки", f64::from(y));
+                aq_trace::counter("wheel: lines", f64::from(y));
                 Some(ScrollDelta::LineDelta(x, y))
             }
             MouseScrollDelta::PixelDelta(p) => {
                 if self.touchpad.as_ref().is_some_and(crate::touchpad::Touchpad::active) {
                     return None;
                 }
-                aq_trace::counter("колесо: пиксели", p.y);
+                aq_trace::counter("wheel: pixels", p.y);
                 Some(ScrollDelta::PixelDelta(p))
             }
             _ => None,

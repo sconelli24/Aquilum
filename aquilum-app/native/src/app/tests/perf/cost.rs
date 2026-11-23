@@ -52,11 +52,11 @@ fn core_events_cost() {
             worst = (spent, started.elapsed().as_secs_f64());
         }
         if spent > Duration::from_millis(30) {
-            eprintln!("{:.2} с: обработка событий ядра {:?}", started.elapsed().as_secs_f64(), spent);
+            eprintln!("{:.2} s: core event handling {:?}", started.elapsed().as_secs_f64(), spent);
         }
         std::thread::sleep(Duration::from_millis(8));
     }
-    eprintln!("всего на главном потоке {:?}, худшее {:?} на {:.2} с", total, worst.0, worst.1);
+    eprintln!("total on main thread {:?}, worst {:?} at {:.2} s", total, worst.0, worst.1);
 }
 
 #[test]
@@ -92,7 +92,7 @@ fn typing_cost() {
     if let Ok(out) = std::env::var("AQ_TRACE") {
         aq_trace::write(std::path::Path::new(&out)).unwrap();
     }
-    eprintln!("удалено байт {}; нажатие: событие {:?}, действия {:?}, сцена {:?}, растр {:?}", before - h.app.text.byte_len(), event / n, deliver / n, scene / n, raster / n);
+    eprintln!("bytes removed {}; keypress: event {:?}, actions {:?}, scene {:?}, raster {:?}", before - h.app.text.byte_len(), event / n, deliver / n, scene / n, raster / n);
 }
 
 #[test]
@@ -117,7 +117,7 @@ fn resize_cost() {
         scene += t1 - t0;
         raster += t1.elapsed();
     }
-    eprintln!("шаг изменения размера: сцена {:?}, растр {:?}", scene / n, raster / n);
+    eprintln!("resize step: scene {:?}, raster {:?}", scene / n, raster / n);
 }
 
 #[test]
@@ -135,13 +135,13 @@ fn settings_rebuild_cost() {
         config.ui.font.font_size_base = size;
         b.h.app.workspace.core.settings.update_config(config).unwrap();
         let (built, scene, raster) = restyle_cost(&mut b, true);
-        eprintln!("шрифт {size}: restyle {built:?}, раскладка и сцена {scene:?}, растр {raster:?}");
+        eprintln!("font {size}: restyle {built:?}, layout and scene {scene:?}, raster {raster:?}");
     }
     for color in ["#e0457b", "#2a9d8f", "#1471eb"] {
         let mut config = b.h.config();
         config.ui.primary_color = color.into();
         b.h.app.workspace.core.settings.update_config(config).unwrap();
         let (built, scene, raster) = restyle_cost(&mut b, false);
-        eprintln!("цвет {color}: restyle {built:?}, сцена {scene:?}, растр {raster:?}");
+        eprintln!("color {color}: restyle {built:?}, scene {scene:?}, raster {raster:?}");
     }
 }

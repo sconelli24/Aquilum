@@ -20,7 +20,7 @@ fn setters_write_config() {
     let mut config = AppConfig::default();
     let ctx = Context::new(1.0);
     let theme = ui(&config, &ctx).remove(0).rows.remove(1);
-    let Some(Setter::Config(set)) = theme.setter else { panic!("тема пишется в настройки") };
+    let Some(Setter::Config(set)) = theme.setter else { panic!("the theme is written to the settings") };
     set(&mut config, &Value::Index(2));
     assert_eq!(config.ui.theme, "dark");
     assert!(blocks(Section::Analysis, &config, &ctx).len() == 2);
@@ -58,17 +58,17 @@ fn templates_and_attachments_share_one_section_and_search_tuning_lives_with_bm25
     let titles: Vec<String> = blocks(Section::Data, &config, &ctx).into_iter().map(|b| b.title).collect();
     assert_eq!(titles, [t("settings.templates.section"), t("settings.files.section")]);
     for old in ["templates", "files", "data"] {
-        assert_eq!(Section::from_key(old), Some(Section::Data), "сохранённый раздел «{old}» открывает общий раздел");
+        assert_eq!(Section::from_key(old), Some(Section::Data), "the saved section '{old}' opens the shared section");
     }
     assert_eq!(Section::from_key("search"), Some(Section::Analysis));
     assert_eq!(Section::ALL.len(), 12);
 
     let rows = |config: &AppConfig| blocks(Section::Analysis, config, &ctx).into_iter().flat_map(|b| b.rows).map(|r| r.label).collect::<Vec<_>>();
     let pool = t("settings.search.candidatePool");
-    assert!(rows(&config).contains(&pool), "настройки подбора похожих заметок стоят среди параметров BM25F");
+    assert!(rows(&config).contains(&pool), "the similar-notes settings are among the BM25F parameters");
     let mut off = AppConfig::default();
     off.analysis.enable_bm25f = false;
-    assert!(!rows(&off).contains(&pool), "без BM25F этих настроек нет");
+    assert!(!rows(&off).contains(&pool), "without BM25F these settings are absent");
 }
 
 #[test]
@@ -78,11 +78,11 @@ fn sync_is_turned_on_per_vault_after_connecting() {
     ctx.workspace = Some(PathBuf::from("База"));
     ctx.vault_sync = Some(SyncSettings::default());
     let labels = |ctx: &Context| blocks(Section::Sync, &config, ctx).into_iter().flat_map(|b| b.rows).map(|r| r.label).collect::<Vec<_>>();
-    assert!(!labels(&ctx).contains(&t("settings.sync.enabled")), "до входа настройки базы не показываются");
+    assert!(!labels(&ctx).contains(&t("settings.sync.enabled")), "workspace settings are not shown before sign-in");
 
     ctx.sync = SyncStatus::Ready;
     assert!(labels(&ctx).contains(&t("settings.sync.enabled")));
-    assert!(!labels(&ctx).contains(&t("settings.sync.trash")), "новая база по умолчанию не синхронизируется");
+    assert!(!labels(&ctx).contains(&t("settings.sync.trash")), "a new workspace is not synced by default");
 
     ctx.vault_sync = Some(SyncSettings { enabled: true, ..SyncSettings::default() });
     assert!(labels(&ctx).contains(&t("settings.sync.trash")) && labels(&ctx).contains(&t("settings.sync.history")));
@@ -99,7 +99,7 @@ fn sync_is_turned_on_per_vault_after_connecting() {
         rows.filter(|r| r.label == t("settings.sync.enabled")).find_map(|r| r.description)
     };
     ctx.sync = SyncStatus::Running(aquilum_core::sync::Progress::default());
-    assert_eq!(description(&ctx), Some(t("settings.sync.running")), "во время прохода вместо отсчёта — «Синхронизация…»");
+    assert_eq!(description(&ctx), Some(t("settings.sync.running")), "during a pass, 'Syncing...' is shown instead of the countdown");
 
     let count = |done, total| aquilum_core::sync::Count { done, total };
     let stage = |key: &str, done: usize, total: usize| t_with("settings.sync.progress", &[("stage", &t(key)), ("done", &done.to_string()), ("total", &total.to_string())]);

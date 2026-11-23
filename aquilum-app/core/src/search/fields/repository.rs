@@ -59,7 +59,7 @@ mod tests {
         let transaction = connection.transaction().unwrap();
         crate::search::index_document::index_text(&transaction, std::path::Path::new("C:/vault"), path, "---\ntype: note\n---\n").unwrap();
         transaction.commit().unwrap();
-        assert_eq!(count(&connection), 1, "поля прежней версии заметки удалены");
+        assert_eq!(count(&connection), 1, "fields of the previous note version are removed");
 
         let transaction = connection.transaction().unwrap();
         crate::search::pages::remove(&transaction, &path.to_string_lossy()).unwrap();
@@ -85,8 +85,8 @@ mod tests {
         transaction.commit().unwrap();
 
         let read = query::read(&connection, std::slice::from_ref(&path)).unwrap();
-        let fields = read.get(&path).expect("поля заметки прочитаны");
-        assert_eq!(fields.len(), 3, "порядок и состав полей сохранены");
+        let fields = read.get(&path).expect("note fields read");
+        assert_eq!(fields.len(), 3, "field order and contents are preserved");
         assert_eq!(fields[0].key, "type");
         assert_eq!(fields[1].text, "Иван Ефремов");
         assert_eq!(fields[2].items, vec!["fiction", "classic"]);
@@ -115,7 +115,7 @@ mod tests {
         assert_eq!(
             filled,
             vec!["C:/vault/Книга.md".to_owned()],
-            "пустое значение не считается заполненным"
+            "an empty value does not count as filled"
         );
     }
 }

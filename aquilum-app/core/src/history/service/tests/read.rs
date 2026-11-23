@@ -17,7 +17,7 @@ fn the_page_lists_past_versions_newest_first_and_a_version_comes_with_the_one_be
     assert_eq!(page.total, 3);
     let full = |id: &str| match history.view(&|| fixture.roots(), &note, id) {
         Some(VersionView::Full(texts)) => (texts.text, texts.previous),
-        _ => panic!("маленькая версия показывается целиком"),
+        _ => panic!("a small version is shown in full"),
     };
     assert_eq!(full(&page.versions[0].id), ("третья".to_owned(), Some("вторая".to_owned())));
     let second = history.page(&|| fixture.roots(), &note, None, 1, 1).versions.remove(0);

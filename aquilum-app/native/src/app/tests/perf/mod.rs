@@ -72,7 +72,7 @@ impl Threads {
             .filter(|(_, ms)| *ms > least)
             .collect();
         busy.sort_by(|a, b| b.1.total_cmp(&a.1));
-        busy.iter().map(|(name, ms)| format!("{name}: {ms:.0} мс")).collect::<Vec<_>>().join("; ")
+        busy.iter().map(|(name, ms)| format!("{name}: {ms:.0} ms")).collect::<Vec<_>>().join("; ")
     }
 }
 

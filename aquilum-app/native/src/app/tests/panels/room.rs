@@ -26,31 +26,31 @@ fn a_narrow_window_hides_the_right_panel_first_and_brings_both_back_while_draggi
     h.app.interface.set_width(Side::Sidebar, Some(400.0));
     drag_to(&mut h, 1200.0);
     let (sidebar, panel, _) = shown(&h);
-    assert!(sidebar > 0.0 && panel > 0.0, "на широком окне видны обе панели: {sidebar} {panel}");
+    assert!(sidebar > 0.0 && panel > 0.0, "both panels visible in a wide window: {sidebar} {panel}");
     drag_to(&mut h, 900.0);
     let (sidebar, panel, editor) = shown(&h);
-    assert!(sidebar > 0.0 && panel == 0.0 && editor >= 300.0, "сначала уходит правая: {sidebar} {panel} {editor}");
+    assert!(sidebar > 0.0 && panel == 0.0 && editor >= 300.0, "right one goes first: {sidebar} {panel} {editor}");
     drag_to(&mut h, 700.0);
     let (sidebar, panel, editor) = shown(&h);
-    assert!(sidebar == 0.0 && panel == 0.0 && editor >= 300.0, "затем левая: {sidebar} {panel} {editor}");
+    assert!(sidebar == 0.0 && panel == 0.0 && editor >= 300.0, "then the left one: {sidebar} {panel} {editor}");
     drag_to(&mut h, 500.0);
     h.anim(std::time::Duration::from_secs(1));
     drag_to(&mut h, 1200.0);
     let (sidebar, panel, _) = shown(&h);
-    assert!(sidebar > 0.0 && panel > 0.0, "панели вернулись без кадров анимации: {sidebar} {panel}");
-    assert!(h.app.interface.sidebar_open() && h.app.interface.right_open(), "сужение окна не меняет настройки");
+    assert!(sidebar > 0.0 && panel > 0.0, "panels came back without animation frames: {sidebar} {panel}");
+    assert!(h.app.interface.sidebar_open() && h.app.interface.right_open(), "narrowing the window does not change settings");
 }
 
 #[test]
 fn the_panel_button_makes_room_for_a_hidden_panel() {
     let mut h = Harness::new();
     drag_to(&mut h, 860.0);
-    assert!(!h.app.panel_visible(), "правой панели не хватает места");
+    assert!(!h.app.panel_visible(), "no room for the right panel");
     let toggle = h.app.chrome.as_ref().unwrap().panel_toggle;
     h.act(toggle, Pressed);
     h.settle();
-    assert!(h.app.panel_visible(), "кнопка показала правую панель");
-    assert!(!h.app.interface.sidebar_open(), "левая уступила ей место");
+    assert!(h.app.panel_visible(), "button showed the right panel");
+    assert!(!h.app.interface.sidebar_open(), "left one made room for it");
 }
 
 #[test]
@@ -61,6 +61,6 @@ fn the_note_fills_the_window_at_every_width() {
         drag_to(&mut h, width);
         h.settle();
         let height = h.root.get_widget(h.app.note_ids.as_ref().unwrap().scroll.id()).unwrap().ctx().bounding_box().height();
-        assert!(height > f64::from(H) / 2.0, "заметке не досталось высоты при ширине {width}: {height}");
+        assert!(height > f64::from(H) / 2.0, "note got no height at width {width}: {height}");
     }
 }

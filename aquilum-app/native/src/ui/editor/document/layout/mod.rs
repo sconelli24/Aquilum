@@ -55,11 +55,11 @@ impl Document {
                     _ => merged.push(span),
                 }
             }
-            let measured = aq_trace::zone("вёрстка: высоты абзацев");
+            let measured = aq_trace::zone("layout: paragraph heights");
             let changed = self.measure(fcx, lcx, styles, compose, selection, rebreak, &merged, &pinned, stale.as_ref(), &mut wanted) || rebreak;
             drop(measured);
             rebreak = false;
-            let placed = aq_trace::zone("вёрстка: расстановка");
+            let placed = aq_trace::zone("layout: placement");
             for span in &merged {
                 self.place(span.start, span.end, fcx, lcx, styles, width, selection);
             }

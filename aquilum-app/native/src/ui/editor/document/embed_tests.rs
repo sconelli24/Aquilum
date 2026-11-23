@@ -30,7 +30,7 @@ fn missing_media_stays_visible_as_text() {
     doc.resolver = Some(Arc::new(Files));
     let doc = laid(doc);
     let embedded: Vec<bool> = doc.paragraphs().map(|p| p.embed.is_some()).collect();
-    assert_eq!(embedded, [true, false, false], "ненайденная картинка спряталась вместо того, чтобы показать строку");
+    assert_eq!(embedded, [true, false, false], "a missing image was hidden instead of showing the source line");
     let shown: Vec<(f64, Fold)> = doc.paragraphs().enumerate().map(|(i, p)| (doc.bottom(i) - doc.top(i), p.fold)).collect();
     assert!(shown[1..].iter().all(|(h, f)| *h > 0.0 && *f == Fold::None), "{shown:?}");
 }
@@ -38,16 +38,16 @@ fn missing_media_stays_visible_as_text() {
 #[test]
 fn table_cells_use_editor_markdown() {
     let doc = laid(markdown("| **жирный** | [[Заметка\\|алиас]] |\n| --- | --- |\n| `код` | #тег и [сайт](https://e.com) |"));
-    let (_, view) = doc.table_at(0).expect("таблица свёрстана");
-    let cell = |r, c| view.cell(r, c).expect("ячейка");
+    let (_, view) = doc.table_at(0).expect("table is laid out");
+    let cell = |r, c| view.cell(r, c).expect("cell");
     let link = &cell(0, 1).decor.links[0];
     assert_eq!((link.target.as_str(), link.wiki, &view.model.value(0, 1)[link.label.clone()]), ("Заметка", true, "алиас"));
-    assert_eq!(cell(1, 0).decor.codes.len(), 1, "код в ячейке не оформлен");
-    assert_eq!(cell(1, 1).decor.tags.len(), 1, "тег в ячейке не оформлен");
+    assert_eq!(cell(1, 0).decor.codes.len(), 1, "code in the cell is not styled");
+    assert_eq!(cell(1, 1).decor.tags.len(), 1, "tag in the cell is not styled");
     assert_eq!(cell(1, 1).decor.links[0].target, "https://e.com");
     let layout = &cell(0, 1).layout;
     let b = Cursor::from_byte_index(layout, link.label.start + 2, Affinity::Downstream).geometry(layout, 0.0);
-    assert_eq!(cell(0, 1).decor.link_at(layout, b.x0 + 1.0, (b.y0 + b.y1) / 2.0).map(|l| l.target.as_str()), Some("Заметка"), "щелчок по псевдониму не находит ссылку");
+    assert_eq!(cell(0, 1).decor.link_at(layout, b.x0 + 1.0, (b.y0 + b.y1) / 2.0).map(|l| l.target.as_str()), Some("Заметка"), "clicking the alias does not find the link");
 }
 
 #[test]
@@ -69,6 +69,6 @@ fn clicks_in_a_table_cell_place_caret_word_and_cell() {
             2 => word..word + "другое".len(),
             _ => 0.."слово другое третье".len(),
         };
-        assert_eq!(anchor..caret, expected, "щелчков: {count}");
+        assert_eq!(anchor..caret, expected, "clicks: {count}");
     }
 }

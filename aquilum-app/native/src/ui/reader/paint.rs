@@ -121,7 +121,7 @@ impl ReaderView {
             box_shadow(painter, shape, tm.elevation_md);
             painter.fill(shape, tm.bg_surface).draw();
             painter.stroke(&RoundedRect::from_rect(self.toolbar.inflate(-0.5, -0.5), size::RADIUS_XL - 0.5), &Stroke::new(size::BORDER_1), tm.border_subtle).draw();
-            let (from, to) = self.ordered().expect("выделение проверено выше");
+            let (from, to) = self.ordered().expect("selection is checked above");
             let text = self.session.text(from, to);
             let line = Self::line_height();
             let layout = self.preview_line.layout(ctx, &text, self.preview.width().max(1.0), Style::ui(line));

@@ -106,7 +106,7 @@ pub fn desktop_main() {
         std::process::exit(aquilum_core::mcp::run_stdio_bridge(workspace::APP_ID));
     }
     let _ = rayon::ThreadPoolBuilder::new().num_threads(WORKERS).build_global();
-    let result = args::parse().and_then(|args| host::run(args, winit::event_loop::EventLoop::new().map_err(|e| format!("цикл событий: {e}"))?));
+    let result = args::parse().and_then(|args| host::run(args, winit::event_loop::EventLoop::new().map_err(|e| format!("event loop: {e}"))?));
     if let Err(err) = &result {
         report!("{err}");
         native_dialog::alert(err);

@@ -14,8 +14,8 @@ fn phase(b: &mut Bench, name: &str, base: usize, run: impl FnOnce(&mut Bench)) {
     reset_peak();
     let (t, cpu, threads) = (Instant::now(), cpu_ms(), Threads::now());
     run(b);
-    eprintln!("{name}: {:?}, ЦП {:.0} мс, пик +{:.0} МБ, после +{:.0} МБ · {}", t.elapsed(), cpu_ms() - cpu, mb(peak().saturating_sub(base)), mb(heap().saturating_sub(base)), private());
-    eprintln!("  потоки: {}", threads.busy(20.0));
+    eprintln!("{name}: {:?}, CPU {:.0} ms, peak +{:.0} MB, after +{:.0} MB · {}", t.elapsed(), cpu_ms() - cpu, mb(peak().saturating_sub(base)), mb(heap().saturating_sub(base)), private());
+    eprintln!("  threads: {}", threads.busy(20.0));
 }
 
 fn sampler(stop: std::sync::Arc<std::sync::atomic::AtomicBool>) -> std::thread::JoinHandle<String> {
@@ -24,7 +24,7 @@ fn sampler(stop: std::sync::Arc<std::sync::atomic::AtomicBool>) -> std::thread::
         while !stop.load(std::sync::atomic::Ordering::Relaxed) {
             if heap() > top + 32 * 1024 * 1024 {
                 top = heap();
-                snapshot = format!("куча +{:.0} МБ\n{}", mb(top), report());
+                snapshot = format!("heap +{:.0} MB\n{}", mb(top), report());
             }
             std::thread::sleep(Duration::from_millis(1));
         }
@@ -55,19 +55,19 @@ fn big_note_typing_memory() {
     let note = b.h.copy_note();
     let (core, workspace) = (std::sync::Arc::clone(&b.h.app.workspace.core), b.h.vault.path().to_string_lossy().into_owned());
     core.search.prepare(&workspace).unwrap();
-    assert!(wait_index(&core, &workspace), "индекс не готов");
+    assert!(wait_index(&core, &workspace), "index not ready");
     std::thread::sleep(Duration::from_secs(2));
     let base = heap();
-    eprintln!("до открытия · {}", private());
-    phase(&mut b, "открытие", base, |b| {
+    eprintln!("before open · {}", private());
+    phase(&mut b, "open", base, |b| {
         let started = Instant::now();
         b.h.app.open(&mut b.h.root, note.clone());
         let asked = started.elapsed();
         b.h.parked();
-        eprintln!("  главный поток занят {asked:?}, текст готов через {:?}", started.elapsed());
+        eprintln!("  main thread busy {asked:?}, text ready after {:?}", started.elapsed());
         b.timed(true);
     });
-    phase(&mut b, "фон после открытия 10 с", base, |b| {
+    phase(&mut b, "background after open 10 s", base, |b| {
         background(b, 10);
     });
     let at = (f64::from(b.w) / 2.0, f64::from(b.hh) / 2.0);
@@ -80,7 +80,7 @@ fn big_note_typing_memory() {
     let traced = std::env::var_os("AQ_PROBE_TRACE").is_some();
     trace(traced);
     for round in 1..=if traced { 1 } else { 3 } {
-        phase(&mut b, &format!("круг {round}: 20 букв"), base, |b| {
+        phase(&mut b, &format!("round {round}: 20 letters"), base, |b| {
             let mut slowest = (0.0f64, 0);
             for key in 0..20 {
                 let t = Instant::now();
@@ -91,24 +91,24 @@ fn big_note_typing_memory() {
                     slowest = (spent, key);
                 }
             }
-            eprintln!("самая долгая буква: №{} — {:.1} мс", slowest.1, slowest.0);
+            eprintln!("slowest letter: #{} — {:.1} ms", slowest.1, slowest.0);
         });
         let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         let watch = sampler(std::sync::Arc::clone(&stop));
-        phase(&mut b, &format!("круг {round}: сохранение"), base, |b| {
+        phase(&mut b, &format!("round {round}: save"), base, |b| {
             b.h.app.tick(&mut b.h.root, Instant::now() + Duration::from_secs(3600));
             crate::disk::wait();
         });
         stop.store(true, std::sync::atomic::Ordering::Relaxed);
         if round == 1 {
-            eprintln!("наибольший снимок сохранения:\n{}", watch.join().unwrap());
+            eprintln!("largest save snapshot:\n{}", watch.join().unwrap());
         }
         let mut snapshot = String::new();
-        phase(&mut b, &format!("круг {round}: фон 15 с"), base, |b| {
+        phase(&mut b, &format!("round {round}: background 15 s"), base, |b| {
             snapshot = background(b, 15);
         });
         if round == 1 {
-            eprintln!("наибольший снимок фона:\n{snapshot}");
+            eprintln!("largest background snapshot:\n{snapshot}");
         }
     }
     if let Ok(out) = std::env::var("AQ_TRACE") {

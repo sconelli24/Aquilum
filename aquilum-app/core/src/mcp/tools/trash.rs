@@ -13,26 +13,26 @@ pub fn definitions() -> Vec<Value> {
     vec![
         tool(
             "list_trash",
-            "Удалённые заметки в корзине базы, от свежих к старым: original — где заметка лежала, deletedAtMs — время удаления в миллисекундах Unix, path — адрес в корзине для restore_note. Корзина сама чистится по сроку из настроек.",
+            "Deleted notes in the workspace trash, newest first: original is where the note used to be, deletedAtMs is the deletion time in Unix milliseconds, path is the address in the trash for restore_note. The trash is cleaned automatically after the period set in settings.",
             json!({
-                "offset": { "type": "integer", "description": "Сколько записей пропустить, чтобы получить следующую страницу" },
-                "limit": { "type": "integer", "description": "Сколько записей вернуть, по умолчанию 100, максимум 500" },
+                "offset": { "type": "integer", "description": "How many entries to skip to get the next page" },
+                "limit": { "type": "integer", "description": "How many entries to return, default 100, maximum 500" },
                 "workspace": workspace_property(),
             }),
             &[],
         ),
         tool(
             "restore_note",
-            "Вернуть заметку из корзины на прежнее место. Принимает path из list_trash или прежний путь заметки; из нескольких копий с одним путём возвращается самая свежая. Если прежнее место занято, заметка вернётся рядом с суффиксом « (1)».",
+            "Restore a note from the trash to its former place. Accepts a path from list_trash or the note's former path; of several copies with the same path the newest is restored. If the former place is taken, the note is restored next to it with the suffix \" (1)\".",
             json!({
-                "note": { "type": "string", "description": "path из list_trash или прежний путь заметки, например «Проекты/Идея.md»" },
+                "note": { "type": "string", "description": "path from list_trash or the note's former path, for example \"Projects/Idea.md\"" },
                 "workspace": workspace_property(),
             }),
             &["note"],
         ),
         tool(
             "empty_trash",
-            "Очистить корзину безвозвратно. Вызывайте только по прямой просьбе пользователя.",
+            "Empty the trash permanently. Call only at the user's direct request.",
             json!({ "workspace": workspace_property() }),
             &[],
         ),
@@ -91,7 +91,7 @@ fn trashed_note(vault: &Vault, wanted: &str) -> Result<PathBuf, String> {
             candidate == original || candidate == with_extension
         })
         .map(|item| PathBuf::from(item.path))
-        .ok_or_else(|| format!("В корзине нет заметки «{wanted}» — список покажет list_trash"))
+        .ok_or_else(|| format!("There is no note “{wanted}” in the trash: list_trash shows the list"))
 }
 
 #[cfg(test)]
@@ -115,7 +115,7 @@ mod tests {
         fs::write(&note, "вторая").unwrap();
         let newest = move_to_trash_impl(&root, &note).unwrap().root;
 
-        assert_eq!(trashed_note(&vault, "Проекты/Идея").unwrap(), newest, "свежая копия");
+        assert_eq!(trashed_note(&vault, "Проекты/Идея").unwrap(), newest, "newest copy");
         assert_eq!(trashed_note(&vault, "проекты\\идея.md").unwrap(), newest);
         assert_eq!(
             trashed_note(&vault, ".trash/Проекты/Идея.md").unwrap(),

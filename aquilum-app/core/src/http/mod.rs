@@ -14,9 +14,9 @@ const HANG_UP_WAIT: Duration = Duration::from_secs(1);
 const MAX_FRAMING_BYTES: usize = 16 * 1024;
 const MAX_HEADERS: usize = 64;
 const READ_CHUNK: usize = 16 * 1024;
-const FRAMING_TOO_LARGE: &str = "Слишком длинный заголовок запроса";
-const BAD_CHUNK: &str = "Некорректное chunked-тело запроса";
-const BODY_TOO_LARGE: &str = "Слишком большой запрос";
+const FRAMING_TOO_LARGE: &str = "Request header too long";
+const BAD_CHUNK: &str = "Invalid chunked request body";
+const BODY_TOO_LARGE: &str = "Request too large";
 
 pub enum Failure {
     Gone,
@@ -94,7 +94,7 @@ impl<'a> Connection<'a> {
             Ok(httparse::Status::Complete(length)) => length,
             Ok(httparse::Status::Partial) => return Ok(None),
             Err(httparse::Error::TooManyHeaders) => return Err(refused(431, FRAMING_TOO_LARGE)),
-            Err(_) => return Err(refused(400, "Некорректный запрос")),
+            Err(_) => return Err(refused(400, "Invalid request")),
         };
         let head = Head::from_parsed(&request);
         self.received.drain(..length);

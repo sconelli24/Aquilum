@@ -48,5 +48,5 @@ pub fn retrying<T>(note: &Path, mut attempt: impl FnMut(&str) -> Result<T, FileC
 }
 
 fn missing(id: &str) -> FileCommandError {
-    FileCommandError::Task { message: format!("нет версии {id}") }
+    FileCommandError::Task { message: format!("no version {id}") }
 }

@@ -64,55 +64,55 @@ fn matches_foliate_golden() {
         let file = entry["file"].as_str().unwrap();
         let started = std::time::Instant::now();
         let Some(book) = Book::open(&vault.join(file)) else {
-            failures.push(format!("{file}: не открылась"));
+            failures.push(format!("{file}: failed to open"));
             continue;
         };
         let sections = entry["sections"].as_array().unwrap();
         if sections.len() != book.sections.len() {
-            failures.push(format!("{file}: глав {} вместо {}", book.sections.len(), sections.len()));
+            failures.push(format!("{file}: chapters {} instead of {}", book.sections.len(), sections.len()));
             continue;
         }
         for (index, section) in sections.iter().enumerate() {
             if book.sections[index].base != section["base"].as_str().unwrap() {
-                failures.push(format!("{file} #{index}: база {} вместо {}", book.sections[index].base, section["base"]));
+                failures.push(format!("{file} #{index}: base {} instead of {}", book.sections[index].base, section["base"]));
             }
             if book.document(index).is_none() {
-                failures.push(format!("{file} #{index}: глава не разобрана"));
+                failures.push(format!("{file} #{index}: chapter was not parsed"));
                 continue;
             }
             for point in section["points"].as_array().unwrap() {
                 checked += 1;
                 let cfi = point["cfi"].as_str().unwrap();
                 let Some((i, start, _)) = book.resolve(cfi) else {
-                    failures.push(format!("{file}: {cfi} не разрешился"));
+                    failures.push(format!("{file}: {cfi} did not resolve"));
                     continue;
                 };
                 let got = after(&book, i, start);
                 if got != point["after"].as_str().unwrap() {
-                    failures.push(format!("{file}: {cfi} → {got:?} вместо {:?}", point["after"]));
+                    failures.push(format!("{file}: {cfi} → {got:?} instead of {:?}", point["after"]));
                     continue;
                 }
                 let back = text_point(start).and_then(|p| book.cfi(i, p, p));
                 if back.as_deref() != Some(cfi) {
-                    failures.push(format!("{file}: из места собран {back:?} вместо {cfi}"));
+                    failures.push(format!("{file}: a location produced {back:?} instead of {cfi}"));
                 }
             }
             for range in section["ranges"].as_array().unwrap() {
                 checked += 1;
                 let cfi = range["cfi"].as_str().unwrap();
                 let Some((i, start, end)) = book.resolve(cfi) else {
-                    failures.push(format!("{file}: {cfi} не разрешился"));
+                    failures.push(format!("{file}: {cfi} did not resolve"));
                     continue;
                 };
                 let text = book.text(i, start, end).unwrap_or_default();
                 let length = text.encode_utf16().count() as u64;
                 if length != range["length"].as_u64().unwrap() || prefix(&text, 48) != range["text"].as_str().unwrap() {
-                    failures.push(format!("{file}: {cfi} → {:?} ({length}) вместо {:?} ({})", prefix(&text, 48), range["text"], range["length"]));
+                    failures.push(format!("{file}: {cfi} → {:?} ({length}) instead of {:?} ({})", prefix(&text, 48), range["text"], range["length"]));
                     continue;
                 }
                 let back = text_point(start).zip(text_point(end)).and_then(|(a, b)| book.cfi(i, a, b));
                 if back.as_deref() != Some(cfi) {
-                    failures.push(format!("{file}: из выделения собран {back:?} вместо {cfi}"));
+                    failures.push(format!("{file}: a selection produced {back:?} instead of {cfi}"));
                 }
             }
         }
@@ -120,21 +120,21 @@ fn matches_foliate_golden() {
             checked += 1;
             let cfi = saved["cfi"].as_str().unwrap();
             let Some((i, start, end)) = book.resolve(cfi) else {
-                failures.push(format!("{file}: сохранённая {cfi} не разрешилась"));
+                failures.push(format!("{file}: saved {cfi} did not resolve"));
                 continue;
             };
             let text = book.text(i, start, end).unwrap_or_default();
             if i as u64 != saved["index"].as_u64().unwrap() || prefix(&text, 60) != saved["text"].as_str().unwrap() || text.encode_utf16().count() as u64 != saved["length"].as_u64().unwrap() {
-                failures.push(format!("{file}: сохранённая {cfi} → #{i} {:?} вместо #{} {:?}", prefix(&text, 60), saved["index"], saved["text"]));
+                failures.push(format!("{file}: saved {cfi} → #{i} {:?} instead of #{} {:?}", prefix(&text, 60), saved["index"], saved["text"]));
             }
         }
-        eprintln!("{file}: глав {}, {:?}", book.sections.len(), started.elapsed());
+        eprintln!("{file}: chapters {}, {:?}", book.sections.len(), started.elapsed());
     }
     for failure in failures.iter().take(40) {
         eprintln!("{failure}");
     }
-    assert!(failures.is_empty(), "расхождений {} из {checked}", failures.len());
-    eprintln!("проверено {checked}, всё совпало");
+    assert!(failures.is_empty(), "mismatches {} of {checked}", failures.len());
+    eprintln!("checked {checked}, everything matched");
 }
 
 #[test]
@@ -146,13 +146,13 @@ fn quote_links_point_at_their_text() {
     let own = crate::frontmatter::parse(&doc).and_then(|f| f.text(crate::frontmatter::BOOK_FILE).map(str::to_owned));
     let normalize = |s: &str| s.replace(['\\', '«', '»', '“', '”'], "").split_whitespace().collect::<Vec<_>>().join(" ");
     let quotes = super::quotes::find(&doc);
-    assert!(!quotes.is_empty(), "цитат нет");
+    assert!(!quotes.is_empty(), "no quotes");
     let mut failures = Vec::new();
     for quote in quotes {
-        let file = quote.book.clone().or_else(|| own.clone()).expect("файл книги");
-        let book = Book::open(&vault.join(&file)).expect("книга открылась");
+        let file = quote.book.clone().or_else(|| own.clone()).expect("book file");
+        let book = Book::open(&vault.join(&file)).expect("book opened");
         let Some((index, start, end)) = book.resolve(&quote.cfi) else {
-            failures.push(format!("[{}] {} не разрешился", quote.label, quote.cfi));
+            failures.push(format!("[{}] {} did not resolve", quote.label, quote.cfi));
             continue;
         };
         let got = normalize(&book.text(index, start, end).unwrap_or_default());
@@ -160,7 +160,7 @@ fn quote_links_point_at_their_text() {
         let head: String = want.chars().take(40).collect();
         eprintln!("[{}] {} -> {:?}", quote.label, quote.cfi, got.chars().take(60).collect::<String>());
         if !got.contains(&head) {
-            failures.push(format!("[{}] {}: ждали {head:?}, а там {:?}", quote.label, quote.cfi, got.chars().take(80).collect::<String>()));
+            failures.push(format!("[{}] {}: expected {head:?}, got {:?}", quote.label, quote.cfi, got.chars().take(80).collect::<String>()));
         }
     }
     assert!(failures.is_empty(), "{failures:#?}");

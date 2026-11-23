@@ -13,7 +13,7 @@ use crate::ui::tokens::{self, Builtin, Theme};
 
 static CURRENT: RwLock<Option<Arc<Theme>>> = RwLock::new(None);
 static DARK: AtomicBool = AtomicBool::new(false);
-/// Индекс показанной темы в `tokens::THEMES`.
+/// Index of the shown theme in `tokens::THEMES`.
 static ACTIVE: AtomicUsize = AtomicUsize::new(LIGHT);
 static PRIMARY: Mutex<[u8; 3]> = Mutex::new(DEFAULT_PRIMARY);
 static CHOICE: RwLock<Option<Arc<Choice>>> = RwLock::new(None);
@@ -23,7 +23,7 @@ pub(super) const DEFAULT_PRIMARY: [u8; 3] = [0x14, 0x71, 0xeb];
 const LIGHT: usize = 0;
 const DARK_THEME: usize = 1;
 
-/// Выбранные темы и правки пользователя поверх них: id темы → токен → «#rrggbb» или число.
+/// Selected themes and user edits on top of them: theme id -> token -> "#rrggbb" or a number.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Choice {
     pub light: String,
@@ -50,7 +50,7 @@ pub fn is_dark() -> bool {
     !printing_now() && DARK.load(Ordering::Relaxed)
 }
 
-/// Печать — на светлой теме Aquilum, но с размерами и насыщенностью заголовков показанной темы.
+/// Print uses the light Aquilum theme, but with the heading sizes and weights of the shown theme.
 pub fn printing<T>(print: impl FnOnce() -> T) -> T {
     let mut paper = *themed(LIGHT, *PRIMARY.lock().unwrap_or_else(|e| e.into_inner()), None);
     let mut shown = *current();
@@ -82,12 +82,12 @@ pub fn current() -> Arc<Theme> {
     CURRENT.read().unwrap_or_else(|e| e.into_inner()).clone().unwrap_or_else(|| base(LIGHT))
 }
 
-/// Показанная тема.
+/// The shown theme.
 pub fn active() -> &'static Builtin {
     &tokens::THEMES[ACTIVE.load(Ordering::Relaxed).min(tokens::THEMES.len() - 1)]
 }
 
-/// Встроенные светлые (`dark == false`) или тёмные темы.
+/// Built-in light (`dark == false`) or dark themes.
 pub fn builtins(dark: bool) -> impl Iterator<Item = &'static Builtin> {
     tokens::THEMES.iter().filter(move |builtin| builtin.dark == dark)
 }
@@ -111,7 +111,7 @@ fn rgb(c: [u8; 3]) -> [f32; 4] {
     [r, g, b, 1.0]
 }
 
-/// Тема `index` с акцентом `primary` и правками пользователя; без правок — значения как есть.
+/// Theme `index` with accent `primary` and user edits; without edits, the values as they are.
 fn themed(index: usize, primary: [u8; 3], overrides: Option<&BTreeMap<String, String>>) -> Arc<Theme> {
     let overrides: Vec<(String, String)> = overrides.map(|o| o.iter().map(|(k, v)| (k.clone(), v.clone())).collect()).unwrap_or_default();
     if primary == DEFAULT_PRIMARY && overrides.is_empty() {
@@ -151,7 +151,7 @@ fn themed(index: usize, primary: [u8; 3], overrides: Option<&BTreeMap<String, St
     theme
 }
 
-/// Темы для светлого и тёмного режима и правки к ним; применяется следующим `apply_setting`.
+/// Themes for light and dark mode and their edits; applied by the next `apply_setting`.
 pub fn set_choice(choice: Choice) {
     *CHOICE.write().unwrap_or_else(|e| e.into_inner()) = Some(Arc::new(choice));
 }
@@ -182,7 +182,7 @@ pub fn apply_setting(setting: &str, system_dark: bool, primary: &str) {
     crate::system::set_dark_theme(dark);
 }
 
-/// Цвет входа `name` (`tokens::INPUTS`) в показанной теме; полупрозрачный — каким он выглядит на фоне заметки.
+/// Color of input `name` (`tokens::INPUTS`) in the shown theme; if translucent, as it looks over the note background.
 pub fn input_hex(name: &str) -> Option<String> {
     let at = tokens::INPUTS.iter().position(|input| *input == name)?;
     let t = current();
@@ -192,14 +192,14 @@ pub fn input_hex(name: &str) -> Option<String> {
     Some(hex(Color::new([over(r, br), over(g, bg), over(b, bb), 1.0])))
 }
 
-/// Число `name` (`tokens::NUMBERS`) в показанной теме.
+/// Number `name` (`tokens::NUMBERS`) in the shown theme.
 pub fn number(name: &str) -> Option<f32> {
     let at = tokens::NUMBERS.iter().position(|number| *number == name)?;
     let mut shown = *current();
     tokens::number_mut(&mut shown, at).copied()
 }
 
-/// Размер и насыщенность заголовков, цвет жирного и курсива: их смена требует новой раскладки текста.
+/// Heading size and weight, bold and italic color: changing them requires a new text layout.
 pub fn typography(t: &Theme) -> [f32; 14] {
     let colored = |c: Color| if c == t.editor_text { 0.0 } else { 1.0 };
     [

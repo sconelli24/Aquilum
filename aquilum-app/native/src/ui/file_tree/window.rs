@@ -73,8 +73,8 @@ mod tests {
 
     fn list(root: &mut RenderRoot, tree: &FileTree) -> (f64, Vec<WidgetId>) {
         let _ = root.redraw();
-        let scroll = tree.scroll.and_then(|scroll| scroll.get(root)).expect("прокрутка дерева");
-        let list = scroll.children().into_iter().next().expect("список строк");
+        let scroll = tree.scroll.and_then(|scroll| scroll.get(root)).expect("tree scroll");
+        let list = scroll.children().into_iter().next().expect("row list");
         (list.ctx().border_box().height(), list.children().iter().map(|child| child.id()).collect())
     }
 
@@ -94,12 +94,12 @@ mod tests {
         for first in [30, 90, 60, 0, 200, 170, 240, 0] {
             tree.slide(&mut root, first);
             let shown: Vec<String> = tree.row_ids.iter().filter_map(|&id| Some(root.get_widget(id)?.downcast::<TreeRow>()?.inner().name().to_owned())).collect();
-            assert_eq!(shown, tree.names()[tree.built_rows()], "строки окна с {first}");
+            assert_eq!(shown, tree.names()[tree.built_rows()], "window rows from {first}");
             let (now, children) = list(&mut root, &tree);
             let rows: Vec<WidgetId> = children.iter().copied().filter(|id| tree.row_ids.contains(id)).collect();
-            assert_eq!(rows, tree.row_ids, "порядок строк окна с {first}");
+            assert_eq!(rows, tree.row_ids, "window row order from {first}");
             assert_eq!(children.len() - rows.len(), usize::from(first > 0) + usize::from(tree.built_rows().end < 400));
-            assert!((now - height).abs() < 0.01, "высота списка {now} вместо {height}");
+            assert!((now - height).abs() < 0.01, "list height {now} instead of {height}");
         }
     }
 }

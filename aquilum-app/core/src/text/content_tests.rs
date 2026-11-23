@@ -29,5 +29,5 @@ fn characters_are_counted_not_bytes() {
     let text = "я".repeat(150);
     assert!(chars_below(&text.as_str(), [0..text.len()], 200).unwrap());
     assert!(!chars_below(&text.as_str(), [0..text.len()], 150).unwrap());
-    assert!(!chars_below(&text.as_str(), [0..text.len() / 2, text.len() / 2..text.len()], 150).unwrap(), "символы считаются по всем кускам вместе");
+    assert!(!chars_below(&text.as_str(), [0..text.len() / 2, text.len() / 2..text.len()], 150).unwrap(), "characters are counted across all pieces together");
 }

@@ -11,7 +11,7 @@ fn counted(h: &mut Harness) {
     assert!(wait_until(500, 10, || {
         h.app.tree.poll(&mut h.root);
         h.app.tree.counted()
-    }), "число элементов не посчитано");
+    }), "item count not computed");
 }
 
 fn folder_with_notes(h: &mut Harness, name: &str, notes: usize) -> PathBuf {
@@ -25,7 +25,7 @@ fn folder_with_notes(h: &mut Harness, name: &str, notes: usize) -> PathBuf {
 }
 
 fn open_folder(h: &mut Harness, name: &str) {
-    let center = rect(h, h.app.tree.row_id(name).expect("строка папки")).center();
+    let center = rect(h, h.app.tree.row_id(name).expect("folder row")).center();
     h.click(center.x, center.y);
 }
 
@@ -47,7 +47,7 @@ fn folder_rows_count_everything_inside_at_any_depth() {
     std::fs::write(nested.join("глубоко.md"), "").unwrap();
     std::fs::write(nested.join("картинка.png"), "").unwrap();
     h.app.tree.paths_changed(&mut h.root, std::slice::from_ref(&nested));
-    assert_eq!(h.app.tree.items("Проекты"), Some(5), "не учтены вложенная папка, заметка и картинка");
+    assert_eq!(h.app.tree.items("Проекты"), Some(5), "nested folder, note and image not counted");
     std::fs::remove_file(nested.join("глубоко.md")).unwrap();
     h.app.tree.paths_changed(&mut h.root, &[nested.join("глубоко.md")]);
     assert_eq!(h.app.tree.items("Проекты"), Some(4));
@@ -64,14 +64,14 @@ fn expanded_folder_stays_pinned_and_a_click_on_it_collapses_the_folder() {
     let mut h = Harness::new();
     folder_with_notes(&mut h, "Проекты", 60);
     open_folder(&mut h, "Проекты");
-    assert!(h.app.tree.pinned_names(&h.root).is_empty(), "папка закреплена, пока её строка на месте");
+    assert!(h.app.tree.pinned_names(&h.root).is_empty(), "folder is pinned while its row is in place");
     scroll_tree(&mut h, -400.0);
     assert_eq!(h.app.tree.pinned_names(&h.root), ["Проекты"]);
     let tree = rect(&h, h.app.tree.scroll_id().unwrap());
     h.click(tree.x0 + 60.0, tree.y0 + 10.0);
-    assert!(h.app.tree.pinned_names(&h.root).is_empty(), "после сворачивания папка осталась закреплённой");
+    assert!(h.app.tree.pinned_names(&h.root).is_empty(), "folder stayed pinned after collapsing");
     assert_eq!(h.app.tree.names(), ["Проекты", "a"]);
-    assert!(h.app.tree.offset() < 40.0, "дерево не вернулось к строке свёрнутой папки: {}", h.app.tree.offset());
+    assert!(h.app.tree.offset() < 40.0, "tree did not return to the collapsed folder's row: {}", h.app.tree.offset());
 }
 
 #[test]
@@ -85,6 +85,6 @@ fn a_note_opened_far_down_an_open_folder_shows_that_folder_pinned_without_scroll
     assert!(h.open(folder.join("заметка 55.md")));
     h.settle();
     h.deliver();
-    assert!(h.app.tree.offset() > 0.0, "список не прокрутился к открытой заметке");
-    assert_eq!(h.app.tree.pinned_names(&h.root), ["Проекты"], "закреплённая папка не появилась без прокрутки");
+    assert!(h.app.tree.offset() > 0.0, "list did not scroll to the open note");
+    assert_eq!(h.app.tree.pinned_names(&h.root), ["Проекты"], "pinned folder did not appear without scrolling");
 }

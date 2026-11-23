@@ -65,7 +65,7 @@ mod tests {
 
         let head = read_until_title(source);
 
-        assert!(head.len() <= CHUNK_BYTES, "прочитано {} байт", head.len());
+        assert!(head.len() <= CHUNK_BYTES, "read {} bytes", head.len());
         assert_eq!(title::parse(&head).as_deref(), Some("Коротко"));
     }
 

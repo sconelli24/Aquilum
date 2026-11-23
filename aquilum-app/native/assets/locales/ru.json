@@ -783,5 +783,36 @@
     "cloudLoading": "Загрузка…",
     "cloudHint": "Скачать из Dropbox",
     "cloudFailed": "Не удалось получить список баз из Dropbox: {{reason}}"
+  },
+  "native": {
+    "note": {
+      "saveInternalError": "внутренняя ошибка записи"
+    },
+    "graph": {
+      "snapshotCorrupt": "снимок графа повреждён"
+    },
+    "pdf": {
+      "noScene": "нет сцены заметки",
+      "pageSize": "размер страницы"
+    },
+    "updater": {
+      "installerFailed": "установщик не запустился, код {{code}}",
+      "notInAppBundle": "приложение запущено не из пакета .app",
+      "noBundleDir": "нет каталога пакета",
+      "noAppInUpdate": "в обновлении нет пакета .app",
+      "appImageOnly": "обновление поддерживается только для AppImage",
+      "platformUnsupported": "платформа не поддерживается",
+      "manifestNoVersion": "в latest.json нет версии",
+      "manifestNoBuild": "в latest.json нет сборки для {{target}}",
+      "manifestNoSignature": "в latest.json нет подписи"
+    },
+    "android": {
+      "documentNotOpened": "документ не открылся",
+      "noUpdateFile": "нет файла для обновления",
+      "installerNotOpened": "установщик не открылся"
+    },
+    "workspace": {
+      "noUserDataDir": "не найден каталог данных пользователя"
+    }
   }
 }

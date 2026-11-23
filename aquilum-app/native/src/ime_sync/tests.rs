@@ -149,7 +149,7 @@ fn an_empty_keyboard_before_the_note_arrives_deletes_nothing() {
     let note = AppState { text: "заметка".into(), anchor: 14, cursor: 14, preedit: None };
     assert!(s.differs(&note));
     assert_eq!(feed(&mut s, "|"), []);
-    assert!(s.differs(&note), "приложение должно отправить текст ещё раз");
+    assert!(s.differs(&note), "the app must send the text again");
     s.echoed(&note.to_ime());
     assert!(!s.differs(&note));
     assert_eq!(feed(&mut s, "заметкаx|"), [commit("x")]);

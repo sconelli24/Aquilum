@@ -40,7 +40,7 @@ impl Renderer {
         };
         self.painter.regions = crate::render::scroll::snapshot().iter().map(|r| r.viewport.scale_from_origin(scale)).collect();
         let damage = {
-            let _zone = aq_trace::zone("поиск изменений");
+            let _zone = aq_trace::zone("change detection");
             self.tracker.begin(width, height, scale);
             frame.paint_into(&mut self.tracker);
             self.tracker.damage()
@@ -82,7 +82,7 @@ impl Renderer {
         let mut result = Ok(());
         canvas.with_target(&mut |Target { pixels, width, height }| {
             for shift in &damage.moves {
-                let _zone = aq_trace::zone("сдвиг прокрутки");
+                let _zone = aq_trace::zone("scroll shift");
                 crate::render::scroll::shift_rows(pixels, usize::from(width), *shift);
             }
             for &area in &damage.areas {
@@ -124,14 +124,14 @@ impl Renderer {
 
 fn raster(painter: &mut Painter, frame: &Frame<'_>, pixels: &mut [u32], width: u16, height: u16, (x, y, w, h): (u16, u16, u16, u16), after: Option<u64>) -> Result<(), PaintError> {
     {
-        let _zone = aq_trace::zone("кодирование");
+        let _zone = aq_trace::zone("encoding");
         painter.begin(x, y, w, h);
         painter.after = after;
         frame.paint_into(painter);
         painter.finish()?;
     }
-    let _zone = aq_trace::zone("растеризация");
-    let pixmap = PixmapMut::new(width, height, bytemuck::cast_slice_mut(pixels)).expect("холст вывода");
+    let _zone = aq_trace::zone("rasterization");
+    let pixmap = PixmapMut::new(width, height, bytemuck::cast_slice_mut(pixels)).expect("output canvas");
     let settings = RasterizerSettings { target_init: TargetInit::SrcOver, pixel_format: crate::render::PIXEL_FORMAT, offset: (x, y) };
     painter.ctx.render_with(pixmap, &mut painter.resources, settings);
     crate::render::night::canvas(pixels, usize::from(width), (x, y, w, h));

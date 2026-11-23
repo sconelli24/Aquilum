@@ -25,7 +25,7 @@ fn started(device: &Device, remote: &Arc<FakeRemote>, folder: &Path) -> SyncServ
 fn finish(service: SyncService) {
     let shared = Arc::clone(&service.shared);
     drop(service);
-    until("поток синхронизации завершился", || Arc::strong_count(&shared) == 1);
+    until("the sync thread finished", || Arc::strong_count(&shared) == 1);
 }
 
 fn synced(service: &SyncService) -> bool {
@@ -35,7 +35,7 @@ fn synced(service: &SyncService) -> bool {
 fn until(what: &str, condition: impl Fn() -> bool) {
     let start = Instant::now();
     while !condition() {
-        assert!(start.elapsed() < Duration::from_secs(20), "не дождались: {what}");
+        assert!(start.elapsed() < Duration::from_secs(20), "timed out waiting for: {what}");
         thread::sleep(Duration::from_millis(2));
     }
 }
@@ -48,7 +48,7 @@ fn turning_the_vault_off_holds_the_pass_until_it_is_turned_on() {
         device.write(&format!("Заметка {index}.md"), &index.to_string());
     }
     let service = started(&device, &remote, folder.path());
-    until("проход начал отправку", || matches!(service.status(), SyncStatus::Running(progress) if progress.done >= 1));
+    until("the pass started uploading", || matches!(service.status(), SyncStatus::Running(progress) if progress.done >= 1));
     service.set_vault(Some((device.root.clone(), SyncSettings { enabled: false, ..NOTES_ONLY })), 0);
     thread::sleep(QUIET);
     let sent = remote.paths().len();
@@ -61,7 +61,7 @@ fn turning_the_vault_off_holds_the_pass_until_it_is_turned_on() {
     assert!(sent < 100);
     assert_eq!(remote.paths().len(), sent);
     service.set_vault(Some((device.root.clone(), NOTES_ONLY)), 0);
-    until("проход завершился", || synced(&service));
+    until("the pass finished", || synced(&service));
     assert_eq!(remote.paths().len(), 100);
     finish(service);
 }
@@ -71,7 +71,7 @@ fn the_next_pass_waits_for_the_vault_interval() {
     let (device, remote, folder) = (Device::new(), Arc::new(FakeRemote::default()), tempfile::tempdir().unwrap());
     device.write("Заметка.md", "текст");
     let service = started(&device, &remote, folder.path());
-    until("проход завершился", || synced(&service));
+    until("the pass finished", || synced(&service));
     thread::sleep(QUIET);
 
     let left = service.due().map(|due| due.saturating_duration_since(Instant::now()));
@@ -82,7 +82,7 @@ fn the_next_pass_waits_for_the_vault_interval() {
     let left = service.due().map(|due| due.saturating_duration_since(Instant::now()));
     assert!(left.is_some_and(|left| left > Duration::from_secs(29) && left <= Duration::from_secs(30)), "{left:?}");
     thread::sleep(QUIET);
-    assert_eq!(service.status(), ready, "смена периода не запускает проход");
+    assert_eq!(service.status(), ready, "changing the period does not start a pass");
     finish(service);
 }
 
@@ -94,10 +94,10 @@ fn only_real_edits_count_as_touched() {
     laptop.write("Папка/Вложенная.md", "в папке");
     laptop.sync(remote.as_ref());
     let service = started(&phone, &remote, folder.path());
-    until("проход завершился", || synced(&service));
+    until("the pass finished", || synced(&service));
     let touched = |name: &str| service.touched(&[canonical_path(&phone.root).join(name)], false);
 
-    assert!(!touched("Заметка.md"), "скачанный синхронизацией файл — не правка");
+    assert!(!touched("Заметка.md"), "a file downloaded by sync is not an edit");
     phone.write(".obsidian/Заметка.md", "скрытое");
     phone.write(".trash/Старое.md", "корзина вне настроек");
     assert!(!touched(".obsidian/Заметка.md") && !touched(".trash/Старое.md"));
@@ -106,7 +106,7 @@ fn only_real_edits_count_as_touched() {
     fs::remove_file(phone.root.join("Удалить.md")).unwrap();
     fs::remove_dir_all(phone.root.join("Папка")).unwrap();
     assert!(touched("Заметка.md") && touched("Новая.md") && touched("Удалить.md") && touched("Папка"));
-    assert!(service.touched(&[], true), "пересканирование папки — всегда проход");
+    assert!(service.touched(&[], true), "a folder rescan is always a pass");
     finish(service);
 }
 
@@ -118,7 +118,7 @@ fn large_files_and_the_size_are_known_without_the_cloud() {
     device.write("Заметка.md", "текст");
 
     let service = started(&device, &remote, folder.path());
-    until("проход упал без сети", || service.status() == SyncStatus::Offline);
+    until("the pass failed without network", || service.status() == SyncStatus::Offline);
 
     assert_eq!(service.large(), vec![Large { path: "Видео.mp4".to_owned(), size: LARGE + 2, kept: true }]);
     assert_eq!(service.size().synced, 10);
@@ -132,7 +132,7 @@ fn a_pass_without_network_is_offline_and_waits_for_its_turn() {
     remote.go_offline();
 
     let service = started(&device, &remote, folder.path());
-    until("проход упал без сети", || !matches!(service.status(), SyncStatus::Ready | SyncStatus::Running(_)));
+    until("the pass failed without network", || !matches!(service.status(), SyncStatus::Ready | SyncStatus::Running(_)));
 
     assert_eq!(service.status(), SyncStatus::Offline);
     assert!(service.due().is_some_and(|due| due > Instant::now() + Duration::from_secs(NOTES_ONLY.interval - 10)));
@@ -152,8 +152,8 @@ fn sending_a_large_file_marks_it_at_once_and_uploads_it() {
     let (device, remote, folder) = (Device::new(), Arc::new(FakeRemote::default()), tempfile::tempdir().unwrap());
     device.write("Видео.mp4", &"в".repeat(LARGE as usize / 2 + 1));
     let service = started(&device, &remote, folder.path());
-    until("большой файл в списке", || service.large().first().is_some_and(|large| large.kept));
-    until("проход завершился", || synced(&service));
+    until("large file in the list", || service.large().first().is_some_and(|large| large.kept));
+    until("the pass finished", || synced(&service));
 
     service.allow(vec!["Видео.mp4".to_owned()]);
 

@@ -76,7 +76,7 @@ impl McpServer {
 
         if !wanted {
             if settings.enabled {
-                state.error = Some("Не задан токен доступа".to_owned());
+                state.error = Some("Access token is not set".to_owned());
             }
             return state.status();
         }
@@ -84,7 +84,7 @@ impl McpServer {
         if state.running.is_none() {
             let weak = Arc::downgrade(core);
             let caller: server::SharedToolCaller = Arc::new(move |name: &str, arguments: &serde_json::Value| {
-                let core = weak.upgrade().ok_or_else(|| "Приложение завершается".to_owned())?;
+                let core = weak.upgrade().ok_or_else(|| "The app is shutting down".to_owned())?;
                 core.settle();
                 tools::call(&core, name, arguments)
             });
@@ -94,7 +94,7 @@ impl McpServer {
                     state.running = Some(running);
                 }
                 Err(error) => {
-                    state.error = Some(format!("Порт {} недоступен: {error}", settings.port))
+                    state.error = Some(format!("Port {} is unavailable: {error}", settings.port))
                 }
             }
         }

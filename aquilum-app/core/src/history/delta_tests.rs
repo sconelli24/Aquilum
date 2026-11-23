@@ -28,7 +28,7 @@ fn composed_regions_rebuild_every_step_from_the_base() {
         let (next, splice) = edit(&text, at, removed, insert);
         regions = compose(&regions, splice);
         text = next;
-        assert_eq!(apply(base, &regions, &text), text, "после {at} {removed} {insert:?}");
+        assert_eq!(apply(base, &regions, &text), text, "after {at} {removed} {insert:?}");
         assert!(regions.windows(2).all(|pair| pair[0].to < pair[1].from), "{regions:?}");
     }
 }

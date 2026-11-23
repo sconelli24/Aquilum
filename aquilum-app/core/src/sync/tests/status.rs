@@ -20,8 +20,8 @@ fn a_lost_network_is_no_error() {
 
 #[test]
 fn file_errors_are_summed_up_with_the_first_real_one() {
-    let failed = vec![("Один.md", offline()), ("Два.md", RemoteError::Failed("Dropbox 400: плохо\nподробности".into())), ("Три.md", RemoteError::Stale)];
+    let failed = vec![("Один.md", offline()), ("Два.md", RemoteError::Failed("Dropbox 400: bad\ndetails".into())), ("Три.md", RemoteError::Stale)];
 
-    assert_eq!(settled(Ok(failed)), SyncStatus::Unsynced { files: 3, first: "Два.md: Dropbox 400: плохо".into() });
-    assert_eq!(settled(Err(RemoteError::Failed("папка пропала".into()))), SyncStatus::Failed("папка пропала".into()));
+    assert_eq!(settled(Ok(failed)), SyncStatus::Unsynced { files: 3, first: "Два.md: Dropbox 400: bad".into() });
+    assert_eq!(settled(Err(RemoteError::Failed("folder disappeared".into()))), SyncStatus::Failed("folder disappeared".into()));
 }

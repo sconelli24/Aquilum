@@ -173,11 +173,11 @@ pub struct Target<'a> {
 fn a_buffer_gets_every_change_since_it_was_shown() {
     let at = |y| Area { x: 0, y, w: 10, h: 10 };
     let mut history = History::default();
-    assert_eq!(history.frame(&[at(0)], 3).1, None, "буфер старше истории копируется целиком");
+    assert_eq!(history.frame(&[at(0)], 3).1, None, "a buffer older than the history is copied whole");
     assert_eq!(history.frame(&[at(100)], 3).1, None);
     assert_eq!(history.frame(&[at(200)], 3).1, Some(vec![at(200), at(100), at(0)]));
     assert_eq!(history.frame(&[at(300)], 1).1, Some(vec![at(300)]));
-    assert_eq!(history.frame(&[at(400)], 0).1, None, "возраст 0 — содержимое неизвестно");
+    assert_eq!(history.frame(&[at(400)], 0).1, None, "age 0 - contents unknown");
     history.reset();
     assert_eq!(history.frame(&[at(500)], 2), (vec![at(500)], None));
 }

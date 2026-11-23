@@ -49,7 +49,7 @@ impl WorkspaceWatcher {
     pub fn watch(&self, root: &Path) -> Result<(), String> {
         let mut running = self.running.lock().unwrap_or_else(|error| error.into_inner());
         if self.closed.load(Ordering::Relaxed) {
-            return Err("наблюдатель закрыт".to_owned());
+            return Err("watcher is closed".to_owned());
         }
         if running.as_ref().is_some_and(|active| active.root == root) {
             return Ok(());
@@ -68,10 +68,10 @@ impl WorkspaceWatcher {
                 let _ = sender.send(batch);
             }
         })
-        .map_err(|error| format!("не удалось создать наблюдатель: {error}"))?;
+        .map_err(|error| format!("failed to create watcher: {error}"))?;
         watcher
             .watch(root, RecursiveMode::Recursive)
-            .map_err(|error| format!("не удалось наблюдать за {}: {error}", root.display()))?;
+            .map_err(|error| format!("failed to watch {}: {error}", root.display()))?;
 
         let stopping = Arc::new(AtomicBool::new(false));
         let thread_stopping = Arc::clone(&stopping);
@@ -79,7 +79,7 @@ impl WorkspaceWatcher {
         let thread = std::thread::Builder::new()
             .name("aquilum-fs-watch".to_owned())
             .spawn(move || deliver(watcher, &receiver, &thread_stopping, sink.as_ref()))
-            .map_err(|error| format!("не удалось запустить поток наблюдателя: {error}"))?;
+            .map_err(|error| format!("failed to start watcher thread: {error}"))?;
 
         *running = Some(Running {
             root: root.to_path_buf(),

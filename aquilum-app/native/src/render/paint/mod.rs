@@ -107,10 +107,10 @@ impl Painter {
             return Err(err);
         }
         if self.clip_depth != 0 {
-            return Err(PaintError::Unbalanced("клип не закрыт"));
+            return Err(PaintError::Unbalanced("clip not closed"));
         }
         if !self.groups.is_empty() {
-            return Err(PaintError::Unbalanced("группа не закрыта"));
+            return Err(PaintError::Unbalanced("group not closed"));
         }
         self.ctx.flush();
         Ok(())

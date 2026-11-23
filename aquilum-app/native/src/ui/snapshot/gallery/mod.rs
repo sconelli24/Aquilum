@@ -31,7 +31,7 @@ impl Scene<'_> {
 }
 
 #[test]
-#[ignore = "снимки для просмотра глазами"]
+#[ignore = "snapshots for visual inspection"]
 fn snapshot_tree_menu_dialog() {
     let _theme = theme::test_lock();
     let vault = crate::test_dir::tempdir();

@@ -5,12 +5,12 @@ fn text_files_are_listed_opened_edited_and_saved() {
     let mut h = Harness::new();
     let path = h.write_note("заметка.txt", "первая строка");
     h.app.tree.paths_changed(&mut h.root, std::slice::from_ref(&path));
-    assert!(h.app.tree.names().iter().any(|name| name == "заметка.txt"), "текстовый файл не показан в дереве");
-    assert!(h.open(path.clone()), "текстовый файл не открылся");
+    assert!(h.app.tree.names().iter().any(|name| name == "заметка.txt"), "text file not shown in the tree");
+    assert!(h.open(path.clone()), "text file did not open");
     assert_eq!(h.body_text(), "первая строка");
     h.replace_body("первая строка\nвторая");
     h.save_now();
-    assert_eq!(std::fs::read_to_string(&path).unwrap(), "первая строка\nвторая", "правка не сохранилась в .txt");
+    assert_eq!(std::fs::read_to_string(&path).unwrap(), "первая строка\nвторая", "edit was not saved to .txt");
 }
 
 #[test]
@@ -29,13 +29,13 @@ fn text_file_follows_outside_edits_and_has_properties_like_a_note() {
     let path = h.write_note("заметка.txt", "---\nтег: один\n---\nтекст");
     h.app.tree.paths_changed(&mut h.root, std::slice::from_ref(&path));
     assert!(h.open(path.clone()));
-    assert!(h.app.metadata_state().is_some(), "у .txt нет блока свойств, как у заметки");
+    assert!(h.app.metadata_state().is_some(), ".txt has no properties block like a note does");
     std::fs::write(&path, "---\nтег: один\n---\nизменён снаружи").unwrap();
     assert!(
         wait_until(300, 20, || {
             h.app.on_core_events(&mut h.root);
             h.body_text().contains("изменён снаружи")
         }),
-        "правка .txt снаружи не подтянулась в редактор"
+        "external .txt edit was not picked up by the editor"
     );
 }

@@ -97,8 +97,8 @@ fn the_selection_is_painted_and_goes_away_when_focus_is_lost() {
     gesture(&mut root, (1.0, 8.0), (WIDTH as f64 - 2.0, 8.0), 1);
     let selected = pixels(&mut root);
     let changed = before.iter().zip(&selected).filter(|(a, b)| a != b).count();
-    assert!(changed > 200, "выделение не нарисовано: изменилось {changed} точек");
+    assert!(changed > 200, "selection is not drawn: {changed} points changed");
     root.focus_on(None);
     let after = pixels(&mut root);
-    assert_eq!(after, before, "после потери фокуса выделение осталось");
+    assert_eq!(after, before, "the selection remained after losing focus");
 }

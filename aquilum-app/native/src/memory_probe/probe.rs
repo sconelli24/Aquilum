@@ -23,13 +23,13 @@ fn watch_peaks(output: &std::path::Path) {
             let heap = CURRENT.load(Ordering::Relaxed);
             if heap > top + PEAK_STEP {
                 top = heap;
-                let text = format!("## пик rust-кучи {:.0} МБ через {:.1} с\n{}{}", mb(heap), started.elapsed().as_secs_f64(), breakdown(), large_report());
+                let text = format!("## rust heap peak {:.0} MB after {:.1} s\n{}{}", mb(heap), started.elapsed().as_secs_f64(), breakdown(), large_report());
                 let _ = std::fs::write(&peaks, text);
             }
             if started.elapsed() >= logged + HEAP_EVERY {
                 logged = started.elapsed();
                 if let Some(log) = &mut log {
-                    let _ = writeln!(log, "{:.2} с\t{:.0} МБ", logged.as_secs_f64(), mb(heap));
+                    let _ = writeln!(log, "{:.2} s\t{:.0} MB", logged.as_secs_f64(), mb(heap));
                 }
             }
             std::thread::sleep(Duration::from_millis(2));
@@ -59,16 +59,16 @@ impl Probe {
             let (steps, pauses) = text.lines().filter_map(parse).unzip();
             return Probe::with(output, steps, pauses);
         }
-        let mut steps = vec![("старт".to_owned(), Step::Wait)];
+        let mut steps = vec![("start".to_owned(), Step::Wait)];
         for (i, note) in notes.into_iter().enumerate() {
-            steps.push((format!("заметка {}", i + 1), Step::OpenNote(note)));
+            steps.push((format!("note {}", i + 1), Step::OpenNote(note)));
         }
-        steps.push(("настройки открыты".to_owned(), Step::OpenSettings));
-        steps.push(("настройки закрыты".to_owned(), Step::CloseSettings));
-        steps.push(("граф открыт".to_owned(), Step::OpenGraph));
-        steps.push(("граф +3 с".to_owned(), Step::Wait));
-        steps.push(("вкладка графа закрыта".to_owned(), Step::CloseTab));
-        steps.push(("простой".to_owned(), Step::Wait));
+        steps.push(("settings opened".to_owned(), Step::OpenSettings));
+        steps.push(("settings closed".to_owned(), Step::CloseSettings));
+        steps.push(("graph opened".to_owned(), Step::OpenGraph));
+        steps.push(("graph +3 s".to_owned(), Step::Wait));
+        steps.push(("graph tab closed".to_owned(), Step::CloseTab));
+        steps.push(("idle".to_owned(), Step::Wait));
         let steps: Vec<_> = steps.into_iter().flat_map(|(name, step)| [(String::new(), step), (name.clone(), Step::Mark(name))]).collect();
         let pauses = steps.iter().map(|(name, _)| if name.is_empty() { PAUSE } else { Duration::ZERO }).collect();
         Probe::with(output, steps, pauses)
@@ -104,7 +104,7 @@ impl Probe {
         let peak = PEAK.load(Ordering::Relaxed);
         let cpu = cpu_ms();
         let wall = self.started.get().elapsed().as_secs_f64() * 1000.0;
-        let mut text = format!("## {name}\nЦП за шаг {:.0} мс за {:.0} мс ({:.1}% одного ядра)\nrust-куча {:.1} МБ (пик {:.1} МБ)\n", cpu - self.cpu.get(), wall, (cpu - self.cpu.get()) / wall * 100.0, mb(heap), mb(peak));
+        let mut text = format!("## {name}\nCPU per step {:.0} ms over {:.0} ms ({:.1}% of one core)\nrust heap {:.1} MB (peak {:.1} MB)\n", cpu - self.cpu.get(), wall, (cpu - self.cpu.get()) / wall * 100.0, mb(heap), mb(peak));
         self.cpu.set(cpu);
         self.started.set(Instant::now());
         text.push_str(extra);

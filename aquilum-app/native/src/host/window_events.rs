@@ -26,9 +26,9 @@ impl Host {
     pub(super) fn on_window_event(&mut self, event_loop: &dyn ActiveEventLoop, event: WindowEvent) {
         let _zone = aq_trace::zone(match &event {
             WindowEvent::RedrawRequested => "WM_PAINT",
-            WindowEvent::MouseWheel { .. } => "колесо",
-            WindowEvent::PointerMoved { .. } => "указатель",
-            _ => "событие окна",
+            WindowEvent::MouseWheel { .. } => "wheel",
+            WindowEvent::PointerMoved { .. } => "pointer",
+            _ => "window event",
         });
         if self.args.trace {
             eprintln!("{:>8.1} ms  {event:?}", self.started.elapsed().as_secs_f64() * 1000.0);

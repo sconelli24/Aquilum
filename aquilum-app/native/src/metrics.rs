@@ -1,4 +1,4 @@
-//! Замеры кадров. Пишутся в JSON-файл `--metrics`, который читает `scripts/measure.ps1`.
+//! Frame measurements. Written to the `--metrics` JSON file, which `scripts/measure.ps1` reads.
 
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
@@ -11,9 +11,9 @@ pub struct Metrics {
     window_created_ms: f64,
     first_frame_ms: f64,
     pub frames: u64,
-    /// Анимационные тики Masonry; кадр из них получается только при видимых изменениях.
+    /// Masonry animation ticks; a frame results from them only when there are visible changes.
     pub anim_ticks: u64,
-    /// Кадры после первого: растеризация и полный кадр (с переносом в буфер и present), мс.
+    /// Frames after the first: rasterization and the full frame (including the buffer copy and present), ms.
     raster: Vec<f64>,
     total: Vec<f64>,
     #[cfg(not(feature = "installed"))]
@@ -45,7 +45,7 @@ impl Live {
         }
         let avg = |d: Duration| ms(d) / f64::from(self.frames);
         self.summary = format!(
-            "{:.0} к/с · кадр {:.1} мс, худший {:.1} (сцена {:.1}, растр {:.1}, вывод {:.1})",
+            "{:.0} fps · frame {:.1} ms, worst {:.1} (scene {:.1}, raster {:.1}, output {:.1})",
             f64::from(self.frames) / elapsed.as_secs_f64(),
             avg(self.sums[3]),
             ms(self.worst),

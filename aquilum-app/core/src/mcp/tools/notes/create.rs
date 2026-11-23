@@ -31,7 +31,7 @@ pub(super) fn create_note(core: &Core, arguments: &Value) -> Result<Value, Strin
             failed
                 .first()
                 .and_then(|entry| entry["error"].as_str())
-                .unwrap_or("Заметка не создана")
+                .unwrap_or("Note was not created")
                 .to_owned()
         })?;
         return Ok(json!({
@@ -69,13 +69,13 @@ pub(super) fn requested_notes(arguments: &Value) -> Result<Vec<(String, String)>
     };
     let list = list
         .as_array()
-        .ok_or_else(|| "Аргумент «notes» — список объектов вида {path, content}".to_owned())?;
+        .ok_or_else(|| "Argument “notes” is a list of objects of the form {path, content}".to_owned())?;
     if list.is_empty() {
-        return Err("Список «notes» пуст: нечего создавать".to_owned());
+        return Err("List “notes” is empty: nothing to create".to_owned());
     }
     if list.len() > BATCH_LIMIT {
         return Err(format!(
-            "За один вызов создаётся не больше {BATCH_LIMIT} заметок, запрошено {}",
+            "At most {BATCH_LIMIT} notes are created per call, {} requested",
             list.len()
         ));
     }
@@ -86,7 +86,7 @@ pub(super) fn requested_notes(arguments: &Value) -> Result<Vec<(String, String)>
                 .and_then(Value::as_str)
                 .map(str::trim)
                 .filter(|value| !value.is_empty())
-                .ok_or_else(|| "У каждой заметки в «notes» должен быть непустой path".to_owned())?;
+                .ok_or_else(|| "Every note in “notes” must have a non-empty path".to_owned())?;
             let initial = item
                 .get("content")
                 .and_then(Value::as_str)

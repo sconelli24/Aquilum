@@ -69,7 +69,7 @@ pub fn run(vault: &Vault<'_>) -> Result<Outcome, SyncError> {
     }
     let (view, cursor) = observe(vault)?;
     if view.emptied() && !records.is_empty() {
-        return Err(RemoteError::Failed("папка в облаке пуста или пропала, а файлы уже синхронизировались — проход остановлен".into()).into());
+        return Err(RemoteError::Failed("the cloud folder is empty or gone, yet files were already synced; pass stopped".into()).into());
     }
     let paths: BTreeSet<&String> = local.files.keys().chain(view.paths()).chain(records.keys()).filter(|path| !local.kept.contains(*path)).collect();
     let mut plan = Vec::new();

@@ -19,7 +19,7 @@ fn refuses_to_start_on_a_missing_folder_instead_of_dying_quietly() {
         .watch(Path::new("D:/такой/папки/нет/и/не/будет"))
         .unwrap_err();
 
-    assert!(error.contains("не удалось наблюдать"));
+    assert!(error.contains("failed to watch"));
 }
 
 #[test]
@@ -33,7 +33,7 @@ fn delivers_a_real_file_change_to_the_sink() {
 
     let batch = receiver
         .recv_timeout(Duration::from_secs(10))
-        .expect("вотчер обязан доставить изменение файла");
+        .expect("the watcher must deliver the file change");
     assert!(batch
         .paths
         .iter()
@@ -53,7 +53,7 @@ fn retargeting_moves_the_watch_to_the_new_workspace() {
     std::fs::write(second.path().join("Вторая.md"), "текст").unwrap();
     let batch = receiver
         .recv_timeout(Duration::from_secs(10))
-        .expect("новая база обязана наблюдаться");
+        .expect("the new vault must be watched");
     assert!(batch
         .paths
         .iter()
@@ -65,7 +65,7 @@ fn retargeting_moves_the_watch_to_the_new_workspace() {
             receiver.recv_timeout(Duration::from_millis(800)),
             Err(RecvTimeoutError::Timeout)
         ),
-        "старая база больше не наблюдается"
+        "the old vault is no longer watched"
     );
     watcher.close();
 }
@@ -81,7 +81,7 @@ fn close_does_not_wait_for_a_poll_interval() {
     let started = std::time::Instant::now();
     watcher.close();
 
-    assert!(started.elapsed() < Duration::from_millis(500), "остановка ждала {:?}", started.elapsed());
+    assert!(started.elapsed() < Duration::from_millis(500), "shutdown waited {:?}", started.elapsed());
 }
 
 #[test]
@@ -98,5 +98,5 @@ fn a_closed_watcher_delivers_nothing_and_does_not_start_again() {
         receiver.recv_timeout(Duration::from_millis(800)),
         Err(RecvTimeoutError::Timeout)
     ));
-    assert!(watcher.watch(directory.path()).is_err(), "закрытый наблюдатель не запускается снова");
+    assert!(watcher.watch(directory.path()).is_err(), "a closed watcher does not start again");
 }

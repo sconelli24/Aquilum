@@ -137,7 +137,7 @@ impl Device {
     }
 
     pub fn copies(&self) -> Vec<String> {
-        self.files().into_iter().filter(|path| path.contains("(конфликт")).collect()
+        self.files().into_iter().filter(|path| path.contains("(conflict")).collect()
     }
 
     pub fn read(&self, path: &str) -> Option<String> {

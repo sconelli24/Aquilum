@@ -2,7 +2,7 @@ use super::*;
 use crate::ui::theme;
 use crate::ui::tokens::Builtin;
 
-/// Цвета темы, которые правит пользователь (входы `tokens::derive` после трёх цветов акцента).
+/// Theme colors edited by the user (`tokens::derive` inputs after the three accent colors).
 const COLORS: [&str; 12] = [
     "bg-canvas",
     "sidebar-bg",
@@ -89,7 +89,7 @@ pub(super) fn themes(config: &AppConfig) -> Vec<Block> {
     blocks
 }
 
-/// Правка `key` темы `theme` значением из поля настроек; `false` — значение не подошло.
+/// Edits `key` of theme `theme` with a value from a settings field; `false` means the value did not fit.
 pub fn set_theme_value(config: &mut AppConfig, theme: &str, key: &str, value: &Value) -> bool {
     let stored = if key.ends_with("-scale") {
         let Value::Number(percent) = value else { return false };

@@ -14,7 +14,7 @@ fn corpus() -> Document {
 }
 
 fn at(doc: &Document, line: &str) -> usize {
-    doc.paragraphs().position(|p| doc.slice(p.range()) == line).unwrap_or_else(|| panic!("нет строки «{line}»"))
+    doc.paragraphs().position(|p| doc.slice(p.range()) == line).unwrap_or_else(|| panic!("no line '{line}'"))
 }
 
 fn block<'a>(doc: &'a Document, line: &str) -> &'a Block {
@@ -36,11 +36,11 @@ fn item_level(doc: &Document, line: &str) -> Option<usize> {
 #[test]
 fn frontmatter_is_metadata_and_the_body_starts_after_it() {
     let doc = corpus();
-    let front = crate::frontmatter::end(CORPUS).expect("в тестовой заметке есть frontmatter");
+    let front = crate::frontmatter::end(CORPUS).expect("the test note has frontmatter");
     let meta = doc.paragraphs().take_while(|p| p.start < front).count();
     assert_eq!(meta, 13);
     let kinds: Vec<&Block> = (0..meta).map(|i| doc.block(i)).collect();
-    assert_eq!((kinds[0], kinds[meta - 1]), (&Block::Rule, &Block::Rule), "обе черты блока свойств — линии");
+    assert_eq!((kinds[0], kinds[meta - 1]), (&Block::Rule, &Block::Rule), "both rules of the properties block are rules");
     assert!(kinds[1..meta - 1].iter().all(|b| **b == Block::Meta));
     assert_eq!(block(&doc, "# Полный тест Markdown-редактора"), &Block::Heading { level: 1, marker: 2 });
 }
@@ -132,9 +132,9 @@ fn code_blocks_fences_and_indentation() {
     assert!(matches!(block(&doc, "~~~"), Block::Code { first: true, fence: true, .. }));
     let outer = at(&doc, "````markdown");
     assert!(matches!(doc.paragraph(outer).block, Block::Code { first: true, fence: true, .. }));
-    assert!(matches!(doc.paragraph(outer + 1).block, Block::Code { first: false, fence: false, .. }), "```js внутри четырёх обратных кавычек не должно открывать блок");
+    assert!(matches!(doc.paragraph(outer + 1).block, Block::Code { first: false, fence: false, .. }), "```js inside four backticks must not open a block");
     assert!(matches!(doc.paragraph(outer + 2).block, Block::Code { fence: false, .. }));
-    assert!(matches!(doc.paragraph(outer + 3).block, Block::Code { last: false, fence: false, .. }), "``` внутри четырёх обратных кавычек не закрывает блок");
+    assert!(matches!(doc.paragraph(outer + 3).block, Block::Code { last: false, fence: false, .. }), "``` inside four backticks does not close the block");
     assert!(matches!(doc.paragraph(outer + 4).block, Block::Code { last: true, fence: true, .. }));
     assert!(matches!(block(&doc, "graph TD"), Block::Code { fence: false, .. }));
     assert_eq!(block(&doc, "Текст сразу после кода."), &Block::Text);

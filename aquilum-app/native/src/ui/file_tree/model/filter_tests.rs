@@ -104,5 +104,5 @@ fn twenty_thousand_names_filter_fast_even_in_a_debug_build() {
     let started = std::time::Instant::now();
     model.set_filter("кофе чай");
     assert_eq!(model.rows().len(), 400 + 20_000);
-    assert!(started.elapsed() < std::time::Duration::from_secs(1), "фильтр 20 тысяч названий занял {:?}", started.elapsed());
+    assert!(started.elapsed() < std::time::Duration::from_secs(1), "filtering 20 thousand names took {:?}", started.elapsed());
 }

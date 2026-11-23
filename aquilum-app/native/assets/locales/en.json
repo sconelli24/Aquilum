@@ -771,5 +771,36 @@
     "cloudLoading": "Loading…",
     "cloudHint": "Download from Dropbox",
     "cloudFailed": "Could not get the list of bases from Dropbox: {{reason}}"
+  },
+  "native": {
+    "note": {
+      "saveInternalError": "internal write error"
+    },
+    "graph": {
+      "snapshotCorrupt": "graph snapshot is corrupted"
+    },
+    "pdf": {
+      "noScene": "no note scene",
+      "pageSize": "page size"
+    },
+    "updater": {
+      "installerFailed": "the installer failed to start, code {{code}}",
+      "notInAppBundle": "the app is not running from an .app bundle",
+      "noBundleDir": "no bundle directory",
+      "noAppInUpdate": "the update contains no .app bundle",
+      "appImageOnly": "updates are only supported for AppImage",
+      "platformUnsupported": "this platform is not supported",
+      "manifestNoVersion": "latest.json has no version",
+      "manifestNoBuild": "latest.json has no build for {{target}}",
+      "manifestNoSignature": "latest.json has no signature"
+    },
+    "android": {
+      "documentNotOpened": "the document could not be opened",
+      "noUpdateFile": "no file for the update",
+      "installerNotOpened": "the installer could not be opened"
+    },
+    "workspace": {
+      "noUserDataDir": "the user data directory was not found"
+    }
   }
 }

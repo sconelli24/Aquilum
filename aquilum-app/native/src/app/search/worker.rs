@@ -30,7 +30,7 @@ pub(super) struct Worker {
 impl Worker {
     pub(super) fn spawn(core: Arc<Core>, found: Sender<Found>, wake: Arc<dyn Fn() + Send + Sync>) -> Self {
         let (asks, inbox) = channel();
-        let started = std::thread::Builder::new().name("поиск Ctrl+O".into()).spawn(move || serve(&core, &inbox, &found, &*wake));
+        let started = std::thread::Builder::new().name("search Ctrl+O".into()).spawn(move || serve(&core, &inbox, &found, &*wake));
         if let Err(error) = started {
             report!("search thread not started: {error}");
         }

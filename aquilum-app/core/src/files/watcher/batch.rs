@@ -72,7 +72,7 @@ mod tests {
         );
 
         assert_eq!(merged.scope, WatchScope::Structure);
-        assert_eq!(merged.paths.len(), 2, "одинаковые пути схлопываются");
+        assert_eq!(merged.paths.len(), 2, "identical paths collapse");
     }
 
     #[test]

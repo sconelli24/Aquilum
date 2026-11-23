@@ -1,5 +1,5 @@
-//! Мелкие элементы оформления: кнопка-иконка (`IconButton.tsx`), кнопка в стиле строки дерева
-//! (переключатель базы в подвале), граница с одной стороны.
+//! Small styling elements: icon button (`IconButton.tsx`), a tree-row-style button
+//! (the workspace switcher in the footer), and a one-sided border.
 
 mod buttons;
 mod appear;
@@ -29,11 +29,11 @@ pub use size::*;
 
 use masonry::core::{EventCtx, PointerButtonEvent, PointerEvent};
 
-/// Нажатие кнопки.
+/// Button press.
 #[derive(Debug)]
 pub struct Pressed;
 
-/// Общая логика нажатия: захват указателя, действие при отпускании над кнопкой.
+/// Shared press logic: pointer capture, action on release over the button.
 #[derive(Default)]
 pub struct Press {
     pub down: bool,

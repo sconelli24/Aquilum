@@ -771,5 +771,36 @@
     "cloudLoading": "Cargando…",
     "cloudHint": "Descargar de Dropbox",
     "cloudFailed": "No se pudo obtener la lista de bases de Dropbox: {{reason}}"
+  },
+  "native": {
+    "note": {
+      "saveInternalError": "error interno de escritura"
+    },
+    "graph": {
+      "snapshotCorrupt": "la instantánea del grafo está dañada"
+    },
+    "pdf": {
+      "noScene": "no hay escena de la nota",
+      "pageSize": "tamaño de página"
+    },
+    "updater": {
+      "installerFailed": "el instalador no se pudo iniciar, código {{code}}",
+      "notInAppBundle": "la aplicación no se está ejecutando desde un paquete .app",
+      "noBundleDir": "no hay directorio del paquete",
+      "noAppInUpdate": "la actualización no contiene un paquete .app",
+      "appImageOnly": "las actualizaciones solo son compatibles con AppImage",
+      "platformUnsupported": "esta plataforma no es compatible",
+      "manifestNoVersion": "latest.json no tiene versión",
+      "manifestNoBuild": "latest.json no tiene compilación para {{target}}",
+      "manifestNoSignature": "latest.json no tiene firma"
+    },
+    "android": {
+      "documentNotOpened": "no se pudo abrir el documento",
+      "noUpdateFile": "no hay archivo para la actualización",
+      "installerNotOpened": "no se pudo abrir el instalador"
+    },
+    "workspace": {
+      "noUserDataDir": "no se encontró el directorio de datos del usuario"
+    }
   }
 }

@@ -176,8 +176,8 @@ mod tests {
         let drawing = dataview(&Fetch::Ready(grid), 800.0, false, &mut |_| Layout::default());
         assert_eq!((drawing.view, drawing.width), (800.0, 800.0));
         let empty = dataview(&Fetch::Ready(Grid { shape: Shape::List, title: None, columns: Vec::new(), rows: Vec::new().into() }), 800.0, false, &mut |_| Layout::default());
-        assert!(empty.items.iter().any(|item| matches!(item, Item::Text(_, _, text) if *text == t("search.noResults"))), "пустой результат подписан");
-        assert_eq!(drawing.max_scroll(), 0.0, "узкая таблица не прокручивается");
+        assert!(empty.items.iter().any(|item| matches!(item, Item::Text(_, _, text) if *text == t("search.noResults"))), "empty result is labeled");
+        assert_eq!(drawing.max_scroll(), 0.0, "narrow table does not scroll");
     }
 
     #[test]
@@ -186,7 +186,7 @@ mod tests {
         let row = columns.iter().map(|c| vec![Part::Text(c.clone())]).collect();
         let grid = Grid { shape: Shape::Table, title: None, columns, rows: vec![row].into() };
         let drawing = dataview(&Fetch::Ready(grid), 400.0, false, &mut |_| Layout::default());
-        assert!(drawing.max_scroll() > 0.0, "десять колонок в 400 px должны прокручиваться вбок");
+        assert!(drawing.max_scroll() > 0.0, "ten columns in 400 px must scroll sideways");
     }
 
     #[test]

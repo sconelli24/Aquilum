@@ -97,7 +97,7 @@ impl Endpoint {
     ) -> Result<bool, Failure> {
         let _turn = lock(&self.turn);
         if self.stopping.load(Ordering::SeqCst) {
-            return Err(refused(503, "MCP-сервер остановлен"));
+            return Err(refused(503, "MCP server stopped"));
         }
         let response = match protocol::handle_message(body, self.call.as_ref()) {
             Some(payload) => Response::json(payload),
@@ -144,20 +144,20 @@ fn exchange(connection: &mut Connection, endpoint: &Endpoint) -> Result<bool, Fa
     let head = connection.read_head()?;
     admit(&head, &endpoint.token)?;
     let body = connection.read_body(&head, MAX_BODY_BYTES)?;
-    let body = String::from_utf8(body).map_err(|_| refused(400, "Тело запроса не в UTF-8"))?;
+    let body = String::from_utf8(body).map_err(|_| refused(400, "Request body is not UTF-8"))?;
     endpoint.answer(&body, connection, head.keeps_alive())
 }
 
 fn admit(head: &Head, token: &str) -> Result<(), Failure> {
     if head.method != "POST" {
-        let response = Response::text(405, "Поддерживается только POST").allowing("POST");
+        let response = Response::text(405, "Only POST is supported").allowing("POST");
         return Err(Failure::Refused(response));
     }
     if !head.header("origin").is_none_or(is_loopback_origin) {
-        return Err(refused(403, "Источник запроса запрещён"));
+        return Err(refused(403, "Request origin is forbidden"));
     }
     if !authorized(head, token) {
-        return Err(refused(401, "Неверный токен"));
+        return Err(refused(401, "Invalid token"));
     }
     Ok(())
 }
@@ -308,7 +308,7 @@ mod tests {
                 }
                 let mut chunk = [0; 4096];
                 let read = self.stream.read(&mut chunk).unwrap();
-                assert!(read > 0, "сервер закрыл соединение, не ответив");
+                assert!(read > 0, "server closed the connection without replying");
                 self.received.extend_from_slice(&chunk[..read]);
             }
         }
@@ -420,7 +420,7 @@ mod tests {
             .call()
             .unwrap_err();
         let ureq::Error::Status(405, response) = error else {
-            panic!("ожидался 405, пришло {error}");
+            panic!("expected 405, got {error}");
         };
         assert_eq!(response.header("Allow"), Some("POST"));
         server.stop();
@@ -458,7 +458,7 @@ mod tests {
                 .set("Authorization", &bearer())
                 .set("Connection", "close")
                 .send_string(&tool_call("slow"))
-                .unwrap_or_else(|error| panic!("запрос {attempt}: {error}"));
+                .unwrap_or_else(|error| panic!("request {attempt}: {error}"));
             assert_eq!(response.status(), 200);
             assert_eq!(response.header("Connection"), Some("close"));
         }
@@ -574,7 +574,7 @@ mod tests {
             .send(endless)
             .unwrap_err();
         let ureq::Error::Status(413, response) = error else {
-            panic!("ожидался 413, пришло {error}");
+            panic!("expected 413, got {error}");
         };
         assert_eq!(response.header("Connection"), Some("close"));
         server.stop();
@@ -657,13 +657,13 @@ mod tests {
         thread::sleep(Duration::from_millis(30));
         server.stop();
 
-        assert!(finished.load(Ordering::SeqCst), "остановка дождалась идущего вызова");
-        assert_eq!(first.join().unwrap(), Some(200), "ответ идущего вызова дошёл");
-        assert_eq!(queued.join().unwrap(), Some(503), "вызов из очереди отклонён");
+        assert!(finished.load(Ordering::SeqCst), "shutdown waited for the in-flight call");
+        assert_eq!(first.join().unwrap(), Some(200), "the in-flight call's response was delivered");
+        assert_eq!(queued.join().unwrap(), Some(503), "the queued call was rejected");
         idle.send(&sized(&initialize(), ""));
         let refused = idle.answer();
         assert_eq!((refused.status, refused.connection.as_str()), (503, "close"));
-        assert_eq!(calls.load(Ordering::SeqCst), 1, "после остановки инструменты не запускаются");
+        assert_eq!(calls.load(Ordering::SeqCst), 1, "tools are not run after shutdown");
     }
 
     #[test]
@@ -678,7 +678,7 @@ mod tests {
         assert!(ureq::post(&url).send_string(&initialize()).is_err());
         let caller: SharedToolCaller = Arc::new(|_name: &str, _arguments: &Value| Ok(Value::Null));
         RunningServer::start(port, TOKEN.to_owned(), caller)
-            .expect("порт освобождён и сервер поднимается снова")
+            .expect("port is released and the server starts again")
             .stop();
     }
 }

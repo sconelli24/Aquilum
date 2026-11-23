@@ -121,7 +121,7 @@ impl Remote for Dropbox {
                     }
                 }
                 Entry::Deleted { path_lower, .. } if path_lower == root => {
-                    return Err(RemoteError::Failed(format!("папка {} пропала из Dropbox — проход остановлен", self.root)));
+                    return Err(RemoteError::Failed(format!("folder {} disappeared from Dropbox; pass stopped", self.root)));
                 }
                 Entry::Deleted { path_display, .. } => {
                     if let Some(path) = self.relative(&path_display) {
@@ -153,7 +153,7 @@ impl Remote for Dropbox {
             length if length <= SINGLE_UPLOAD => json(self.api.call(&format!("{CONTENT}files/upload"), Some(&commit), Body::Bytes(content, 0..length))?)?,
             _ => self.upload_parts(content, commit)?,
         };
-        self.file(metadata).ok_or_else(|| RemoteError::Failed(format!("Dropbox записал {path} вне папки синхронизации")))
+        self.file(metadata).ok_or_else(|| RemoteError::Failed(format!("Dropbox wrote {path} outside the sync folder")))
     }
 
     fn delete(&self, file: &RemoteFile) -> RemoteResult<()> {

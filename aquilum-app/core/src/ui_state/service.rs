@@ -36,7 +36,7 @@ impl UiStateService {
         let mut storage = self.storage.lock().map_err(|error| UiStateError::Database {
             message: error.to_string(),
         })?;
-        *storage = Storage::Unavailable("сбрасывается".to_owned());
+        *storage = Storage::Unavailable("being reset".to_owned());
         let set_aside = set_aside_database(&self.path, now_ms);
         *storage = open_storage(&self.path);
         set_aside
@@ -44,7 +44,7 @@ impl UiStateService {
 
     pub fn close(&self) {
         if let Ok(mut storage) = self.storage.lock() {
-            *storage = Storage::Unavailable("закрыто".to_owned());
+            *storage = Storage::Unavailable("closed".to_owned());
         }
     }
 

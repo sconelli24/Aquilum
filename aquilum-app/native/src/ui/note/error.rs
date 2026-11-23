@@ -21,7 +21,7 @@ pub struct OpenErrorIds {
     pub close: WidgetId,
 }
 
-/// Баннер об ошибке сохранения, размещаемый над заголовком открытой заметки.
+/// Save-error banner placed above the title of the open note.
 pub fn save_error_banner(text: &str) -> (NewWidget<Flex>, SaveErrorIds) {
     let retry = NewWidget::new(TextButton::new(t("editor.saveRetry"), Variant::Primary).size(ControlSize::Xs));
     let retry_id = retry.id();
@@ -39,7 +39,7 @@ pub fn save_error_banner(text: &str) -> (NewWidget<Flex>, SaveErrorIds) {
     (banner, SaveErrorIds { retry: retry_id })
 }
 
-/// Полноразмерный экран ошибки, если заметку не удалось прочитать с диска.
+/// Full-size error screen shown when the note could not be read from disk.
 pub fn open_error_page(path: &Path, error: &str) -> (NewWidget<Flex>, OpenErrorIds) {
     let file_str = path.to_string_lossy();
     let desc = t_with("editor.openFailed", &[("path", &file_str), ("reason", error)]);

@@ -58,13 +58,13 @@ pub fn parse() -> Result<Args, String> {
     let mut args = defaults();
     let mut it = std::env::args().skip(1);
     while let Some(flag) = it.next() {
-        let mut value = || it.next().ok_or_else(|| format!("{flag}: нет значения"));
+        let mut value = || it.next().ok_or_else(|| format!("{flag}: missing value"));
         match flag.as_str() {
             "--vault" => args.vault = Some(value()?.into()),
             "--data-dir" => args.data_dir = Some(value()?.into()),
             "--size" => {
                 let v = value()?;
-                let (w, h) = v.split_once('x').ok_or("--size: нужно ШxВ, например 2881x1717")?;
+                let (w, h) = v.split_once('x').ok_or("--size: expected WxH, for example 2881x1717")?;
                 let parse = |s: &str| s.parse::<u32>().map_err(|e| format!("--size: {e}"));
                 args.size = Some(PhysicalSize::new(parse(w)?, parse(h)?));
             }
@@ -95,7 +95,7 @@ pub fn parse() -> Result<Args, String> {
             "--replay-graph" => args.replay = Some((replay::Kind::Graph, value()?.into())),
             #[cfg(not(feature = "installed"))]
             "--replay-focus" => args.replay = Some((replay::Kind::Focus, value()?.into())),
-            other => return Err(format!("неизвестный аргумент {other}")),
+            other => return Err(format!("unknown argument {other}")),
         }
     }
     Ok(args)

@@ -28,18 +28,18 @@ impl Host {
                 RenderRootSignal::TakeFocus => window.focus_window(),
                 RenderRootSignal::Exit => event_loop.exit(),
                 RenderRootSignal::NewLayer(_, root, pos) => {
-                    self.root.as_mut().expect("корень есть").add_layer(root, pos)
+                    self.root.as_mut().expect("root exists").add_layer(root, pos)
                 }
-                RenderRootSignal::RemoveLayer(id) => self.root.as_mut().expect("корень есть").remove_layer(id),
+                RenderRootSignal::RemoveLayer(id) => self.root.as_mut().expect("root exists").remove_layer(id),
                 RenderRootSignal::RepositionLayer(id, pos) => {
-                    self.root.as_mut().expect("корень есть").reposition_layer(id, pos)
+                    self.root.as_mut().expect("root exists").reposition_layer(id, pos)
                 }
                 RenderRootSignal::Action(action, id) => actions.push((action, id)),
-                // Перетаскивание окна, меню окна — по мере переноса интерфейса.
+                // Window dragging and the window menu - as the interface gets ported.
                 _ => {}
             }
         }
-        // Действия обрабатываются после разбора сигналов: им нужен изменяемый RenderRoot.
+        // Actions are handled after the signals are processed: they need a mutable RenderRoot.
         let mut title_changed = false;
         let mut rescale = false;
         let mut commands = Vec::new();
@@ -71,7 +71,7 @@ impl Host {
             self.show_title();
         }
         self.sync_ime_text(&*window);
-        // Обработка действий могла породить новые сигналы (перерисовка, фокус).
+        // Handling actions may have produced new signals (repaint, focus).
         if !self.signals.borrow().is_empty() {
             self.handle_signals(event_loop);
         }

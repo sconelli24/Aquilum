@@ -25,7 +25,7 @@ impl Language {
             let mut weights = vec![0u8];
             for ch in pattern.chars() {
                 match ch.to_digit(10) {
-                    Some(d) => *weights.last_mut().expect("вес") = d as u8,
+                    Some(d) => *weights.last_mut().expect("weight") = d as u8,
                     None => {
                         at = match nodes[at].next.binary_search_by_key(&ch, |&(c, _)| c) {
                             Ok(i) => nodes[at].next[i].1 as usize,

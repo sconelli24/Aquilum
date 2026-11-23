@@ -33,7 +33,7 @@ fn device(driver: D3D_DRIVER_TYPE) -> windows::core::Result<(ID3D11Device, ID3D1
     unsafe {
         D3D11CreateDevice(None, driver, HMODULE::default(), D3D11_CREATE_DEVICE_BGRA_SUPPORT | D3D11_CREATE_DEVICE_SINGLETHREADED, None, D3D11_SDK_VERSION, Some(&mut device), None, Some(&mut context))?;
     }
-    Ok((device.expect("устройство D3D11"), context.expect("контекст D3D11")))
+    Ok((device.expect("D3D11 device"), context.expect("D3D11 context")))
 }
 
 pub(super) fn texture(device: &ID3D11Device, width: u32, height: u32) -> windows::core::Result<ID3D11Texture2D> {
@@ -51,7 +51,7 @@ pub(super) fn texture(device: &ID3D11Device, width: u32, height: u32) -> windows
     };
     let mut texture = None;
     unsafe { device.CreateTexture2D(&desc, None, Some(&mut texture))? };
-    Ok(texture.expect("текстура холста"))
+    Ok(texture.expect("canvas texture"))
 }
 
 pub(super) fn rect(a: Area) -> RECT {
@@ -85,10 +85,10 @@ pub(super) fn create(hwnd: HWND, width: u32, height: u32) -> Result<Gpu, String>
         AlphaMode: DXGI_ALPHA_MODE_IGNORE,
         Flags: 0,
     };
-    let chain = unsafe { factory.CreateSwapChainForHwnd(&device, hwnd, &desc, None, None) }.map_err(|e| format!("цепочка кадров: {e}"))?;
+    let chain = unsafe { factory.CreateSwapChainForHwnd(&device, hwnd, &desc, None, None) }.map_err(|e| format!("swap chain: {e}"))?;
     unsafe {
         let _ = factory.MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER);
     }
-    let canvas = texture(&device, width, height).map_err(|e| format!("холст: {e}"))?;
+    let canvas = texture(&device, width, height).map_err(|e| format!("canvas: {e}"))?;
     Ok(Gpu { device, context, chain, canvas })
 }

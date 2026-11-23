@@ -17,11 +17,11 @@ pub fn definitions() -> Vec<Value> {
     vec![
         tool(
             "set_frontmatter",
-            "Изменить поля frontmatter заметки: перечисленные ключи создаются или переписываются, остальные поля, их порядок и текст заметки остаются нетронутыми. Пустая строка очищает значение, но оставляет ключ. Если у заметки нет frontmatter, блок создаётся в начале. В ответе поля-списки приходят массивом.",
+            "Change a note's frontmatter fields: the listed keys are created or overwritten; other fields, their order and the note text are left untouched. An empty string clears the value but keeps the key. If the note has no frontmatter, the block is created at the start. List fields come back as arrays in the response.",
             json!({
-                "note": { "type": "string", "description": "Путь или название заметки" },
-                "fields": { "type": "object", "description": "Пары «ключ: значение», например {\"status\": \"read\", \"rating\": 5}" },
-                "open": { "type": "boolean", "description": "Открыть заметку вкладкой в приложении, по умолчанию да; в другой базе вкладка не открывается" },
+                "note": { "type": "string", "description": "Note path or title" },
+                "fields": { "type": "object", "description": "\"key: value\" pairs, for example {\"status\": \"read\", \"rating\": 5}" },
+                "open": { "type": "boolean", "description": "Open the note in a tab in the app, default true; no tab is opened for another workspace" },
                 "versionName": version_name_property(),
                 "workspace": workspace_property(),
             }),
@@ -29,16 +29,16 @@ pub fn definitions() -> Vec<Value> {
         ),
         tool(
             "find_notes",
-            "Выборка заметок по полям frontmatter: точное совпадение (match), заполненность (has) и незаполненность (missing). Это не полнотекстовый поиск: по содержимому заметок ищет search_notes, а здесь ищутся метаданные — «все заметки с type: book», «книги без автора». Значения полей возвращаются только для ключей, перечисленных в fields. Поля-списки (`tags: [a, b]` или список с дефисами) приходят массивом, пустой список считается незаполненным полем, а match сравнивает значение целиком, а не отдельные элементы списка.",
+            "Select notes by frontmatter fields: exact match (match), filled (has) and unfilled (missing). This is not full-text search: search_notes searches note contents, while this searches metadata, e.g. \"all notes with type: book\", \"books without an author\". Field values are returned only for the keys listed in fields. List fields (`tags: [a, b]` or a dash list) come back as arrays, an empty list counts as an unfilled field, and match compares the whole value, not individual list items.",
             json!({
-                "match": { "type": "object", "description": "Поля, совпадающие точно (регистр не учитывается), например {\"type\": \"book\"}" },
-                "has": { "type": "array", "items": { "type": "string" }, "description": "Эти поля должны быть заполнены" },
-                "missing": { "type": "array", "items": { "type": "string" }, "description": "Эти поля должны отсутствовать или быть пустыми" },
-                "fields": { "type": "array", "items": { "type": "string" }, "description": "Какие поля вернуть в ответе; без него возвращаются только пути" },
-                "folder": { "type": "string", "description": "Искать только в этой папке, пусто — вся база" },
-                "sort": { "type": "string", "description": "Поле для сортировки, по умолчанию сортировка по пути" },
-                "offset": { "type": "integer", "description": "Сколько заметок пропустить, чтобы получить следующую страницу" },
-                "limit": { "type": "integer", "description": "Сколько заметок вернуть, по умолчанию 100, максимум 200" },
+                "match": { "type": "object", "description": "Fields that must match exactly (case-insensitive), for example {\"type\": \"book\"}" },
+                "has": { "type": "array", "items": { "type": "string" }, "description": "These fields must be filled" },
+                "missing": { "type": "array", "items": { "type": "string" }, "description": "These fields must be absent or empty" },
+                "fields": { "type": "array", "items": { "type": "string" }, "description": "Which fields to return; without it only paths are returned" },
+                "folder": { "type": "string", "description": "Search only in this folder; empty means the whole workspace" },
+                "sort": { "type": "string", "description": "Field to sort by; defaults to sorting by path" },
+                "offset": { "type": "integer", "description": "How many notes to skip to get the next page" },
+                "limit": { "type": "integer", "description": "How many notes to return, default 100, maximum 200" },
                 "workspace": workspace_property(),
             }),
             &[],
@@ -89,19 +89,19 @@ fn field_updates(arguments: &Value) -> Result<Vec<(String, String)>, String> {
     let fields = arguments
         .get("fields")
         .and_then(Value::as_object)
-        .ok_or("Не заполнен аргумент «fields»: нужен объект вида {«ключ»: «значение»}")?;
+        .ok_or("Argument “fields” is missing: an object of the form {“key”: “value”} is required")?;
     if fields.is_empty() {
-        return Err("Список полей пуст: нечего менять".to_owned());
+        return Err("The field list is empty: nothing to change".to_owned());
     }
     fields
         .iter()
         .map(|(key, value)| {
             if key.trim().is_empty() || key.contains(':') || key.contains('\n') {
-                return Err(format!("Недопустимое имя поля «{key}»: двоеточия и переводы строк в ключе не разрешены"));
+                return Err(format!("Invalid field name “{key}”: colons and line breaks are not allowed in a key"));
             }
             let value = scalar(key, value)?;
             if value.contains('\n') {
-                return Err(format!("Поле «{key}»: значение не может быть многострочным"));
+                return Err(format!("Field “{key}”: the value must not be multiline"));
             }
             Ok((key.trim().to_owned(), value))
         })
@@ -113,6 +113,6 @@ fn scalar(key: &str, value: &Value) -> Result<String, String> {
         Value::String(text) => Ok(text.clone()),
         Value::Number(_) | Value::Bool(_) => Ok(value.to_string()),
         Value::Null => Ok(String::new()),
-        _ => Err(format!("Поле «{key}»: значением может быть строка, число или логическое значение")),
+        _ => Err(format!("Field “{key}”: the value must be a string, number or boolean")),
     }
 }

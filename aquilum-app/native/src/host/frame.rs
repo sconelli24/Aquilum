@@ -2,7 +2,7 @@ use super::*;
 
 impl Host {
     pub(super) fn redraw(&mut self) {
-        let _zone = aq_trace::zone("кадр");
+        let _zone = aq_trace::zone("frame");
         let t0 = Instant::now();
         self.trim_renderer();
         let (Some(window), Some(output), Some(root)) = (self.window.clone(), self.output.as_mut(), self.root.as_mut()) else { return };
@@ -15,7 +15,7 @@ impl Host {
             return;
         }
         let (layers, access_update) = {
-            let _zone = aq_trace::zone("сцена");
+            let _zone = aq_trace::zone("scene");
             root.run_rewrite_passes();
             self.app.restore_view(root);
             let painted = root.redraw();
@@ -75,7 +75,7 @@ impl Host {
         }
     }
 
-    /// Кадр живых слоёв: без сцены Masonry, только анимация поверх кэшей.
+    /// A live-layer frame: no Masonry scene, only animation on top of the caches.
     pub(super) fn live_tick(&mut self) {
         let (Some(output), Some(layers)) = (self.output.as_mut(), self.layers.as_ref()) else { return };
         match self.renderer.live(layers, output) {
@@ -94,9 +94,9 @@ impl Host {
         self.live_at = next.map(|wait| Instant::now() + wait);
     }
 
-    /// Анимационный тик: проходы обновления Masonry без растеризации.
+    /// Animation tick: Masonry update passes without rasterization.
     pub(super) fn anim_tick(&mut self, event_loop: &dyn ActiveEventLoop, vblank: Instant, previous: Option<Instant>) {
-        let _zone = aq_trace::zone("тик анимации");
+        let _zone = aq_trace::zone("animation tick");
         let Some(root) = &mut self.root else { return };
         let since = |t: Instant| vblank.saturating_duration_since(t);
         let elapsed = match self.last_anim.take() {

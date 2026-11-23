@@ -9,7 +9,7 @@ fn released(step: f64, frames: u32) -> (Fling, Instant) {
     for k in 0..frames {
         trail.push(start + FRAME * k, 0.0, step * f64::from(k));
     }
-    (trail.release(SCALE).expect("инерция после движения"), start + FRAME * (frames - 1))
+    (trail.release(SCALE).expect("inertia after movement"), start + FRAME * (frames - 1))
 }
 
 fn steps(mut fling: Fling, from: Instant, moved: f64) -> Vec<f64> {
@@ -23,7 +23,7 @@ fn continues_at_the_speed_of_the_fingers() {
     let (fling, last) = released(90.0, 12);
     let steps = steps(fling, last, 90.0);
     for step in &steps[..2] {
-        assert!((step - 90.0).abs() < 90.0 * 0.05, "шаги отрыва и инерции {:?} вместо 90", &steps[..2]);
+        assert!((step - 90.0).abs() < 90.0 * 0.05, "lift-off and inertia steps {:?} instead of 90", &steps[..2]);
     }
 }
 
@@ -38,7 +38,7 @@ fn recorded(steps: &[f64]) -> (Fling, Instant, f64) {
     let mut last: Vec<f64> = steps[steps.len() - 5..steps.len() - 1].to_vec();
     last.sort_by(f64::total_cmp);
     let reference = (last[1] + last[2]) / 2.0;
-    (trail.release(SCALE).expect("инерция после движения"), start + FRAME * (steps.len() as u32 - 1), reference)
+    (trail.release(SCALE).expect("inertia after movement"), start + FRAME * (steps.len() as u32 - 1), reference)
 }
 
 #[test]
@@ -47,7 +47,7 @@ fn a_release_in_the_middle_of_a_frame_does_not_stall() {
     flick.push(22.0);
     let (fling, last, reference) = recorded(&flick);
     let steps = steps(fling, last, 22.0);
-    assert!(steps[..3].iter().all(|step| (0.85..=1.25).contains(&(step / reference))), "провал в кадре отрыва: {:?}", &steps[..3]);
+    assert!(steps[..3].iter().all(|step| (0.85..=1.25).contains(&(step / reference))), "dip in the lift-off frame: {:?}", &steps[..3]);
 }
 
 #[test]
@@ -61,8 +61,8 @@ fn real_flicks_do_not_brake_at_the_moment_of_release() {
     for flick in flicks {
         let (fling, last, reference) = recorded(flick);
         let steps = steps(fling, last, flick[flick.len() - 1]);
-        assert!((0.85..=1.25).contains(&(steps[1] / reference)), "первый шаг инерции {:.0} при скорости пальцев {reference:.0}: {flick:?}", steps[1]);
-        assert!(steps[0] >= 0.85 * steps[1].min(reference), "провал в кадре отрыва {:.0}: {flick:?}", steps[0]);
+        assert!((0.85..=1.25).contains(&(steps[1] / reference)), "first inertia step {:.0} at finger speed {reference:.0}: {flick:?}", steps[1]);
+        assert!(steps[0] >= 0.85 * steps[1].min(reference), "dip in the lift-off frame {:.0}: {flick:?}", steps[0]);
     }
 }
 
@@ -70,11 +70,11 @@ fn real_flicks_do_not_brake_at_the_moment_of_release() {
 fn slows_down_smoothly_to_a_stop() {
     let (fling, last) = released(100.0, 12);
     let steps = steps(fling, last, 100.0);
-    assert!(steps.windows(2).all(|w| w[1] <= w[0] && w[1] >= 0.0), "шаги не убывают плавно: {steps:?}");
-    assert!(steps.windows(2).all(|w| w[0] - w[1] < 0.1 * w[0] + 0.5), "резкий скачок скорости: {steps:?}");
-    assert!(*steps.last().unwrap() < 1.0, "остановка обрывом: {:?}", &steps[steps.len() - 3..]);
+    assert!(steps.windows(2).all(|w| w[1] <= w[0] && w[1] >= 0.0), "steps do not decrease smoothly: {steps:?}");
+    assert!(steps.windows(2).all(|w| w[0] - w[1] < 0.1 * w[0] + 0.5), "sharp jump in speed: {steps:?}");
+    assert!(*steps.last().unwrap() < 1.0, "abrupt stop: {:?}", &steps[steps.len() - 3..]);
     let path: f64 = steps.iter().sum();
-    assert!((2400.0..3100.0).contains(&path), "путь {path} не как у Windows (около 2700)");
+    assert!((2400.0..3100.0).contains(&path), "path {path} differs from Windows (about 2700)");
 }
 
 #[test]
@@ -97,5 +97,5 @@ fn old_movement_is_forgotten() {
     for k in 6..24 {
         trail.push(start + FRAME * k, 0.0, 400.0);
     }
-    assert!(trail.release(SCALE).is_none(), "пальцы остановились, а инерция взялась из старого движения");
+    assert!(trail.release(SCALE).is_none(), "fingers stopped, yet inertia came from the old movement");
 }

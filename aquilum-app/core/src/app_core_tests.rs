@@ -127,10 +127,10 @@ fn after_shutdown_no_file_of_the_data_or_the_vault_stays_open() {
 
     core.shutdown();
 
-    assert!(!directory.path().join("data").join("ui-state.sqlite3-wal").exists(), "журнал закрытой базы сброшен в файл");
+    assert!(!directory.path().join("data").join("ui-state.sqlite3-wal").exists(), "journal of the closed database was flushed to file");
     assert!(core.search.prepare(&workspace.to_string_lossy()).is_err());
     assert!(core.watcher.watch(&workspace).is_err());
-    directory.close().expect("после завершения ядро не держит ни одного файла");
+    directory.close().expect("after shutdown the core holds no open files");
     drop(held_by_a_late_thread);
 }
 

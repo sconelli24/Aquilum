@@ -128,7 +128,7 @@ fn update(dir: &Path, id: &str, regions: Option<Vec<Region>>, write: &NoteWrite<
     let path = dir.join(id);
     let old = delta::read(&path)?;
     let Some(regions) = regions else {
-        return Err(FileCommandError::Task { message: "нет правки для версии".to_owned() });
+        return Err(FileCommandError::Task { message: "no edit for the version".to_owned() });
     };
     let merged = regions.iter().rev().fold(old.regions, |merged, region| compose(&merged, Splice { at: region.from, removed: region.to - region.from, inserted: region.len }));
     delta::write(&path, old.base.as_deref(), write.hash, &merged, write.text)

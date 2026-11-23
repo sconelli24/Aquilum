@@ -21,9 +21,9 @@ fn the_syntax_marks_headings_phrases_exclusions_and_the_open_last_word() {
     assert_eq!(parsed.phrases, [["точн", "фраз"]]);
     assert_eq!(parsed.excluded, [["минус"]]);
     for odd in ["", "-", "\"", "#", "-\"\"", "a\"b", "- кот", "кот кот", "\"незакрытая фраза"] {
-        assert!(parse(odd).words.len() <= 2, "разбор не падает и не плодит слов: {odd:?}");
+        assert!(parse(odd).words.len() <= 2, "parsing does not panic or multiply words: {odd:?}");
     }
-    assert_eq!(parse("кот кот").words.len(), 1, "повтор слова не меняет запрос");
+    assert_eq!(parse("кот кот").words.len(), 1, "a repeated word does not change the query");
 }
 
 #[test]
@@ -38,7 +38,7 @@ fn a_typo_is_counted_and_highlighted_but_ranks_below_the_exact_form() {
     let found = index.search(&Request::new("заметок")).unwrap();
     assert_eq!(names(&found.results), ["Список", "Заметка"]);
     assert_eq!((found.results[1].match_count, found.results[1].matched_terms.as_slice()), (1, ["заметок".to_owned()].as_slice()));
-    assert!(found.terms.contains(&"заметк".to_owned()), "форма с опечаткой подсвечивается: {:?}", found.terms);
+    assert!(found.terms.contains(&"заметк".to_owned()), "the misspelled form is highlighted: {:?}", found.terms);
 }
 
 #[test]
@@ -57,8 +57,8 @@ fn every_result_has_a_counted_match_and_folder_names_do_not_match() {
 #[test]
 fn typos_need_five_letters_and_the_same_first_letter() {
     let (_guard, index) = indexed(&[("Кит.md", "кит"), ("Машина.md", "машина")]);
-    assert!(search(&index, "кот").is_empty(), "короткое слово ищется без опечаток");
-    assert!(search(&index, "вашина").is_empty(), "опечатка в первой букве не допускается");
+    assert!(search(&index, "кот").is_empty(), "a short word is searched without typos");
+    assert!(search(&index, "вашина").is_empty(), "a typo in the first letter is not allowed");
     assert_eq!(names(&search(&index, "мошина")), ["Машина"]);
 }
 
@@ -68,7 +68,7 @@ fn only_the_last_word_is_a_prefix() {
     let results = search(&index, "маш обуч");
     assert_eq!(names(&results), ["Маш", "Обучение"]);
     assert_eq!(results[1].matched_terms, ["обуч"]);
-    assert_eq!(names(&search(&index, "маш")), ["Маш", "Обучение"], "последнее слово ищется и как начало");
+    assert_eq!(names(&search(&index, "маш")), ["Маш", "Обучение"], "the last word is also searched as a prefix");
 }
 
 #[test]
@@ -91,7 +91,7 @@ fn a_quoted_phrase_needs_the_words_side_by_side_in_any_form() {
         ("Врозь.md", "Поиск бывает разный, но быстрый лучше."),
     ]);
     assert_eq!(sorted(&search(&index, "\"быстрый поиск\"")), ["Рядом", "Склонение"]);
-    assert_eq!(search(&index, "\"быстрый поиск").len(), 2, "незакрытая кавычка — фраза до конца строки");
+    assert_eq!(search(&index, "\"быстрый поиск").len(), 2, "an unclosed quote - the phrase runs to the end of the line");
 }
 
 #[test]
@@ -112,7 +112,7 @@ fn a_long_note_adds_up_its_pages_and_an_exclusion_on_any_page_hides_it() {
     let filler: String = (0..40_000).map(|line| format!("строка номер {line}\n")).collect();
     let (guard, index) = indexed(&[("Длинная.md", &format!("кофе\n\n{filler}\nчай\n")), ("Кофе.md", "кофе")]);
     let mut pages = crate::search::pages::Pages::open(&guard.path().join("Длинная.md")).unwrap();
-    assert!(pages.next().unwrap().is_some() && pages.next().unwrap().is_some(), "заметка из нескольких страниц");
+    assert!(pages.next().unwrap().is_some() && pages.next().unwrap().is_some(), "note spans several pages");
     let long = search(&index, "кофе чай");
     assert_eq!((long[0].title.as_str(), long[0].match_count, long[0].matched_terms.len()), ("Длинная", 2, 2));
     assert_eq!(names(&search(&index, "кофе -чай")), ["Кофе"]);
@@ -126,9 +126,9 @@ fn a_multi_word_query_ranks_partial_matches_instead_of_returning_nothing() {
         ("Быстрота.md", "# Плавность\n\nКадр рисуется быстро.\n"),
     ]);
     let results = search(&index, "физика тика кадр плавность");
-    assert_eq!(names(&results), ["Камера", "Быстрота"], "заметка с большим числом совпавших слов идёт первой");
+    assert_eq!(names(&results), ["Камера", "Быстрота"], "the note with more matched words comes first");
     assert_eq!((results[0].matched_terms.len(), results[1].matched_terms.len()), (3, 2));
-    assert_eq!(results[0].heading.as_deref(), Some("Ощущение камеры"), "фрагмент подписан разделом, в котором нашлось совпадение");
+    assert_eq!(results[0].heading.as_deref(), Some("Ощущение камеры"), "the snippet is labelled with the section where the match was found");
 }
 
 #[test]

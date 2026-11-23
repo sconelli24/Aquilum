@@ -6,7 +6,7 @@ const DEFAULT_DATE: &str = "YYYY-MM-DD";
 const DEFAULT_TIME: &str = "HH:mm";
 const TOKENS: [&str; 16] = ["YYYY", "MMMM", "DDDD", "MMM", "DDD", "YY", "MM", "DD", "HH", "mm", "ss", "M", "D", "H", "m", "s"];
 
-/// Названия месяцев и дней недели (с понедельника) для `MMMM`, `MMM`, `DDDD`, `DDD` — как в локалях moment.js.
+/// Month and weekday names (starting Monday) for `MMMM`, `MMM`, `DDDD`, `DDD`, as in the moment.js locales.
 struct Names {
     months: [&'static str; 12],
     months_short: [&'static str; 12],
@@ -43,7 +43,7 @@ fn names(language: Language) -> &'static Names {
     }
 }
 
-/// Подставляет `{{date}}` и `{{time}}`; названия месяцев и дней — на языке интерфейса.
+/// Substitutes `{{date}}` and `{{time}}`; month and weekday names use the interface language.
 pub fn apply_placeholders(text: &str) -> String {
     apply_at(text, &chrono::Local::now(), i18n::language())
 }

@@ -41,7 +41,7 @@ fn click_toggles_folder_and_opens_note() {
     assert_eq!(model.rows()[2].guides, vec![0]);
     let readme = model.rows().iter().position(|r| r.name == "README").unwrap();
     let Some(Press::Open { path, new_tab: false }) = model.press(readme, Modifiers::default()) else {
-        panic!("заметка не открылась");
+        panic!("the note did not open");
     };
     assert!(path.ends_with("README.md"));
     model.press(1, Modifiers::default());
@@ -106,7 +106,7 @@ fn folder_click_is_target_and_collapse_all_closes_everything() {
     let (dir, mut model) = tree();
     assert_eq!(model.target_folder().as_deref(), Some(dir.path()));
     model.press(1, Modifiers::default());
-    assert!(model.rows()[1].selected, "щелчок по папке её не выделил");
+    assert!(model.rows()[1].selected, "clicking the folder did not select it");
     assert_eq!(model.target_folder(), Some(dir.path().join("Проекты")));
     model.press(0, Modifiers::default());
     assert_eq!(model.target_folder(), Some(dir.path().join("Архив")));
@@ -125,7 +125,7 @@ fn expand_to_opens_every_parent() {
     let (dir, mut model) = tree();
     let deep = dir.path().join("Проекты/Вложенная/глубоко.md");
     model.expand_to(&deep);
-    assert!(model.index_of(&deep).is_some(), "строка вложенной заметки не видна");
+    assert!(model.index_of(&deep).is_some(), "the nested note row is not visible");
     assert_eq!(model.rows()[model.index_of(&deep).unwrap()].depth, 2);
 }
 

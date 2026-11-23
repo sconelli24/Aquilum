@@ -26,7 +26,7 @@ pub fn open_guest(core: &Core, root: &Path) -> Result<(), String> {
         Ok(())
     } else {
         Err(format!(
-            "База знаний {workspace} ещё индексируется, поиск по ней пока неполон — повторите запрос через несколько секунд"
+            "Workspace {workspace} is still being indexed and search over it is incomplete for now: retry in a few seconds"
         ))
     }
 }
@@ -43,7 +43,7 @@ pub fn known_workspace(core: &Core, input: &str) -> Result<PathBuf, String> {
         workspace_by_tail(&known, input)?
     };
     if !root.is_dir() {
-        return Err(format!("Папка базы знаний не найдена: {}", root.to_string_lossy()));
+        return Err(format!("Workspace folder not found: {}", root.to_string_lossy()));
     }
     Ok(root)
 }
@@ -94,7 +94,7 @@ fn workspace_by_tail(known: &[PathBuf], input: &str) -> Result<PathBuf, String> 
         [root] => Ok((*root).clone()),
         [] => Err(unknown_workspace(input)),
         many => Err(format!(
-            "Под «{input}» подходят несколько баз, уточните: {}",
+            "Several workspaces match “{input}”, be more specific: {}",
             many.iter()
                 .map(|root| address(known, root))
                 .collect::<Vec<_>>()
@@ -123,7 +123,7 @@ fn root_parts(root: &Path) -> Vec<String> {
 }
 
 fn unknown_workspace(input: &str) -> String {
-    format!("База знаний «{input}» не открывалась в Aquilum — доступные базы покажет list_workspaces")
+    format!("Workspace “{input}” has not been opened in Aquilum: list_workspaces shows the available workspaces")
 }
 
 #[cfg(test)]
@@ -173,7 +173,7 @@ mod tests {
         assert!(workspace_by_tail(&known, "Нет такой").is_err());
         assert!(
             workspace_by_tail(&known, "voxel/Knowledge").is_err(),
-            "хвост сравнивается целыми папками"
+            "the tail is compared by whole folders"
         );
     }
 }

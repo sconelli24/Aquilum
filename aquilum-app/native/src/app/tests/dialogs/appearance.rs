@@ -3,7 +3,7 @@ use crate::ui::editor::TextAction;
 use crate::ui::settings::Binding;
 
 fn color_field(h: &Harness) -> masonry::core::WidgetId {
-    h.binding("поле основного цвета", |b| matches!(b, Binding::Text { value, .. } if value.starts_with('#')))
+    h.binding("primary color field", |b| matches!(b, Binding::Text { value, .. } if value.starts_with('#')))
 }
 
 #[test]
@@ -82,7 +82,7 @@ fn the_night_theme_offers_its_own_list_and_remembers_the_choice() {
     let mut h = Harness::new();
     h.click(242.0, 578.0);
     let segment = |h: &mut Harness, index: usize| {
-        let themes = h.binding("переключатель темы", |b| matches!(b, Binding::Choice(_)));
+        let themes = h.binding("theme switch", |b| matches!(b, Binding::Choice(_)));
         let widget = h.root.get_widget(themes).unwrap();
         let at = widget.downcast::<Segmented>().unwrap().inner().segment(index).unwrap().center() + widget.ctx().bounding_box().origin().to_vec2();
         h.click(at.x, at.y);
@@ -91,23 +91,23 @@ fn the_night_theme_offers_its_own_list_and_remembers_the_choice() {
         Some(Popup::Settings { dialog, .. }) => dialog.bindings.iter().find_map(|(id, b)| matches!(b, Binding::Dropdown { options, .. } if options.contains(&"Тёплая".to_owned())).then_some(*id)),
         _ => None,
     };
-    assert!(nights(&h).is_none(), "список ночных тем виден до выбора ночной темы");
+    assert!(nights(&h).is_none(), "night theme list visible before a night theme is chosen");
 
     segment(&mut h, 3);
     assert_eq!(h.config().ui.theme, "night");
-    let themes = h.binding("переключатель темы", |b| matches!(b, Binding::Choice(_)));
+    let themes = h.binding("theme switch", |b| matches!(b, Binding::Choice(_)));
     let travel = h.root.get_widget(themes).unwrap().downcast::<Segmented>().unwrap().inner().travel();
-    assert!(travel < 3.0, "выбор темы перескочил, а не доехал: {travel}");
-    let list = nights(&h).expect("список ночных тем под темой");
+    assert!(travel < 3.0, "theme selection jumped instead of animating: {travel}");
+    let list = nights(&h).expect("night theme list under the theme");
     h.act(list, Changed::OpenMenu(masonry::kurbo::Rect::new(700.0, 300.0, 900.0, 330.0)));
     h.choose(1);
     assert_eq!(h.config().ui.night, "warm");
 
     segment(&mut h, 2);
-    assert!(nights(&h).is_none(), "список ночных тем остался у тёмной темы");
+    assert!(nights(&h).is_none(), "night theme list remained for the dark theme");
     segment(&mut h, 3);
-    let Some(Popup::Settings { dialog, .. }) = &h.app.popup else { panic!("настройки закрылись") };
-    assert!(matches!(dialog.bindings.get(&nights(&h).unwrap()), Some(Binding::Dropdown { selected: 1, .. })), "ночная тема забыла тёплый вариант");
+    let Some(Popup::Settings { dialog, .. }) = &h.app.popup else { panic!("settings closed") };
+    assert!(matches!(dialog.bindings.get(&nights(&h).unwrap()), Some(Binding::Dropdown { selected: 1, .. })), "night theme forgot the warm variant");
 }
 
 #[test]
@@ -132,14 +132,14 @@ fn restyle_matches_fresh_build() {
     h.app.restyle(&mut h.root, true, None);
     h.settle();
     let live = h.frame(W as u16, H as u16, 1.0);
-    assert_eq!(h.app.note_ids.as_ref().map(|ids| ids.body.id()).into_iter().collect::<Vec<_>>(), ids_before, "restyle пересоздал редактор");
+    assert_eq!(h.app.note_ids.as_ref().map(|ids| ids.body.id()).into_iter().collect::<Vec<_>>(), ids_before, "restyle recreated the editor");
     h.app.rebuild(&mut h.root);
     h.settle();
     let fresh = h.frame(W as u16, H as u16, 1.0);
     dump("restyle-live.png", &live);
     dump("restyle-fresh.png", &fresh);
     let differ = differing_pixels(live.frame_pixels(), fresh.frame_pixels());
-    assert_eq!(differ, 0, "после restyle кадр отличается от собранного заново в {differ} пикселях");
+    assert_eq!(differ, 0, "after restyle the frame differs from one built from scratch in {differ} pixels");
 }
 
 #[test]
@@ -147,13 +147,13 @@ fn color_picker_previews_live_and_saves_on_close() {
     let mut h = Harness::new();
     h.app.open_settings(&mut h.root);
     h.settle();
-    let swatch = h.binding("образец цвета", |b| matches!(b, Binding::Color(_)));
+    let swatch = h.binding("color swatch", |b| matches!(b, Binding::Color(_)));
     let rect = h.root.get_widget(swatch).unwrap().ctx().bounding_box();
     h.click(rect.center().x, rect.center().y);
-    assert!(h.menu_open(), "колорпикер не открылся");
+    assert!(h.menu_open(), "color picker did not open");
     let before = h.config().ui.primary_color;
     let accent = theme::current().bg_accent;
-    let picker = h.root.focused_widget().expect("фокус в колорпикере");
+    let picker = h.root.focused_widget().expect("focus in the color picker");
     let area = h.root.get_widget(picker).unwrap().ctx().bounding_box();
     let mut s = pointer_at(area.x0 + 30.0, area.y0 + 70.0, 1.0);
     s.buttons.insert(PointerButton::Primary);
@@ -163,12 +163,12 @@ fn color_picker_previews_live_and_saves_on_close() {
     s.buttons.remove(PointerButton::Primary);
     h.root.handle_pointer_event(PointerEvent::Up(primary(s)));
     h.deliver();
-    assert_ne!(theme::current().bg_accent, accent, "цвет не применился вживую");
-    assert_eq!(h.config().ui.primary_color, before, "настройки записаны раньше закрытия");
+    assert_ne!(theme::current().bg_accent, accent, "color was not applied live");
+    assert_eq!(h.config().ui.primary_color, before, "settings written before closing");
     h.snapshot("picker.png");
     h.escape();
-    assert!(!h.menu_open(), "колорпикер не закрылся");
-    assert_ne!(h.config().ui.primary_color, before, "цвет не сохранился при закрытии");
+    assert!(!h.menu_open(), "color picker did not close");
+    assert_ne!(h.config().ui.primary_color, before, "color was not saved on close");
 }
 
 #[test]
@@ -176,14 +176,14 @@ fn a_preset_swatch_sets_the_accent_at_once_and_is_saved_on_close() {
     let mut h = Harness::new();
     h.app.open_settings(&mut h.root);
     h.settle();
-    let swatch = h.binding("образец цвета", |b| matches!(b, Binding::Color(_)));
+    let swatch = h.binding("color swatch", |b| matches!(b, Binding::Color(_)));
     let rect = h.root.get_widget(swatch).unwrap().ctx().bounding_box();
     h.click(rect.center().x, rect.center().y);
-    assert!(h.menu_open(), "колорпикер не открылся");
-    let picker = h.root.focused_widget().expect("фокус в колорпикере");
+    assert!(h.menu_open(), "color picker did not open");
+    let picker = h.root.focused_widget().expect("focus in the color picker");
     let area = h.root.get_widget(picker).unwrap().ctx().bounding_box();
     h.click(area.x0 + 12.0 + 22.0 + 15.2 + 11.0, area.y0 + 12.0 + 11.0);
-    assert_eq!(theme::current().bg_accent.to_rgba8().to_u8_array(), [0x93, 0x33, 0xea, 0xff], "второй готовый цвет не применился");
+    assert_eq!(theme::current().bg_accent.to_rgba8().to_u8_array(), [0x93, 0x33, 0xea, 0xff], "second preset color was not applied");
     h.escape();
     assert_eq!(h.config().ui.primary_color, "#9333ea");
 }
@@ -195,13 +195,13 @@ fn themes_section_edits_the_shown_theme_and_resets_it() {
     h.click(242.0, 578.0);
     h.open_section(Section::Themes);
     assert_eq!(h.section(), Some(Section::Themes));
-    let field = h.binding("поле фона заметки", |b| matches!(b, Binding::Text { setter: Setter::ThemeValue("editor-bg"), .. }));
+    let field = h.binding("note background field", |b| matches!(b, Binding::Text { setter: Setter::ThemeValue("editor-bg"), .. }));
     h.send(field, TextAction::Changed("#112233".into()));
     let id = theme::active().id;
     assert_eq!(h.config().ui.theme_overrides[id]["editor-bg"], "#112233");
     assert_eq!(theme::current().editor_bg.to_rgba8().to_u8_array(), [0x11, 0x22, 0x33, 0xff]);
     assert_eq!(h.section(), Some(Section::Themes));
-    let reset = h.binding("кнопка сброса темы", |b| matches!(b, Binding::Button(Action::ResetTheme)));
+    let reset = h.binding("theme reset button", |b| matches!(b, Binding::Button(Action::ResetTheme)));
     h.send(reset, crate::ui::widgets::Pressed);
     assert!(h.config().ui.theme_overrides.get(id).is_none_or(|edits| edits.is_empty()));
     assert_ne!(theme::current().editor_bg.to_rgba8().to_u8_array(), [0x11, 0x22, 0x33, 0xff]);

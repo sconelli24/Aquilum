@@ -30,5 +30,5 @@ fn rescale_matches_fresh_layout() {
         std::fs::write(dir.join("rescale-live.png"), &live).unwrap();
         std::fs::write(dir.join("rescale-fresh.png"), &fresh).unwrap();
     }
-    assert!(live == fresh, "кадр после смены масштаба отличается от собранного заново");
+    assert!(live == fresh, "the frame after a scale change differs from one rebuilt from scratch");
 }

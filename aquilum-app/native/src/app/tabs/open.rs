@@ -71,7 +71,7 @@ impl App {
                 self.open_error_ids = None;
                 self.text = text;
                 self.note = Some(note);
-                let _zone = aq_trace::zone("открытие: страница заметки");
+                let _zone = aq_trace::zone("open: note page");
                 self.render_note(root);
                 self.reveal_pending(root, &path);
             }

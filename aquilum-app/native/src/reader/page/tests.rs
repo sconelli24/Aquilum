@@ -23,5 +23,5 @@ fn a_chapter_laid_out_in_parallel_matches_one_laid_out_block_by_block() {
         assert_eq!((got, breaks, x), (want, &expected, &indent));
         hyphenated += usize::from(breaks.iter().any(|b| b.1 == '-'));
     }
-    assert!(hyphenated > 10, "в примере почти нет переносов в конце строки: {hyphenated}");
+    assert!(hyphenated > 10, "the sample has almost no end-of-line hyphenations: {hyphenated}");
 }

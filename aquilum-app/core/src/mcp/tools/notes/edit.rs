@@ -76,21 +76,21 @@ pub(super) fn changes(text: &dyn Content, edit: &Edit) -> Result<Changes, String
         "prepend" if content.trim().is_empty() => Ok(Vec::new()),
         "prepend" => Ok(vec![(0..ends()?.leading, format!("{}\n\n", content.trim_end_matches('\n')))]),
         "findReplace" => {
-            let needle = edit.find.as_deref().filter(|needle| !needle.is_empty()).ok_or("Для режима findReplace нужен аргумент «find»")?;
+            let needle = edit.find.as_deref().filter(|needle| !needle.is_empty()).ok_or("Mode findReplace requires the argument “find”")?;
             let found = occurrences(text, needle).map_err(|error| error.to_string())?;
             match found.len() {
-                0 => Err(format!("Текст не найден в заметке: {}", shorten(needle, 80))),
+                0 => Err(format!("Text not found in the note: {}", shorten(needle, 80))),
                 count if count > 1 && !edit.all => Err(format!(
-                    "Текст встречается в заметке больше одного раза (всего: {count}) — уточните «find» или передайте all: true"
+                    "The text occurs in the note more than once ({count} in total): refine “find” or pass all: true"
                 )),
                 _ => Ok(found.into_iter().map(|range| (range, content.to_owned())).collect()),
             }
         }
         "underHeading" | "replaceSection" => {
-            let heading = edit.heading.as_deref().ok_or_else(|| format!("Для режима {} нужен аргумент «heading»", edit.mode))?;
+            let heading = edit.heading.as_deref().ok_or_else(|| format!("Mode {} requires the argument “heading”", edit.mode))?;
             section(text, heading, content, edit.mode == "replaceSection")
         }
-        other => Err(format!("Неизвестный режим правки: {other}")),
+        other => Err(format!("Unknown edit mode: {other}")),
     }
 }
 

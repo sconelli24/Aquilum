@@ -101,9 +101,9 @@ fn save(root: &mut RenderRoot, name: &str) {
     let mut renderer = Renderer::new(0);
     let size = root.size();
     let scale = f64::from(size.width) / f64::from(W);
-    renderer.render(&layers, size.width as u16, size.height as u16, scale, theme::background()).expect("кадр");
+    renderer.render(&layers, size.width as u16, size.height as u16, scale, theme::background()).expect("frame");
     let dir = std::env::var_os("AQUILUM_SNAPSHOTS").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
     let path = dir.join(format!("{name}.png"));
-    std::fs::write(&path, renderer.png()).expect("снимок записан");
+    std::fs::write(&path, renderer.png()).expect("snapshot is written");
     eprintln!("snapshot: {}", path.display());
 }

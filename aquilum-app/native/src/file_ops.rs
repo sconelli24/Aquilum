@@ -8,7 +8,7 @@ use aquilum_core::files::gate;
 use aquilum_core::history::Source;
 use aquilum_core::search::paths::is_markdown;
 
-/// Имя новой заметки или папки без названия — на языке интерфейса.
+/// Name of a new untitled note or folder, in the interface language.
 pub fn untitled() -> String {
     crate::i18n::t("editor.untitled")
 }
@@ -41,7 +41,7 @@ pub fn duplicate(core: &Core, path: &Path) -> Result<PathBuf, FileCommandError> 
 }
 
 pub fn duplicate_all(core: &Arc<Core>, targets: Vec<PathBuf>) {
-    background(core, targets, "не продублирован", |core, path| duplicate(core, path).map(drop));
+    background(core, targets, "not duplicated", |core, path| duplicate(core, path).map(drop));
 }
 
 pub fn sanitize_file_name(value: &str) -> String {
@@ -90,7 +90,7 @@ pub fn rename(core: &Arc<Core>, from: PathBuf, to: PathBuf, failed: impl FnOnce(
 }
 
 pub fn move_all(core: &Arc<Core>, sources: Vec<PathBuf>, target: PathBuf) {
-    background(core, sources, "не перенесён", move |core, source| {
+    background(core, sources, "not moved", move |core, source| {
         let Some(name) = source.file_name() else { return Ok(()) };
         let destination = target.join(name);
         first_free(|i| numbered(&destination, i), |candidate| gate::rename(core, source, candidate)).map(drop)
@@ -125,7 +125,7 @@ pub fn create_folder(parent: &Path, base: &str, first: usize) -> Result<PathBuf,
 }
 
 pub fn trash_all(core: &Arc<Core>, workspace: PathBuf, targets: Vec<PathBuf>) {
-    background(core, targets, "не удалён", move |core, target| gate::trash(core, &workspace, target).map(drop));
+    background(core, targets, "not deleted", move |core, target| gate::trash(core, &workspace, target).map(drop));
 }
 
 #[cfg(test)]

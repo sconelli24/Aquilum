@@ -66,7 +66,7 @@ fn versions_are_separate_files_ordered_by_time_and_never_overwritten() {
 
     assert_eq!(found.iter().map(|version| version.source).collect::<Vec<_>>(), [Source::Me, Source::Agent, Source::Agent]);
     assert_eq!(dir.join(&found[2].id), clash);
-    assert_eq!(found[2].at_ms, 20_001, "совпавшее имя сдвигает миллисекунду, а не перезаписывает файл");
+    assert_eq!(found[2].at_ms, 20_001, "a clashing name shifts the millisecond instead of overwriting the file");
     assert_eq!(latest_text(&dir).as_deref(), Some("тот же миг"));
 }
 
@@ -111,7 +111,7 @@ fn the_latest_name_of_a_version_wins_and_an_empty_one_removes_it() {
     write_name(&dir, "aaaa", &id, " Черновик ", at(20)).unwrap();
     write_name(&dir, "bbbb", &id, "До рефакторинга", at(30)).unwrap();
     assert_eq!(names(&dir).get(&id).map(String::as_str), Some("До рефакторинга"));
-    assert!(versions(&dir).len() == 1, "файл названия — не версия");
+    assert!(versions(&dir).len() == 1, "a name file is not a version");
 
     write_name(&dir, "aaaa", &id, "", at(40)).unwrap();
     assert!(names(&dir).is_empty());
@@ -132,7 +132,7 @@ fn retention_keeps_named_versions_and_drops_names_of_removed_ones() {
     assert_eq!(remove_expired(directory.path(), 30), 1);
 
     assert!(named.exists() && !plain.exists());
-    assert_eq!(fs::read_dir(&dir).unwrap().count(), 2, "осталась версия и её название");
+    assert_eq!(fs::read_dir(&dir).unwrap().count(), 2, "the version and its name remain");
 }
 
 #[test]
@@ -156,10 +156,10 @@ fn retention_removes_versions_older_than_the_limit_by_their_own_time() {
     write_version(&fresh_note, "aaaa", Source::Me, at(now - DAY.as_secs()), &"вчера").unwrap();
     fs::write(fresh_note.join("заметки.txt"), "чужой файл").unwrap();
 
-    assert_eq!(remove_expired(directory.path(), 0), 0, "ноль — хранить всегда");
+    assert_eq!(remove_expired(directory.path(), 0), 0, "zero means keep forever");
     assert_eq!(remove_expired(directory.path(), 30), 2);
 
-    assert!(!history_root(directory.path()).join("Архив").exists(), "опустевшие папки убраны");
+    assert!(!history_root(directory.path()).join("Архив").exists(), "emptied folders removed");
     assert_eq!(latest_text(&fresh_note).as_deref(), Some("вчера"));
-    assert!(fresh_note.join("заметки.txt").exists(), "трогаются только файлы версий");
+    assert!(fresh_note.join("заметки.txt").exists(), "only version files are touched");
 }

@@ -1,5 +1,5 @@
-//! Однострочный текст интерфейса: шрифт из настроек, высота строки, многоточие при нехватке
-//! места (как `white-space: nowrap; text-overflow: ellipsis`).
+//! Single-line UI text: font from the settings, line height, ellipsis when there is not enough
+//! room (like `white-space: nowrap; text-overflow: ellipsis`).
 
 use masonry::core::{BrushIndex, PaintCtx};
 use masonry::imaging::Painter;
@@ -10,7 +10,7 @@ use masonry::parley::{Affinity, Cursor, FontContext, FontFamily, FontWeight, Lay
 use super::theme;
 use super::tokens::size;
 
-/// Начертание строки: кегль и вес (по умолчанию — из настроек шрифта интерфейса), высота строки.
+/// Line style: font size and weight (by default from the UI font settings), and line height.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Style {
     pub size: f32,
@@ -19,7 +19,7 @@ pub struct Style {
 }
 
 impl Style {
-    /// Шрифт интерфейса из настроек с заданной высотой строки.
+    /// The UI font from the settings with the given line height.
     pub fn ui(line_height: f64) -> Self {
         let font = theme::ui_font_settings();
         Style { size: font.size, weight: font.weight, line_height }
@@ -42,13 +42,13 @@ impl Line {
         if self.full.as_ref().is_none_or(|(_, t, s)| t != text || *s != style) {
             *self = Line { full: Some((shape(font_cx, layout_cx, text, style), text.to_owned(), style)), ..Line::default() };
         }
-        f64::from(self.full.as_ref().expect("раскладка построена выше").0.width())
+        f64::from(self.full.as_ref().expect("layout is built above").0.width())
     }
 
     pub fn layout(&mut self, ctx: &mut PaintCtx<'_>, text: &str, width: f64, style: Style) -> &Layout<BrushIndex> {
         let (font_cx, layout_cx) = ctx.text_contexts();
         let fits = self.width(font_cx, layout_cx, text, style) <= width;
-        let full = &self.full.as_ref().expect("раскладка построена выше").0;
+        let full = &self.full.as_ref().expect("layout is built above").0;
         if fits {
             return full;
         }
@@ -58,7 +58,7 @@ impl Line {
             let shown = text[..end].trim_end().to_owned() + "…";
             self.cut = Some((shape(font_cx, layout_cx, &shown, style), end));
         }
-        &self.cut.as_ref().expect("обрезка построена выше").0
+        &self.cut.as_ref().expect("truncation is built above").0
     }
 }
 

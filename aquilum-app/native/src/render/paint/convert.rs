@@ -1,4 +1,4 @@
-//! Преобразования типов между Masonry/imaging и vello_cpu.
+//! Type conversions between Masonry/imaging and vello_cpu.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Weak};

@@ -23,7 +23,7 @@ impl Report {
     pub(super) fn print(&self, label: &str) {
         let moved: u64 = self.moved.iter().map(|m| u64::from(m.2) * u64::from(m.3)).sum();
         eprintln!(
-            "{label}: растр {} px {:?}; сдвиг {} px {:?}; вывод {} px {:?}; {:.2} мс",
+            "{label}: raster {} px {:?}; moved {} px {:?}; output {} px {:?}; {:.2} ms",
             self.raster,
             self.rects,
             moved,
@@ -34,7 +34,7 @@ impl Report {
         );
         let mut causes = self.causes.clone();
         causes.sort_by(|a, b| b.area().total_cmp(&a.area()));
-        eprintln!("  крупнейшие изменения до слияния: {:?}", causes.iter().take(8).map(|r| (r.x0.round(), r.y0.round(), r.x1.round(), r.y1.round())).collect::<Vec<_>>());
+        eprintln!("  largest changes before merging: {:?}", causes.iter().take(8).map(|r| (r.x0.round(), r.y0.round(), r.x1.round(), r.y1.round())).collect::<Vec<_>>());
     }
 
     pub(super) fn above(&self, y: f64) -> bool {
@@ -79,5 +79,5 @@ pub(super) fn summary(label: &str, reports: &[Report]) {
     let moved: f64 = reports.iter().map(|r| r.moved.iter().map(|m| f64::from(m.2) * f64::from(m.3)).sum::<f64>()).sum::<f64>() / n;
     let shown: f64 = reports.iter().flat_map(|r| r.shown.iter()).map(|a| f64::from(a.w) * f64::from(a.h)).sum::<f64>() / n;
     let time: f64 = reports.iter().map(|r| r.time.as_secs_f64() * 1000.0).sum::<f64>() / n;
-    eprintln!("{label}: в среднем растр {raster:.0} px, сдвиг {moved:.0} px, вывод {shown:.0} px, {time:.2} мс на кадр");
+    eprintln!("{label}: average raster {raster:.0} px, moved {moved:.0} px, output {shown:.0} px, {time:.2} ms per frame");
 }

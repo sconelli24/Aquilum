@@ -12,7 +12,7 @@ use crate::ui::tokens::size;
 
 impl TextEditor {
     pub(super) fn do_paint(&mut self, ctx: &mut PaintCtx<'_>, props: &PropertiesRef<'_>, painter: &mut Painter<'_>) {
-        let _zone = aq_trace::zone("редактор: отрисовка текста");
+        let _zone = aq_trace::zone("editor: text painting");
         let (top, bottom) = super::visible(ctx.window_transform(), ctx.window_size());
         let (margin, keep) = (bottom - top, self.doc.keep);
         self.painted = ((top - margin).max(keep.0), (bottom + margin).min(keep.1));

@@ -147,6 +147,6 @@ fn edits_at_both_ends_keep_the_version_small() {
     history.saved(&|| fixture.roots(), &note, NoteWrite { text: &last.as_str(), hash: &hash, source: Source::Me, name: None, change, original: None });
     let dir = fixture.history_of("Большая.md");
     let deltas: u64 = versions(&dir).iter().filter(|version| version.id.ends_with(".delta")).map(|version| fs::metadata(dir.join(&version.id)).unwrap().len()).sum();
-    assert!(deltas < 4096, "правки в начале и в конце записали {deltas} байт");
+    assert!(deltas < 4096, "edits at the start and the end wrote {deltas} bytes");
     assert_eq!(texts(&dir).last().map(|(text, _)| text.clone()), Some(last));
 }

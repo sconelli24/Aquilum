@@ -19,7 +19,7 @@ fn real_vault_book_notes_open() {
             }
         }
     }
-    eprintln!("заметок с обложкой или книгой: {}", notes.len());
+    eprintln!("notes with a cover or book: {}", notes.len());
     for scale in [1.0, 1.25, 1.5] {
         let mut h = Harness::with(Some(&vault), scale);
         let mut renderer = crate::render::Renderer::new(4);
@@ -27,7 +27,7 @@ fn real_vault_book_notes_open() {
         let mut frame = |h: &mut Harness| {
             let (layers, _) = h.root.redraw();
             if let Err(error) = renderer.render(&layers, w, hgt, scale, theme::background()) {
-                panic!("кадр не нарисован: {error}");
+                panic!("frame not drawn: {error}");
             }
         };
         for note in &notes {
@@ -54,7 +54,7 @@ fn book_page_renders_with_multithreaded_rasterizer() {
     for _ in 0..3 {
         h.app.on_core_events(&mut h.root);
         let (layers, _) = h.root.redraw();
-        renderer.render(&layers, W as u16, H as u16, 1.0, theme::background()).expect("кадр книжной страницы");
+        renderer.render(&layers, W as u16, H as u16, 1.0, theme::background()).expect("book page frame");
         std::thread::sleep(std::time::Duration::from_millis(20));
     }
 }
@@ -89,7 +89,7 @@ fn scroll_frame_times() {
             }
             std::thread::sleep(std::time::Duration::from_millis(10));
         }
-        eprintln!("{name}: узор готов через {:?}", warm.elapsed());
+        eprintln!("{name}: pattern ready after {:?}", warm.elapsed());
         let mut total = std::time::Duration::ZERO;
         let mut worst = std::time::Duration::ZERO;
         let frames = 60;
@@ -103,7 +103,7 @@ fn scroll_frame_times() {
             total += spent;
             worst = worst.max(spent);
         }
-        eprintln!("{name}: средний кадр {:?}, худший {:?}", total / frames, worst);
+        eprintln!("{name}: average frame {:?}, worst {:?}", total / frames, worst);
     }
 }
 
@@ -123,7 +123,7 @@ fn every_pattern_is_painted_from_its_tile_like_from_the_whole_bake() {
         let mut checked = 0;
         for _ in 0..150 {
             h.wait_cover(false);
-            let cover = h.app.note_ids.as_ref().and_then(|ids| ids.hero.1.cover).expect("обложка");
+            let cover = h.app.note_ids.as_ref().and_then(|ids| ids.hero.1.cover).expect("cover");
             cover.edit(&mut h.root, |mut c| crate::ui::book::PageCover::refresh(&mut c));
             h.anim(std::time::Duration::from_millis(16));
             let frame = h.frame(w, hh, scale);
@@ -131,7 +131,7 @@ fn every_pattern_is_painted_from_its_tile_like_from_the_whole_bake() {
             let (cw, ch) = ((bounds.width() * scale).round() as u32, (bounds.height() * scale).round() as u32);
             let (expected, span) = whole.get_or_insert_with(|| {
                 let span = if crate::cover::centered(id) { cw } else { ((f64::from(W) * scale / 128.0).ceil() * 128.0) as u32 };
-                (crate::cover::expand(&crate::cover::render_pattern(id, span, ch, scale).expect("узор"), span, ch), span)
+                (crate::cover::expand(&crate::cover::render_pattern(id, span, ch, scale).expect("pattern"), span, ch), span)
             });
             let span = *span;
             let (x0, y0) = ((bounds.x0 * scale).round() as u32, (bounds.y0 * scale).round() as u32);
@@ -153,7 +153,7 @@ fn every_pattern_is_painted_from_its_tile_like_from_the_whole_bake() {
         if let (Ok(out), Some(shot)) = (std::env::var("AQ_OUT"), &shot) {
             std::fs::write(std::path::Path::new(&out).join(format!("cover-tile-{id}.png")), shot.png()).unwrap();
         }
-        assert!(mismatched <= 1, "{id}: {mismatched} из {checked} точек обложки не совпадают с узором");
+        assert!(mismatched <= 1, "{id}: {mismatched} of {checked} cover points do not match the pattern");
     }
     theme::apply_setting(if before { "dark" } else { "light" }, before, "#1471eb");
 }

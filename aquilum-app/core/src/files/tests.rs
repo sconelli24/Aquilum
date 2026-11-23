@@ -150,7 +150,7 @@ fn reading_normalises_crlf_but_the_hash_stays_the_hash_of_the_bytes_on_disk() {
     assert_eq!(
         hash_file(&path).expect("hash"),
         hash_bytes("первая\r\nвторая\r\nтретья".as_bytes()),
-        "хэш остаётся хэшем файла: на нём держится проверка при записи"
+        "the hash stays the hash of the file: the write check relies on it"
     );
 }
 

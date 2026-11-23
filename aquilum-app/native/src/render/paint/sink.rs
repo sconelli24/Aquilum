@@ -1,4 +1,4 @@
-//! Реализация трейта `PaintSink` для `Painter`.
+//! Implementation of the `PaintSink` trait for `Painter`.
 
 use masonry::imaging::{
     BlurredRoundedRect, ClipRef, FillRef, GeometryRef, GlyphRunRef, GroupRef, PaintSink, StrokeRef,
@@ -46,7 +46,7 @@ impl PaintSink for Painter {
             return;
         }
         if self.clip_depth == 0 {
-            self.set_error_once(PaintError::Unbalanced("pop_clip без push_clip"));
+            self.set_error_once(PaintError::Unbalanced("pop_clip without push_clip"));
             return;
         }
         self.ctx.pop_clip();
@@ -102,7 +102,7 @@ impl PaintSink for Painter {
             return;
         }
         if self.groups.pop().is_none() {
-            self.set_error_once(PaintError::Unbalanced("pop_group без push_group"));
+            self.set_error_once(PaintError::Unbalanced("pop_group without push_group"));
             return;
         }
         self.ctx.pop_layer();
@@ -179,7 +179,7 @@ impl PaintSink for Painter {
         self.set_transform(draw.transform);
         self.ctx.set_paint(draw.color.multiply_alpha(draw.composite.alpha));
         self.ctx.set_blend_mode(draw.composite.blend);
-        // Обычная тень; инвертированная (внутренняя) в imaging пока не выражается.
+        // A regular shadow; an inverted (inner) one cannot be expressed in imaging yet.
         self.ctx.fill_blurred_rounded_rect(&draw.rect, draw.radius as f32, draw.std_dev as f32, false);
     }
 }

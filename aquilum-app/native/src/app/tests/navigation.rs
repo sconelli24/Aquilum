@@ -16,8 +16,8 @@ fn wiki_link_opens_note_from_subfolder_without_creating_duplicate() {
         }
         std::thread::sleep(std::time::Duration::from_millis(20));
     }
-    assert!(opened, "ссылка не открылась");
-    assert!(!vault.join("📖 Книга.md").exists(), "создан дубль в корне");
+    assert!(opened, "link did not open");
+    assert!(!vault.join("📖 Книга.md").exists(), "duplicate created in the root");
     assert_eq!(h.tab_paths(), [Some("a".to_owned()), Some("📖 Книга".to_owned())]);
 }
 
@@ -84,9 +84,9 @@ author: Второй
 pages: 50/100
 ---
 ", Some(&hash), aquilum_core::history::Source::Me, None).unwrap();
-    assert!(h.wait_for(|h| embeds(h).cached_book("📖 Книга").is_some_and(|b| b.pages == Some((50, 100)) && b.author == "Второй")), "виджет книги не обновился");
+    assert!(h.wait_for(|h| embeds(h).cached_book("📖 Книга").is_some_and(|b| b.pages == Some((50, 100)) && b.author == "Второй")), "book widget did not update");
     aquilum_core::files::gate::create(&core, &vault.join("новая.md"), &"[[📖 Книга]]", aquilum_core::history::Source::Me, None).unwrap();
-    assert!(h.wait_for(|h| embeds(h).cached_rows(query) == Some(3)), "новая ссылка не попала в таблицу");
+    assert!(h.wait_for(|h| embeds(h).cached_rows(query) == Some(3)), "new link did not reach the table");
 }
 
 #[test]
@@ -104,5 +104,5 @@ fn tree_rows_return_after_small_scroll_up() {
         let _ = h.app.tree.on_action(&mut h.root, id, &action);
         h.deliver();
     }
-    assert_eq!(h.app.tree.built_rows().start, 0, "после возврата наверх верхние строки не построены");
+    assert_eq!(h.app.tree.built_rows().start, 0, "top rows not built after scrolling back to the top");
 }

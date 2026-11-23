@@ -3,7 +3,7 @@ use super::super::value::{Link, Value};
 pub fn link(arguments: Vec<Value>) -> Result<Value, String> {
     let mut arguments = arguments.into_iter();
     let Some(target) = arguments.next() else {
-        return Err("«link» ждёт хотя бы путь или ссылку".to_owned());
+        return Err("'link' needs at least a path or a link".to_owned());
     };
     let display = arguments.next().unwrap_or(Value::Null);
     let display = match display {

@@ -251,7 +251,7 @@ fn a_fresh_database_is_created_at_the_latest_version_without_dead_tables() {
     assert_eq!(version, 10);
     assert!(
         !schema_shape(&connection).iter().any(|line| line.contains("document_versions")),
-        "новая база не создаёт таблицу, которую потом удаляет миграция"
+        "a new database does not create a table that the migration then drops"
     );
 }
 
@@ -298,5 +298,5 @@ fn reset_sets_aside_a_database_that_was_open_and_in_use() {
     service.reset(43).unwrap();
 
     assert!(dir.path().join("ui-state.sqlite3.broken-43").exists());
-    assert!(!dir.path().join("ui-state.sqlite3.broken-42").exists(), "остаётся только последняя отложенная копия");
+    assert!(!dir.path().join("ui-state.sqlite3.broken-42").exists(), "only the latest set-aside copy remains");
 }

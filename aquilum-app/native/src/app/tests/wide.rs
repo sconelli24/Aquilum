@@ -37,12 +37,12 @@ fn full_width_keeps_margins_on_tokens_and_goes_back() {
     h.open(long);
     h.settle();
     let narrow = column(&h);
-    assert!(narrow.width() < page(&h).width() - 2.0 * size::SPACE_32 - 100.0, "в окне нет места для широкого режима");
+    assert!(narrow.width() < page(&h).width() - 2.0 * size::SPACE_32 - 100.0, "no room in the window for wide mode");
     h.app.toggle_wide_mode(&mut h.root);
     h.settle();
     let wide = column(&h);
-    assert_eq!(wide.x0 - page(&h).x0, size::SPACE_32, "левое поле не 32 px");
-    assert_eq!(page(&h).x1 - wide.x1, size::SPACE_32 + size::SCROLLBAR_WIDTH, "правое поле не 32 px рядом с полосой прокрутки");
+    assert_eq!(wide.x0 - page(&h).x0, size::SPACE_32, "left margin is not 32 px");
+    assert_eq!(page(&h).x1 - wide.x1, size::SPACE_32 + size::SCROLLBAR_WIDTH, "right margin is not 32 px next to the scrollbar");
     assert!(h.app.interface.wide());
     h.app.toggle_wide_mode(&mut h.root);
     h.settle();
@@ -58,29 +58,29 @@ fn width_change_is_animated_and_instant_without_animations() {
     h.anim(std::time::Duration::from_millis(30));
     let _ = h.root.redraw();
     let during = column(&h).width();
-    assert!(during > narrow, "ширина не начала расти");
+    assert!(during > narrow, "width did not start growing");
     h.settle();
     let wide = column(&h).width();
-    assert!(during < wide, "ширина дошла до конца за один кадр");
+    assert!(during < wide, "width reached the end in one frame");
     motion::set(false);
     h.app.toggle_wide_mode(&mut h.root);
     h.anim(std::time::Duration::from_millis(1));
     let _ = h.root.redraw();
     motion::set(true);
-    assert_eq!(column(&h).width(), narrow, "без анимаций ширина вернулась не сразу");
+    assert_eq!(column(&h).width(), narrow, "without animations the width did not return immediately");
 }
 
 #[test]
 fn note_actions_menu_toggles_full_width() {
     let mut h = wide_window();
     choose(&mut h, crate::app::note_page::menu::NoteCommand::Wide);
-    assert!(h.app.interface.wide(), "пункт «Во всю ширину» не включил полную ширину");
+    assert!(h.app.interface.wide(), "\"Full width\" item did not enable full width");
 }
 
 pub(super) fn choose(h: &mut Harness, command: crate::app::note_page::menu::NoteCommand) {
     h.app.open_note_actions_menu(&mut h.root, Rect::new(10.0, 10.0, 42.0, 42.0));
-    let Some(Popup::Menu { layer, commands }) = &h.app.popup else { panic!("меню действий не открыто") };
-    let (layer, item) = (*layer, commands.iter().position(|&c| c == crate::app::MenuCommand::Note(command)).expect("пункт в меню"));
+    let Some(Popup::Menu { layer, commands }) = &h.app.popup else { panic!("actions menu not open") };
+    let (layer, item) = (*layer, commands.iter().position(|&c| c == crate::app::MenuCommand::Note(command)).expect("menu item"));
     h.act(layer, crate::ui::menu::MenuChoice::Item(item));
 }
 
@@ -105,7 +105,7 @@ fn a_phone_has_no_full_width_item() {
     h.open(note);
     h.settle();
     h.app.open_note_actions_menu(&mut h.root, Rect::new(10.0, 10.0, 42.0, 42.0));
-    let Some(Popup::Menu { commands, .. }) = &h.app.popup else { panic!("меню действий не открыто") };
+    let Some(Popup::Menu { commands, .. }) = &h.app.popup else { panic!("actions menu not open") };
     let has = |command| commands.contains(&crate::app::MenuCommand::Note(command));
     assert!(!has(NoteCommand::Wide) && has(NoteCommand::Undo));
 }
@@ -139,6 +139,6 @@ fn width_tween_frame_cost() {
             total += spent;
             worst = worst.max(spent);
         }
-        eprintln!("ЗАМЕР абзацев {paragraphs} ({} КБ): кадр без изменений {base:?}, средний кадр перехода {:?}, худший {worst:?}", body.len() / 1024, total / 12);
+        eprintln!("MEASUREMENT paragraphs {paragraphs} ({} KB): unchanged frame {base:?}, average transition frame {:?}, worst {worst:?}", body.len() / 1024, total / 12);
     }
 }

@@ -99,10 +99,10 @@ mod tests {
 
     #[test]
     fn size_l_follows_the_mobile_layout() {
-        assert_eq!((L.height(), L.padding(), L.icon(), L.text().line_height), (40.0, 8.0, 24.0, 24.0), "кнопка с текстом");
-        assert_eq!((L.glyph(false).0, M.glyph(false).0), (24.0, 20.0), "иконка в кнопке-иконке L и M");
+        assert_eq!((L.height(), L.padding(), L.icon(), L.text().line_height), (40.0, 8.0, 24.0, 24.0), "button with text");
+        assert_eq!((L.glyph(false).0, M.glyph(false).0), (24.0, 20.0), "icon in the L and M icon buttons");
         let (x, y) = L.field_padding();
-        assert_eq!((x, y * 2.0 + L.field_content(), L.field_icon()), (8.0, 40.0, 24.0), "поле и список");
+        assert_eq!((x, y * 2.0 + L.field_content(), L.field_icon()), (8.0, 40.0, 24.0), "field and list");
     }
 
     #[test]

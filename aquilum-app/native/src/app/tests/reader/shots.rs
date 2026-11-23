@@ -16,7 +16,7 @@ fn reader_snapshot() {
         let started = std::time::Instant::now();
         let shot = h.frame(w, hh, 1.0);
         std::fs::write(out.join(format!("reader-{i}.png")), shot.png()).unwrap();
-        eprintln!("страница {i}: {:?}", started.elapsed());
+        eprintln!("page {i}: {:?}", started.elapsed());
         turn_pages(&mut h, 3);
     }
     h.drag((120.0, 160.0), (420.0, 220.0));
@@ -50,9 +50,9 @@ fn quote_links_open_reader_at_quote() {
     let _ = h.root.redraw();
     for (n, line) in doc.lines().filter(|l| crate::links::reader::is_reader(l.rsplit_once("](").map_or("", |(_, href)| href))).enumerate() {
         let href = line.rsplit_once("](").unwrap().1.trim_end().trim_end_matches(')');
-        assert!(h.app.open_reader_link(&mut h.root, href), "ссылка не открыла читалку: {href}");
+        assert!(h.app.open_reader_link(&mut h.root, href), "link did not open the reader: {href}");
         h.deliver();
-        assert!(h.reader(), "читалка не открылась");
+        assert!(h.reader(), "reader did not open");
         h.settle();
         h.settle();
         std::fs::write(out.join(format!("quote-{n}.png")), h.frame(W as u16, H as u16, 1.0).png()).unwrap();        h.escape();

@@ -6,7 +6,7 @@ pub(super) fn rename_note(core: &Core, arguments: &Value) -> Result<Value, Strin
     let note = vault.note_argument(arguments)?;
     let title = text(arguments, "title")?;
     if title.contains(['/', '\\']) {
-        return Err("Название не должно содержать разделители пути — используйте move_note".to_owned());
+        return Err("The title must not contain path separators; use move_note".to_owned());
     }
     let target = note.with_file_name(format!("{}.md", title.trim_end_matches(".md")));
     relocate(core, &vault, &note, target, "renamed")
@@ -24,7 +24,7 @@ pub(super) fn move_note(core: &Core, arguments: &Value) -> Result<Value, String>
         None => vault.clone(),
     };
     let into = destination.folder(&optional_text(arguments, "folder").unwrap_or_default())?;
-    let targets = notes.iter().map(|note| note.file_name().map(|name| into.join(name)).ok_or("Не удалось определить имя файла")).collect::<Result<Vec<_>, _>>()?;
+    let targets = notes.iter().map(|note| note.file_name().map(|name| into.join(name)).ok_or("Could not determine the file name")).collect::<Result<Vec<_>, _>>()?;
     if destination.root != vault.root {
         let mut moved = transfer::across(core, &vault, &destination, &notes, &targets)?;
         if let [target] = targets.as_slice() {
@@ -47,7 +47,7 @@ fn relocate(core: &Core, vault: &Vault, note: &Path, target: PathBuf, done: &str
 
 pub(super) fn free(vault: &Vault, target: &Path) -> Result<(), String> {
     if target.exists() {
-        return Err(format!("Заметка уже существует: {}", vault.relative(target)));
+        return Err(format!("Note already exists: {}", vault.relative(target)));
     }
     target.parent().map_or(Ok(()), |parent| std::fs::create_dir_all(parent).map_err(|error| error.to_string()))
 }

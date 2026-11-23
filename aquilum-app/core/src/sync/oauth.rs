@@ -139,7 +139,7 @@ impl Login {
                 return Ok(code);
             }
         }
-        Err(RemoteError::Failed("вход отменён".into()))
+        Err(RemoteError::Failed("sign-in cancelled".into()))
     }
 }
 

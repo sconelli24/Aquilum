@@ -14,10 +14,10 @@ fn backspace_erases_the_last_item_one_character_at_a_time() {
         let before = text(&root);
         named(&mut root, NamedKey::Backspace);
         let after = text(&root);
-        assert_eq!(before.len() - after.len(), removed.len(), "Backspace стёр не один символ: «{before}» → «{after}»");
-        assert_eq!(&before[..after.len()], after, "стёрт не последний символ");
+        assert_eq!(before.len() - after.len(), removed.len(), "Backspace erased more than one character: '{before}' -> '{after}'");
+        assert_eq!(&before[..after.len()], after, "the last character was not the one erased");
     }
-    assert!(text(&root).ends_with(&format!("\n              - 8\n{}", " ".repeat(13))), "часть отступа осталась и её можно стирать дальше: {:?}", text(&root));
+    assert!(text(&root).ends_with(&format!("\n              - 8\n{}", " ".repeat(13))), "part of the indent remained and can be erased further: {:?}", text(&root));
 }
 
 #[test]
@@ -27,7 +27,7 @@ fn the_caret_is_painted_on_every_step_of_erasing_the_deepest_item() {
     press(&mut root, Key::Named(NamedKey::End), command());
     let caret_color = crate::ui::theme::current().caret_color.to_rgba8();
     for step in 0..8 {
-        let rect = root.get_widget_with_tag(TAG).expect("редактор").inner().caret_rect();
+        let rect = root.get_widget_with_tag(TAG).expect("editor").inner().caret_rect();
         let (layers, _) = root.redraw();
         let mut renderer = crate::render::Renderer::new(1);
         renderer.render(&layers, 600, 600, 1.0, crate::ui::theme::background()).unwrap();
@@ -40,7 +40,7 @@ fn the_caret_is_painted_on_every_step_of_erasing_the_deepest_item() {
                 near((p >> 16) & 0xff, caret_color.r) && near((p >> 8) & 0xff, caret_color.g) && near(p & 0xff, caret_color.b)
             })
             .count();
-        assert!(painted > 10, "шаг {step}: каретки не видно ({rect:?})");
+        assert!(painted > 10, "step {step}: caret is not visible ({rect:?})");
         named(&mut root, NamedKey::Backspace);
     }
 }

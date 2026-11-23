@@ -39,7 +39,7 @@ fn editor(source: &str) -> (masonry::app::RenderRoot, Arc<Titles>) {
 }
 
 fn caret_after(root: &mut masonry::app::RenderRoot, source: &str, marker: &str) {
-    let at = source.find(marker).expect("метка") + marker.len();
+    let at = source.find(marker).expect("marker") + marker.len();
     let id = editor_id(root);
     root.edit_widget(id, |mut w| TextEditor::select_byte_range(&mut w.downcast(), at, at));
     let _ = root.redraw();
@@ -81,6 +81,6 @@ fn nothing_is_suggested_while_the_caret_is_in_the_alias() {
     let (mut root, titles) = editor(source);
     caret_after(&mut root, source, "[[Заметки|Про");
     typing(&mut root, "е");
-    assert!(titles.0.lock().unwrap().iter().all(|shown| !shown), "подсказки появились внутри подписи ссылки");
+    assert!(titles.0.lock().unwrap().iter().all(|shown| !shown), "suggestions appeared inside the link label");
     assert_eq!(text(&root), "[[Заметки|Прое]]");
 }

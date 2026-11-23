@@ -28,7 +28,7 @@ pub struct Job {
 }
 
 fn write(core: &Core, path: &PathBuf, text: &crop::Rope, job: &Job, disk: &Mutex<Disk>) -> Outcome {
-    let _zone = aq_trace::zone("заметка: сохранение");
+    let _zone = aq_trace::zone("note: save");
     let (expected, ours, hinted) = {
         let disk = lock(disk);
         (disk.hash.clone(), disk.stamp.is_some() && disk.stamp == stamp(path), disk.written == job.after)
@@ -56,6 +56,6 @@ fn write(core: &Core, path: &PathBuf, text: &crop::Rope, job: &Job, disk: &Mutex
 pub(super) fn queue(core: Arc<Core>, path: PathBuf, text: crop::Rope, job: Job, disk: Arc<Mutex<Disk>>, done: Sender<Outcome>) {
     crate::disk::run(move || {
         let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| write(&core, &path, &text, &job, &disk)));
-        let _ = done.send(outcome.unwrap_or_else(|_| Outcome::Failed("внутренняя ошибка записи".to_owned())));
+        let _ = done.send(outcome.unwrap_or_else(|_| Outcome::Failed(crate::i18n::t("native.note.saveInternalError"))));
     });
 }

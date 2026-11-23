@@ -1,11 +1,11 @@
-//! Проба Masonry (шаг 2 этапа 2): ядро виджетов `masonry_core` на собственном хосте —
-//! winit 0.31 + vello_cpu + softbuffer, без `masonry_winit` (у него только GPU-бэкенды и winit 0.30).
+//! Masonry probe (step 2 of stage 2): the `masonry_core` widget core on its own host:
+//! winit 0.31 + vello_cpu + softbuffer, without `masonry_winit` (it has only GPU backends and winit 0.30).
 //!
-//! Макет тот же, что в `aquilum-native`: боковая панель и колонка текста, только текст здесь —
-//! редактируемый `TextArea` как заглушка редактора. Проверяется: встаёт ли Masonry на наш хост без
-//! форка, работают ли фокус, ввод, IME, буфер обмена, и сколько это стоит по памяти.
+//! The layout is the same as in `aquilum-native`: a sidebar and a text column, only the text here is
+//! an editable `TextArea` as an editor stub. What is checked: does Masonry fit on our host without
+//! a fork, do focus, input, IME and the clipboard work, and how much memory it costs.
 //!
-//!   masonry-probe.exe [--size ШxВ] [--file заметка.md] [--metrics файл.json] [--trace] [--focus]
+//!   masonry-probe.exe [--size WxH] [--file note.md] [--metrics file.json] [--trace] [--focus]
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
@@ -23,16 +23,16 @@ use masonry::widgets::{Flex, Label, Portal, SizedBox, TextArea};
 use winit::dpi::PhysicalSize;
 
 const TREE: &[&str] = &[
-    "Входящие",
-    "Проекты",
+    "Inbox",
+    "Projects",
     "    Aquilum.md",
-    "    Уход от Tauri.md",
-    "    Документ в Rust.md",
-    "Книги",
-    "Ежедневник",
+    "    Moving off Tauri.md",
+    "    Document in Rust.md",
+    "Books",
+    "Daily notes",
     "    2026-10-07.md",
     "    2026-10-08.md",
-    "Шаблоны",
+    "Templates",
     "README.md",
 ];
 
@@ -45,7 +45,7 @@ pub struct Args {
     pub text: String,
     pub metrics: Option<PathBuf>,
     pub trace: bool,
-    /// Сразу поставить фокус в текст: замер с мигающей кареткой без участия мыши.
+    /// Focus the text immediately: a measurement with a blinking caret without mouse involvement.
     pub focus: bool,
 }
 
@@ -59,22 +59,22 @@ fn parse_args() -> Args {
     };
     let mut it = std::env::args().skip(1);
     while let Some(flag) = it.next() {
-        let mut value = || it.next().unwrap_or_else(|| panic!("{flag}: нет значения"));
+        let mut value = || it.next().unwrap_or_else(|| panic!("{flag}: missing value"));
         match flag.as_str() {
             "--size" => {
                 let v = value();
-                let (w, h) = v.split_once('x').expect("--size: нужно ШxВ");
-                args.size = PhysicalSize::new(w.parse().expect("ширина"), h.parse().expect("высота"));
+                let (w, h) = v.split_once('x').expect("--size: expected WxH");
+                args.size = PhysicalSize::new(w.parse().expect("width"), h.parse().expect("height"));
             }
-            "--file" => args.text = std::fs::read_to_string(value()).expect("--file: не читается"),
+            "--file" => args.text = std::fs::read_to_string(value()).expect("--file: cannot read"),
             "--metrics" => args.metrics = Some(value().into()),
             "--trace" => args.trace = true,
             "--focus" => args.focus = true,
-            // Аргументы скрипта замера, которые относятся только к aquilum-native.
+            // Measurement-script arguments that apply only to aquilum-native.
             "--threads" | "--bench-frames" => {
                 value();
             }
-            other => panic!("неизвестный аргумент {other}"),
+            other => panic!("unknown argument {other}"),
         }
     }
     args

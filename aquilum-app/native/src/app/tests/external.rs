@@ -13,19 +13,19 @@ fn files_and_folders_put_into_the_vault_from_outside_show_up_in_the_tree() {
     h.watch_vault();
     let vault = h.vault.path().to_path_buf();
     std::fs::write(vault.join("внешняя.md"), "текст").unwrap();
-    assert!(appears(&mut h, "внешняя"), "новая заметка не появилась");
+    assert!(appears(&mut h, "внешняя"), "new note did not appear");
     std::fs::create_dir(vault.join("Пустая")).unwrap();
-    assert!(appears(&mut h, "Пустая"), "новая пустая папка не появилась");
+    assert!(appears(&mut h, "Пустая"), "new empty folder did not appear");
     std::fs::create_dir(vault.join("С заметкой")).unwrap();
     std::fs::write(vault.join("С заметкой/внутри.md"), "текст").unwrap();
-    assert!(appears(&mut h, "С заметкой"), "новая папка с заметкой не появилась");
+    assert!(appears(&mut h, "С заметкой"), "new folder with a note did not appear");
     std::fs::write(vault.join("картинка.png"), "png").unwrap();
-    assert!(appears(&mut h, "картинка.png"), "новая картинка не появилась");
+    assert!(appears(&mut h, "картинка.png"), "new image did not appear");
     std::fs::remove_file(vault.join("внешняя.md")).unwrap();
     assert!(wait_until(300, 20, || {
         h.app.on_core_events(&mut h.root);
         !h.app.tree.names().iter().any(|n| n == "внешняя")
-    }), "удалённая заметка осталась");
+    }), "deleted note remained");
 }
 
 #[test]
@@ -41,7 +41,7 @@ fn open_note_follows_an_outside_edit_without_waiting_for_the_index() {
             h.app.on_core_events(&mut h.root);
             h.body_text() == "новый текст снаружи"
         }),
-        "правка заметки снаружи не подтянулась в редактор"
+        "external edit of the note was not picked up by the editor"
     );
 }
 
@@ -56,7 +56,7 @@ fn a_lost_batch_of_events_still_leaves_the_tree_and_the_open_note_up_to_date() {
     h.app.workspace.core.emit(aquilum_core::CoreEvent::WorkspaceRescanned);
     h.app.on_core_events(&mut h.root);
     assert_eq!(h.body_text(), "новый текст");
-    assert!(h.app.tree.names().iter().any(|name| name == "новая"), "дерево не перечитано после потери событий");
+    assert!(h.app.tree.names().iter().any(|name| name == "новая"), "tree not rescanned after lost events");
 }
 
 #[test]
@@ -74,7 +74,7 @@ fn a_note_or_text_file_removed_outside_closes_its_tab() {
                 h.app.on_core_events(&mut h.root);
                 h.app.note.as_ref().is_none_or(|note| !note.is(&path))
             }),
-            "{name}: удалённый файл остался открытым"
+            "{name}: deleted file stayed open"
         );
     }
 }
@@ -91,7 +91,7 @@ fn deleting_a_text_file_from_the_tree_closes_its_tab() {
             h.app.on_core_events(&mut h.root);
             h.app.note.as_ref().is_none_or(|note| !note.is(&path))
         }),
-        "удалённый из дерева .txt остался открытым"
+        ".txt deleted from the tree stayed open"
     );
     assert!(!path.exists());
 }

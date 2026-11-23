@@ -25,11 +25,11 @@ impl SearchService {
     fn graph_source(&self, workspace: &str) -> Result<GraphSource, SearchError> {
         let active = self.active.read().map_err(SearchError::task)?;
         let active = active.as_ref().ok_or_else(|| SearchError::Unavailable {
-            message: "Индекс ещё не готов".to_owned(),
+            message: "The index is not ready yet".to_owned(),
         })?;
         if !same_workspace(&active.root, workspace) {
             return Err(SearchError::InvalidWorkspace {
-                message: "Индекс принадлежит другой базе знаний".to_owned(),
+                message: "The index belongs to a different vault".to_owned(),
             });
         }
         let status = active.progress.snapshot();
@@ -37,12 +37,12 @@ impl SearchService {
             return Err(SearchError::Unavailable {
                 message: status
                     .error
-                    .unwrap_or_else(|| "Поисковый индекс недоступен".to_owned()),
+                    .unwrap_or_else(|| "Search index is unavailable".to_owned()),
             });
         }
         if status.updating {
             return Err(SearchError::Unavailable {
-                message: "Индекс обновляется".to_owned(),
+                message: "The index is being updated".to_owned(),
             });
         }
         Ok(GraphSource {

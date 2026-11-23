@@ -25,7 +25,7 @@ fn a_lost_release_does_not_keep_selecting_cells() {
     pointer(&mut h, b.0, b.1, spec.scale, false);
     h.deliver();
     let editor = h.app.note_ids.as_ref().unwrap().body.get(&h.root).unwrap();
-    assert_eq!(editor.inner().table_marks(), Some((false, 0)), "указатель без нажатой кнопки продолжил выделять ячейки");
+    assert_eq!(editor.inner().table_marks(), Some((false, 0)), "pointer without a pressed button kept selecting cells");
 }
 
 #[test]
@@ -35,26 +35,26 @@ fn table_selection_leaves_no_stale_pixels_when_cleared_or_scrolled() {
     let mut frames = Frames::new(&mut h, spec, true);
     let check = |h: &mut Harness, frames: &mut Frames, label: &str, marks: Option<(bool, usize)>| {
         let report = frames.draw(h);
-        assert_eq!(report.differ, 0, "{label}: частичный кадр расходится с полным в {} пикселях", report.differ);
+        assert_eq!(report.differ, 0, "{label}: partial frame differs from the full one in {} pixels", report.differ);
         let editor = h.app.note_ids.as_ref().unwrap().body.get(&h.root).unwrap();
-        assert_eq!(editor.inner().table_marks().map(|(range, text)| (range, text > 0)), marks.map(|(range, text)| (range, text > 0)), "{label}: не то выделение");
+        assert_eq!(editor.inner().table_marks().map(|(range, text)| (range, text > 0)), marks.map(|(range, text)| (range, text > 0)), "{label}: wrong selection");
     };
     let (a, b, c) = (cell(&h, 1, 0, spec.scale), cell(&h, 2, 0, spec.scale), cell(&h, 2, 1, spec.scale));
     click_at(&mut h, a, spec.scale);
-    check(&mut h, &mut frames, "щелчок в ячейку", Some((false, 0)));
+    check(&mut h, &mut frames, "click in a cell", Some((false, 0)));
     drag(&mut h, a, b, 1, spec.scale);
-    check(&mut h, &mut frames, "протянули выделение ячеек", Some((true, 0)));
+    check(&mut h, &mut frames, "dragged a cell selection", Some((true, 0)));
     click_at(&mut h, c, spec.scale);
-    check(&mut h, &mut frames, "щелчок снял выделение ячеек", Some((false, 0)));
+    check(&mut h, &mut frames, "click cleared the cell selection", Some((false, 0)));
     drag(&mut h, c, c, 2, spec.scale);
-    check(&mut h, &mut frames, "двойной щелчок выделил слово", Some((false, 1)));
+    check(&mut h, &mut frames, "double click selected a word", Some((false, 1)));
     for step in 0..6 {
         h.scroll((f64::from(spec.width) * 0.55, f64::from(spec.height) * 0.5), spec.scale, (0.0, if step < 3 { -40.0 } else { 40.0 }));
         h.anim(std::time::Duration::from_millis(16));
-        check(&mut h, &mut frames, &format!("прокрутка {step}"), Some((false, 1)));
+        check(&mut h, &mut frames, &format!("scroll {step}"), Some((false, 1)));
     }
     click_at(&mut h, c, spec.scale);
-    check(&mut h, &mut frames, "щелчок снял выделение слова", Some((false, 0)));
+    check(&mut h, &mut frames, "click cleared the word selection", Some((false, 0)));
 }
 
 const FINGER: masonry::core::PointerInfo = masonry::core::PointerInfo { pointer_id: Some(masonry::core::PointerId::PRIMARY), persistent_device_id: None, pointer_type: masonry::core::PointerType::Touch };
@@ -77,7 +77,7 @@ fn thumb(h: &mut Harness, marker: &str) -> (f64, f64) {
             h.pointer_move(x, y);
             h.root.cursor_icon() == masonry::core::CursorIcon::Grab
         })
-        .expect("ползунок таблицы не найден")
+        .expect("table thumb not found")
 }
 
 fn drag_thumb_with_a_finger(compose: bool) -> (String, Option<(bool, usize)>, String, bool) {
@@ -115,9 +115,9 @@ fn drag_thumb_with_a_finger(compose: bool) -> (String, Option<(bool, usize)>, St
 fn a_finger_on_the_table_scrollbar_scrolls_the_table_and_selects_nothing() {
     for compose in [false, true] {
         let (selected, marks, text, focused) = drag_thumb_with_a_finger(compose);
-        assert_eq!(focused, compose, "набор слова {compose}: полоса таблицы сменила фокус и подняла бы клавиатуру");
-        assert_eq!(text.contains("слово"), compose, "касание не зафиксировало набираемое слово");
-        assert!(selected.is_empty(), "набор слова {compose}: протяжка ползунка выделила текст {selected:?}");
-        assert!(marks.is_none_or(|(range, text)| !range && text == 0), "набор слова {compose}: протяжка ползунка выделила ячейки {marks:?}");
+        assert_eq!(focused, compose, "word composition {compose}: table scrollbar changed focus and would raise the keyboard");
+        assert_eq!(text.contains("слово"), compose, "touch did not commit the word being composed");
+        assert!(selected.is_empty(), "word composition {compose}: thumb drag selected text {selected:?}");
+        assert!(marks.is_none_or(|(range, text)| !range && text == 0), "word composition {compose}: thumb drag selected cells {marks:?}");
     }
 }

@@ -12,11 +12,11 @@ fn cover_actions_rewrite_frontmatter() {
         let button = |wanted| ids.actions.iter().find(|&&(_, action)| action == wanted).map(|&(id, _)| id);
         Some((button(CoverAction::Random), button(CoverAction::Remove), ids.thumbnail.map(|t| t.id())))
     };
-    let (random, _, _) = hero(&h).expect("обложка и книга");
+    let (random, _, _) = hero(&h).expect("cover and book");
     h.act(random.unwrap(), Pressed);
     let fields = crate::frontmatter::parse(&h.app.text.to_string()).unwrap();
     let cover = fields.text(crate::frontmatter::PAGE_COVER).unwrap().to_owned();
-    let id = cover.strip_prefix("pattern:").expect("узор записан с префиксом, как в Таури");
+    let id = cover.strip_prefix("pattern:").expect("pattern is written with a prefix, as in Tauri");
     assert!(crate::cover::PATTERN_IDS.contains(&id) && id != "polka");
     h.save_now();
     assert_eq!(std::fs::read_to_string(&note).unwrap(), h.app.text.to_string());
@@ -51,7 +51,7 @@ fn editing_cover_fields_in_metadata_keeps_rendering() {
                 std::thread::sleep(std::time::Duration::from_millis(15));
                 h.app.on_core_events(&mut h.root);
                 let (layers, _) = h.root.redraw();
-                renderer.render(&layers, W as u16, H as u16, 1.0, theme::background()).expect("кадр");
+                renderer.render(&layers, W as u16, H as u16, 1.0, theme::background()).expect("frame");
             }
         }
     }
@@ -76,10 +76,10 @@ fn cover_disappears_when_its_fields_are_removed() {
     assert_eq!(shown(&h).as_deref(), Some("tunnel"));
     let end = text.find("tunnel").unwrap() + "tunnel".len();
     erase(&mut h, end..end);
-    assert_eq!(shown(&h).as_deref(), Some("tunne"), "обложка не сбросилась после правки узора");
+    assert_eq!(shown(&h).as_deref(), Some("tunne"), "cover was not reset after the pattern edit");
     let cover = text.find("cover: true").unwrap();
     erase(&mut h, cover..cover + "cover: true\n".len());
-    assert!(h.app.note_ids.as_ref().unwrap().hero.1.cover.is_none(), "обложка осталась без cover: true");
+    assert!(h.app.note_ids.as_ref().unwrap().hero.1.cover.is_none(), "cover remained without cover: true");
     h.type_text("cover: true\n");
     assert!(h.app.note_ids.as_ref().unwrap().hero.1.cover.is_some());
     let _ = h.root.redraw();

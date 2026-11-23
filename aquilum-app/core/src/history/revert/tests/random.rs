@@ -67,8 +67,8 @@ fn reverting_the_latest_version_gives_back_exactly_the_previous_text() {
         }
         let (version, own) = bytewise(round, &previous, version.done());
         let (text, displaced) = undo(&previous, &own, &version, &Vec::new(), &version);
-        assert_eq!(text, previous, "раунд {round}: откат последней версии возвращает ровно прежний текст; версия {version:?}");
-        assert!(displaced.is_empty(), "раунд {round}: без поздних правок копия-конфликт не нужна");
+        assert_eq!(text, previous, "round {round}: reverting the last version returns exactly the previous text; version {version:?}");
+        assert!(displaced.is_empty(), "round {round}: no conflict copy is needed without later edits");
     }
 }
 
@@ -100,8 +100,8 @@ fn untouched_blocks_keep_later_edits_and_reverted_blocks_return() {
         let (current, later) = current.done();
         let expected: Vec<Vec<String>> = (0..BLOCKS).map(|index| if touched[index] { before[index].clone() } else { blocks[index].clone() }).collect();
         let (text, displaced) = undo(&previous, &own, &version, &later, &current);
-        assert_eq!(text, whole(&expected), "раунд {round}: блоки версии вернулись, поздние правки других блоков остались\nбыло {previous:?}\nверсия {version:?}\nсейчас {current:?}");
-        assert!(displaced.is_empty(), "раунд {round}: непересекающиеся правки не дают копию-конфликт");
+        assert_eq!(text, whole(&expected), "round {round}: the version's blocks came back, later edits of other blocks stayed\nwas {previous:?}\nversion {version:?}\nnow {current:?}");
+        assert!(displaced.is_empty(), "round {round}: non-overlapping edits produce no conflict copy");
     }
 }
 
@@ -122,6 +122,6 @@ fn overlapping_later_edits_never_break_the_text() {
         }
         let (current, later) = bytewise(round + 1, &version, current.done());
         let (text, _) = undo(&previous, &own, &version, &later, &current);
-        assert!(!text.contains('\u{FFFD}'), "раунд {round}: отмена поверх пересекающихся правок не режет символы: {text:?}");
+        assert!(!text.contains('\u{FFFD}'), "round {round}: reverting over overlapping edits does not cut characters: {text:?}");
     }
 }

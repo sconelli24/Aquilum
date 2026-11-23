@@ -14,15 +14,15 @@ fn page_keys_scroll_the_note_by_a_page_and_carry_the_caret() {
     let selection = |h: &Harness| body.get(&h.root).unwrap().inner().selection();
     h.key(Key::Named(NamedKey::PageDown), Modifiers::empty());
     let (page, first) = (note_offset(&h), caret(&h));
-    assert!(page > 200.0 && first > 0, "PageDown: прокрутка {page}, каретка {first}");
+    assert!(page > 200.0 && first > 0, "PageDown: scroll {page}, caret {first}");
     h.key(Key::Named(NamedKey::PageDown), Modifiers::SHIFT);
-    assert!((note_offset(&h) - 2.0 * page).abs() < 1.0, "второй PageDown сдвинул на {}", note_offset(&h) - page);
-    assert_eq!(selection(&h).start, first, "Shift+PageDown не выделил страницу");
+    assert!((note_offset(&h) - 2.0 * page).abs() < 1.0, "second PageDown moved by {}", note_offset(&h) - page);
+    assert_eq!(selection(&h).start, first, "Shift+PageDown did not select a page");
     assert!(selection(&h).end > first);
     for _ in 0..3 {
         h.key(Key::Named(NamedKey::PageUp), Modifiers::empty());
     }
-    assert_eq!((note_offset(&h), caret(&h)), (0.0, 0), "PageUp у начала не вернул в начало");
+    assert_eq!((note_offset(&h), caret(&h)), (0.0, 0), "PageUp near the top did not return to the start");
 }
 
 #[test]
@@ -33,11 +33,11 @@ fn copy_and_paste_go_through_the_system_clipboard() {
     h.focus_editor();
     h.key(Key::Character("a".into()), crate::test_dir::command());
     h.key(Key::Character("c".into()), crate::test_dir::command());
-    assert_eq!(h.copied.as_deref(), Some("первая строка"), "Ctrl+C не отдал выделение");
-    assert!(crate::clipboard::copy(h.copied.clone().unwrap()), "системный буфер не принял текст");
-    assert_eq!(crate::clipboard::text().as_deref(), Some("первая строка"), "из системного буфера вернулось другое");
+    assert_eq!(h.copied.as_deref(), Some("первая строка"), "Ctrl+C did not copy the selection");
+    assert!(crate::clipboard::copy(h.copied.clone().unwrap()), "system clipboard did not accept the text");
+    assert_eq!(crate::clipboard::text().as_deref(), Some("первая строка"), "system clipboard returned something else");
     assert!(crate::clipboard::copy("вставка\r\nиз буфера"));
-    assert!(h.app.paste(&mut h.root, false), "вставка не сработала");
+    assert!(h.app.paste(&mut h.root, false), "paste did not work");
     h.deliver();
     assert_eq!(h.body_text(), "вставка\nиз буфера");
     if let Some(text) = before {
@@ -59,5 +59,5 @@ fn the_keyboard_does_not_cover_the_caret() {
     h.settle();
     let w = body.get(&h.root).unwrap();
     let caret = w.ctx().window_transform().transform_rect_bbox(w.inner().caret_rect());
-    assert!(caret.y0 > 0.0 && caret.y1 <= f64::from(H) - 300.0 + 0.5, "клавиатура закрыла каретку: {caret:?}");
+    assert!(caret.y0 > 0.0 && caret.y1 <= f64::from(H) - 300.0 + 0.5, "keyboard covered the caret: {caret:?}");
 }

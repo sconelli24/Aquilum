@@ -21,7 +21,7 @@ pub fn paginate(items: Vec<Item>, height: f64) -> Laid {
                     if y + tall > height && y > 0.0 {
                         start(&mut columns, &mut y);
                     }
-                    let column = columns.last_mut().expect("колонка");
+                    let column = columns.last_mut().expect("column");
                     match column.pieces.last_mut() {
                         Some(piece) if piece.item == index && (piece.to - top).abs() < 0.5 => piece.to = bottom,
                         _ => column.pieces.push(Piece { item: index, from: top, to: bottom, y }),
@@ -35,7 +35,7 @@ pub fn paginate(items: Vec<Item>, height: f64) -> Laid {
                 if y + tall > height && y > 0.0 {
                     start(&mut columns, &mut y);
                 }
-                columns.last_mut().expect("колонка").pieces.push(Piece { item: index, from: 0.0, to: tall, y });
+                columns.last_mut().expect("column").pieces.push(Piece { item: index, from: 0.0, to: tall, y });
                 y += tall;
                 total += tall;
             }
@@ -43,7 +43,7 @@ pub fn paginate(items: Vec<Item>, height: f64) -> Laid {
                 if y + 1.0 > height && y > 0.0 {
                     start(&mut columns, &mut y);
                 }
-                columns.last_mut().expect("колонка").pieces.push(Piece { item: index, from: 0.0, to: 1.0, y });
+                columns.last_mut().expect("column").pieces.push(Piece { item: index, from: 0.0, to: 1.0, y });
                 y += 1.0;
                 total += 1.0;
             }
