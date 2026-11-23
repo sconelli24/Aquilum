@@ -25,6 +25,7 @@ const CATALOG: &[Cache] = &[
     Cache { name: "плитка обложки «город»", when: &[Hide, Vault], clear: |_, _| crate::cover::forget_tile() },
     Cache { name: "лучи и звезда книжной обложки", when: &[Hide, Vault], clear: |_, _| crate::ui::book::forget_art() },
     Cache { name: "буферы рендера и атлас глифов", when: &[Hide], clear: |_, _| crate::render::trim_soon() },
+    Cache { name: "атлас глифов после холста", when: &[Tab], clear: |_, _| crate::render::trim_soon() },
     Cache { name: "кадры и подписи графа", when: &[Hide], clear: |app, root| app.drop_graph_frames(root) },
     Cache { name: "кадры и кэши PDF", when: &[Hide, Vault], clear: |app, root| app.drop_reader_frames(root) },
     Cache { name: "панель ссылок и анализа", when: &[Tab, Vault], clear: |app, _| (app.listing, app.panel_body, app.panel_key) = (None, None, None) },

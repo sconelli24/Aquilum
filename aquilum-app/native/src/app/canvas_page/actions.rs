@@ -104,6 +104,9 @@ impl App {
                 }
             }
             CanvasAction::Camera { x, y, scale } => {
+                // Zoom rasterises glyphs at every intermediate size (the atlas keys on the exact
+                // size); drop them once the camera rests.
+                crate::render::trim_soon();
                 let path = self.canvas.doc.as_ref().map(|d| d.path().to_path_buf());
                 if let Some((workspace, file)) = path.and_then(|p| self.canvas_key(&p)) {
                     let view = aquilum_core::ui_state::models::CanvasView { center_x: x, center_y: y, scale };
