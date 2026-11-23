@@ -304,6 +304,8 @@ impl App {
             requests.extend(embeds.take_requests());
             if embeds.take_changed() {
                 refresh.extend(self.canvas.editors.iter().filter(|(_, b)| matches!(b, Bound::Text(_))).map(|(id, _)| *id));
+                // The "add note" field waits for the same background search results.
+                refresh.extend(self.canvas.prompt.as_ref().map(|(handle, _)| handle.id()));
             }
         }
         for card in self.canvas.notes.values() {

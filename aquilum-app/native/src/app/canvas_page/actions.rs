@@ -136,7 +136,12 @@ impl App {
 
     fn ask_canvas(&mut self, root: &mut RenderRoot, target: Prompt, text: &str) {
         let Some(view) = self.canvas.view else { return };
-        let editor = NewWidget::new(TextEditor::single_line(text).styled(crate::ui::style::editor_text)).with_class(crate::ui::style::EDITOR_TEXT);
+        let mut field = TextEditor::single_line(text).styled(crate::ui::style::editor_text);
+        if matches!(target, Prompt::Note(_)) {
+            // Adding a note: complete its name from the vault while typing.
+            field = field.suggesting_notes().with_resolver(Self::resolver_for(&self.canvas.embeds));
+        }
+        let editor = NewWidget::new(field).with_class(crate::ui::style::EDITOR_TEXT);
         let handle = Handle::of(&editor);
         let field = crate::ui::canvas::prompt_field(editor);
         view.edit(root, |mut v| CanvasView::set_prompt(&mut v, target.clone(), field));
@@ -150,6 +155,7 @@ impl App {
 
     fn close_canvas_prompt(&mut self, root: &mut RenderRoot) {
         self.canvas.prompt = None;
+        self.show_suggest(root, None);
         if let Some(view) = self.canvas.view {
             view.edit(root, |mut v| CanvasView::close_prompt(&mut v));
             root.focus_on(Some(view.id()));
@@ -361,5 +367,15 @@ impl App {
             self.commit_canvas_edit(root, canvas);
         }
         Outcome::default()
+    }
+}
+
+impl App {
+    /// A suggestion picked with the mouse in the "add note" field adds the card right away, as
+    /// Enter does.
+    pub(in crate::app) fn submit_canvas_note_pick(&mut self, root: &mut RenderRoot, editor: WidgetId) {
+        let Some((handle, target @ Prompt::Note(_))) = self.canvas.prompt.clone().filter(|(h, _)| h.id() == editor) else { return };
+        let Some(answer) = root.get_widget(editor).and_then(|w| w.downcast::<TextEditor>().map(|e| e.inner().rope().to_string())) else { return };
+        self.prompt_answered(root, handle, &target, &answer);
     }
 }

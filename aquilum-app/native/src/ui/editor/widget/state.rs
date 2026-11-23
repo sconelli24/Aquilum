@@ -21,6 +21,11 @@ pub struct TextEditor {
     pub(super) wraps: bool,
     pub(super) centered: bool,
     pub(super) renaming: bool,
+    /// One-line field whose whole text is a note name: suggests vault notes as you type and
+    /// submits the pick.
+    pub(super) suggest_names: bool,
+    /// Set when a note-name suggestion was accepted, so the key handler submits the field.
+    pub(super) suggest_submit: bool,
     pub(super) scroll_x: f64,
     pub(super) focused: bool,
     pub(super) table: Option<crate::ui::editor::table::Session>,

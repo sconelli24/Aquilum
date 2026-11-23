@@ -25,7 +25,7 @@ impl App {
         Smart::from_config(&self.workspace.core.settings.get_config())
     }
 
-    fn resolver_for(embeds: &Option<Embeds>) -> Option<Arc<dyn crate::ui::editor::resolve::Resolver>> {
+    pub(super) fn resolver_for(embeds: &Option<Embeds>) -> Option<Arc<dyn crate::ui::editor::resolve::Resolver>> {
         embeds.clone().map(|e| Arc::new(e) as Arc<dyn crate::ui::editor::resolve::Resolver>)
     }
 

@@ -153,6 +153,47 @@ fn the_context_menu_adds_a_note_card_by_name() {
 }
 
 #[test]
+fn the_add_note_field_suggests_vault_notes_and_enter_adds_the_pick() {
+    let mut h = Harness::new();
+    let target = h.vault.path().join("Design.md");
+    std::fs::write(&target, "x").unwrap();
+    h.app.tree.paths_changed(&mut h.root, std::slice::from_ref(&target));
+    // Opening the note lets the search index learn it, as the note editor test relies on.
+    assert!(h.open(target.clone()));
+    h.settle();
+    let (_, _) = open_board(&mut h);
+    let view = h.app.canvas_view().unwrap();
+    h.act(view, CanvasAction::Menu { at: Point::new(500.0, 500.0), world: Point::new(0.0, 600.0), node: None, edge: None });
+    let Some(Popup::CanvasMenu { layer, .. }) = &h.app.popup else { panic!("canvas menu not open") };
+    let layer = *layer;
+    h.act(layer, crate::ui::menu::MenuChoice::Item(1));
+    assert!(h.app.canvas_prompt().is_some(), "asks for the note name");
+    let _ = h.root.redraw();
+    for _ in 0..30 {
+        h.app.on_core_events(&mut h.root);
+        std::thread::sleep(std::time::Duration::from_millis(50));
+    }
+    h.type_text("Desi");
+    for _ in 0..200 {
+        h.app.on_core_events(&mut h.root);
+        let _ = h.root.redraw();
+        if h.app.suggest_layer.is_some() {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(20));
+    }
+    assert!(h.app.suggest_layer.is_some(), "no suggestions while typing a note name");
+    h.key(Key::Named(NamedKey::Enter), Modifiers::empty());
+    let _ = h.root.redraw();
+    h.app.on_core_events(&mut h.root);
+    let board = h.app.canvas_board(&h.root).unwrap();
+    assert_eq!(board.nodes.len(), 3, "the picked note became a card");
+    assert_eq!(board.nodes[2].file.as_deref(), Some("Design.md"));
+    assert!(h.app.suggest_layer.is_none(), "the list closed with the field");
+    assert!(h.app.canvas_prompt().is_none());
+}
+
+#[test]
 fn an_outside_edit_reloads_the_board() {
     let mut h = Harness::new();
     h.watch_vault();

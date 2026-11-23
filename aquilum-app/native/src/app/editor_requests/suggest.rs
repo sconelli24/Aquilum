@@ -40,6 +40,7 @@ impl App {
         let (Some((_, editor)), Some(picked)) = (self.suggest_layer, action.downcast_ref::<SuggestPicked>()) else { return false };
         root.focus_on(Some(editor));
         root.edit_widget(editor, |mut w| TextEditor::accept_suggestion(&mut w.downcast(), picked.0));
+        self.submit_canvas_note_pick(root, editor);
         true
     }
 }

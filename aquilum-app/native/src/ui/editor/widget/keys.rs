@@ -24,6 +24,9 @@ impl TextEditor {
             } else {
                 self.refresh(ctx);
             }
+            if std::mem::take(&mut self.suggest_submit) {
+                ctx.submit_action::<TextAction>(TextAction::Entered(self.doc.whole()));
+            }
             return;
         }
         let rich = !self.single_line && self.doc.markdown.is_some();
