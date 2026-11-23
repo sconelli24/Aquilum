@@ -51,7 +51,7 @@ fn a_table_without_saved_widths_fills_the_column() {
     let view = blank_view(&table("| a | b |\n| --- | --- |\n| 1 | 2 |"));
     let widths = view.widths();
     assert!(widths[0] == widths[1] && widths[0] > DEFAULT_COL, "{widths:?}");
-    assert!((view.layout_w - view.scroll_w).abs() < 0.5, "таблица {} при колонке {}", view.layout_w, view.scroll_w);
+    assert!((view.layout_w - view.scroll_w).abs() < 0.5, "table {} for column {}", view.layout_w, view.scroll_w);
     assert_eq!(view.max_scroll(), 0.0);
     assert_eq!(view.edge(), view.layout_w);
 }
@@ -77,6 +77,6 @@ fn borders_are_found_where_they_are_painted_after_the_table_narrows() {
     assert!(view.max_scroll() < scroll);
     let painted = view.border_line(Hit::ColumnBorder(0), view.max_scroll());
     assert_eq!(view.border_line(Hit::ColumnBorder(0), scroll), painted);
-    let Line::Col(x, _) = painted else { panic!("нет линии границы") };
+    let Line::Col(x, _) = painted else { panic!("no border line") };
     assert_eq!(view.hit(Point::new(x, 60.0), scroll, crate::ui::keymap::gesture::GRIP), Hit::ColumnBorder(0));
 }

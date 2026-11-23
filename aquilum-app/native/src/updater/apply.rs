@@ -26,7 +26,7 @@ pub fn apply(payload: &[u8], before_exit: impl FnOnce()) -> Result<(), String> {
         )
     };
     if started.0 as isize <= 32 {
-        return Err(format!("установщик не запустился, код {}", started.0 as isize));
+        return Err(crate::i18n::t_with("native.updater.installerFailed", &[("code", (started.0 as isize).to_string().as_str())]));
     }
     std::process::exit(0);
 }
@@ -48,14 +48,14 @@ fn needs_elevation() -> bool {
 
 #[cfg(target_os = "macos")]
 pub fn apply(payload: &[u8], before_exit: impl FnOnce()) -> Result<(), String> {
-    let bundle = crate::system::app_path().filter(|path| path.extension().is_some_and(|extension| extension == "app")).ok_or("приложение запущено не из пакета .app")?;
-    let parent = bundle.parent().ok_or("нет каталога пакета")?;
+    let bundle = crate::system::app_path().filter(|path| path.extension().is_some_and(|extension| extension == "app")).ok_or_else(|| crate::i18n::t("native.updater.notInAppBundle"))?;
+    let parent = bundle.parent().ok_or_else(|| crate::i18n::t("native.updater.noBundleDir"))?;
     let staging = parent.join(format!(".{UPDATE_DIR}"));
     let _ = std::fs::remove_dir_all(&staging);
     std::fs::create_dir_all(&staging).map_err(|e| e.to_string())?;
     let gz = flate2::read::GzDecoder::new(payload);
     super::tar::unpack(gz, &staging)?;
-    let fresh = std::fs::read_dir(&staging).map_err(|e| e.to_string())?.flatten().map(|e| e.path()).find(|p| p.extension().is_some_and(|x| x == "app")).ok_or("в обновлении нет пакета .app")?;
+    let fresh = std::fs::read_dir(&staging).map_err(|e| e.to_string())?.flatten().map(|e| e.path()).find(|p| p.extension().is_some_and(|x| x == "app")).ok_or_else(|| crate::i18n::t("native.updater.noAppInUpdate"))?;
     before_exit();
     let backup = parent.join(format!(".aquilum-old-{}", std::process::id()));
     std::fs::rename(&bundle, &backup).map_err(|e| e.to_string())?;
@@ -81,7 +81,7 @@ pub fn apply(payload: &[u8], _before_exit: impl FnOnce()) -> Result<(), String> 
 #[cfg(target_os = "linux")]
 pub fn apply(payload: &[u8], before_exit: impl FnOnce()) -> Result<(), String> {
     use std::os::unix::fs::PermissionsExt;
-    let image = crate::system::appimage().ok_or("обновление поддерживается только для AppImage")?;
+    let image = crate::system::appimage().ok_or_else(|| crate::i18n::t("native.updater.appImageOnly"))?;
     let fresh = image.with_extension("update");
     std::fs::write(&fresh, payload).map_err(|e| e.to_string())?;
     std::fs::set_permissions(&fresh, std::fs::Permissions::from_mode(0o755)).map_err(|e| e.to_string())?;
@@ -93,5 +93,5 @@ pub fn apply(payload: &[u8], before_exit: impl FnOnce()) -> Result<(), String> {
 
 #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux", target_os = "android")))]
 pub fn apply(_payload: &[u8], _before_exit: impl FnOnce()) -> Result<(), String> {
-    Err("платформа не поддерживается".into())
+    Err(crate::i18n::t("native.updater.platformUnsupported"))
 }

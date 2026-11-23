@@ -38,7 +38,7 @@ impl Host {
             }
             return;
         };
-        let _zone = aq_trace::zone("прогон: колесо");
+        let _zone = aq_trace::zone("replay: wheel");
         let scale = self.scale();
         let target = if graph { self.app.graph_view() } else { self.app.editor_id() };
         let center = self.root.as_ref().zip(target).and_then(|(root, id)| root.get_widget(id)).map(|body| body.ctx().bounding_box().center());

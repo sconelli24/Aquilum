@@ -18,7 +18,7 @@ impl Vault {
                 root,
                 visible: true,
             })
-            .ok_or_else(|| "База знаний не открыта — выберите её в приложении".to_owned())
+            .ok_or_else(|| "No workspace is open: select one in the app".to_owned())
     }
 
     pub fn note(&self, input: &str) -> Result<PathBuf, String> {
@@ -31,7 +31,7 @@ impl Vault {
             0 => Err(self.not_found(input)),
             1 => Ok(matches.remove(0)),
             _ => Err(format!(
-                "Несколько заметок с таким названием, укажите путь: {}",
+                "Several notes have this title, specify the path: {}",
                 matches
                     .iter()
                     .map(|path| self.relative(path))
@@ -44,9 +44,9 @@ impl Vault {
     fn not_found(&self, input: &str) -> String {
         let similar = self.similar_titles(input);
         if similar.is_empty() {
-            return format!("Заметка не найдена: {input}");
+            return format!("Note not found: {input}");
         }
-        format!("Заметка не найдена: {input}. Похожие: {}", similar.join(", "))
+        format!("Note not found: {input}. Similar: {}", similar.join(", "))
     }
 
     fn similar_titles(&self, input: &str) -> Vec<String> {
@@ -100,10 +100,10 @@ impl Vault {
     fn any_path(&self, input: &str) -> Result<PathBuf, String> {
         let trimmed = input.trim();
         if trimmed.is_empty() {
-            return Err("Пустой путь".to_owned());
+            return Err("Empty path".to_owned());
         }
         if !cfg!(windows) && is_windows_absolute_path(trimmed) {
-            return Err(format!("Путь должен быть внутри базы знаний: {input}"));
+            return Err(format!("The path must be inside the workspace: {input}"));
         }
         if Path::new(trimmed).is_absolute() {
             let path = crate::search::paths::canonical_path(Path::new(trimmed));
@@ -114,11 +114,11 @@ impl Vault {
             match component {
                 Component::Normal(value) => relative.push(value),
                 Component::CurDir => {}
-                _ => return Err(format!("Путь должен быть внутри базы знаний: {input}")),
+                _ => return Err(format!("The path must be inside the workspace: {input}")),
             }
         }
         if relative.as_os_str().is_empty() {
-            return Err("Пустой путь".to_owned());
+            return Err("Empty path".to_owned());
         }
         Ok(self.root.join(relative))
     }
@@ -128,7 +128,7 @@ impl Vault {
             Ok(path)
         } else {
             Err(format!(
-                "Путь вне базы знаний: {}",
+                "Path is outside the workspace: {}",
                 path.to_string_lossy()
             ))
         }
@@ -227,7 +227,7 @@ mod tests {
 
         assert!(
             foreign.note_path(&vault.root.join("Идея.md").to_string_lossy()).is_err(),
-            "чужая база не пускает пути из другой базы"
+            "a foreign workspace rejects paths from another workspace"
         );
         assert_eq!(
             foreign.relative(&foreign.root.join("Новая.md")),
@@ -240,15 +240,15 @@ mod tests {
         let (_guard, vault) = vault();
         assert!(vault.note("Нет такой").is_err());
         let similar = vault.note("Идея старая").unwrap_err();
-        assert!(similar.contains("Похожие: Идея.md"), "{similar}");
+        assert!(similar.contains("Similar: Идея.md"), "{similar}");
 
         fs::create_dir_all(vault.root.join("Архив")).unwrap();
         fs::write(vault.root.join("Архив/Aquilum.md"), "копия").unwrap();
         assert!(
             vault.note("Проекты/Aquilum.md").is_ok(),
-            "точный путь остаётся однозначным"
+            "an exact path stays unambiguous"
         );
-        assert!(vault.note("Aquilum").is_err(), "по названию два кандидата");
+        assert!(vault.note("Aquilum").is_err(), "two candidates by title");
     }
 
     #[test]

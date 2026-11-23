@@ -1,5 +1,5 @@
-//! Поиск по заметке: Ctrl+F открывает панель, Enter / Shift+Enter — к следующему и предыдущему
-//! совпадению, Escape закрывает.
+//! Search within a note: Ctrl+F opens the panel, Enter / Shift+Enter jump to the next and previous
+//! match, Escape closes it.
 
 use masonry::app::RenderRoot;
 use masonry::core::keyboard::{Key, Modifiers};

@@ -71,7 +71,7 @@ fn rasterize(labels: &[(&Label, usize)], scale: f64) -> Vec<(usize, Sprite)> {
 
 impl GraphView {
     pub(super) fn step_labels(&mut self, seconds: f64, fcx: &mut FontContext, lcx: &mut LayoutContext<BrushIndex>) -> bool {
-        let _zone = aq_trace::zone("граф: подписи");
+        let _zone = aq_trace::zone("graph: labels");
         let Some(graph) = self.graph.clone() else { return false };
         let read = readable(self.camera.scale * self.display.spread);
         if !self.display.labels || (read == 0.0 && self.hovered.is_none() && self.fades.is_empty()) {

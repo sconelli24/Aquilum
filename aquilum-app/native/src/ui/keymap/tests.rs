@@ -46,9 +46,9 @@ fn every_chord_runs_its_own_command_and_no_global_one_hides_a_field_key() {
         for binding in BINDINGS.iter().filter(|b| scopes.contains(&b.scope)) {
             for chord in binding.chords.iter().chain(binding.hidden).filter(|c| c.here()) {
                 let (key, modifiers) = press(chord);
-                assert_eq!(command(scopes, &key, modifiers), Some(binding.command), "{} в {scopes:?} перехвачено", chord.label());
+                assert_eq!(command(scopes, &key, modifiers), Some(binding.command), "{} in {scopes:?} is intercepted", chord.label());
                 if !scopes.contains(&Scope::Global) {
-                    assert_eq!(command(&[Scope::Global], &key, modifiers), None, "глобальное сочетание прячет {}", chord.label());
+                    assert_eq!(command(&[Scope::Global], &key, modifiers), None, "a global chord hides {}", chord.label());
                 }
             }
         }
@@ -90,11 +90,11 @@ fn every_shortcut_is_listed_in_settings_with_every_translation() {
     for locale in [include_str!("../../../assets/locales/ru.json"), include_str!("../../../assets/locales/en.json"), include_str!("../../../assets/locales/es.json")] {
         let json: serde_json::Value = serde_json::from_str(locale).unwrap();
         for key in &listed {
-            assert!(json["settings"]["shortcuts"][key].is_string(), "нет перевода settings.shortcuts.{key}");
+            assert!(json["settings"]["shortcuts"][key].is_string(), "missing translation settings.shortcuts.{key}");
         }
         for binding in BINDINGS {
             if !binding.chords.is_empty() {
-                assert!(json["settings"]["shortcuts"][binding.label].is_string(), "нет перевода settings.shortcuts.{}", binding.label);
+                assert!(json["settings"]["shortcuts"][binding.label].is_string(), "missing translation settings.shortcuts.{}", binding.label);
             }
         }
     }
@@ -113,7 +113,7 @@ fn insert_and_delete_chords_work_like_ctrl_letters() {
     assert_eq!(text(&named(NamedKey::Insert), Modifiers::SHIFT), Some(Command::Paste));
     assert_eq!(text(&named(NamedKey::Delete), Modifiers::SHIFT), Some(Command::Cut));
     assert_eq!(text(&named(NamedKey::Delete), Modifiers::empty()), None);
-    assert_eq!(text(&letter("c"), Modifiers::CONTROL | Modifiers::ALT), None, "AltGr не должен копировать");
+    assert_eq!(text(&letter("c"), Modifiers::CONTROL | Modifiers::ALT), None, "AltGr must not copy");
     assert_eq!(super::label(Scope::Text, Command::Copy), "Ctrl + C / Ctrl + Insert");
     assert_eq!(super::label(Scope::Global, Command::FocusMode), "Ctrl + Shift + F");
 }
@@ -126,33 +126,33 @@ fn mac_navigation_chords() {
     let editor = |key: &Key, modifiers| command(&[Scope::Text, Scope::Editor, Scope::Navigation, Scope::Caret], key, modifiers);
     let meta = Modifiers::META;
     let alt = Modifiers::ALT;
-    // ⌥←/→ — по словам
+    // ⌥←/→ moves by words
     assert_eq!(editor(&named(NamedKey::ArrowLeft), alt), Some(Command::WordLeft));
     assert_eq!(editor(&named(NamedKey::ArrowRight), alt), Some(Command::WordRight));
     assert_eq!(editor(&named(NamedKey::ArrowLeft), alt | Modifiers::SHIFT), Some(Command::WordLeft));
     assert_eq!(editor(&named(NamedKey::ArrowRight), alt | Modifiers::SHIFT), Some(Command::WordRight));
-    // ⌘←/→ — начало/конец строки
+    // ⌘←/→ goes to line start/end
     assert_eq!(editor(&named(NamedKey::ArrowLeft), meta), Some(Command::LineStart));
     assert_eq!(editor(&named(NamedKey::ArrowRight), meta), Some(Command::LineEnd));
     assert_eq!(editor(&named(NamedKey::ArrowLeft), meta | Modifiers::SHIFT), Some(Command::LineStart));
     assert_eq!(editor(&named(NamedKey::ArrowRight), meta | Modifiers::SHIFT), Some(Command::LineEnd));
-    // ⌘↑/↓ — начало/конец заметки
+    // ⌘↑/↓ goes to note start/end
     assert_eq!(editor(&named(NamedKey::ArrowUp), meta), Some(Command::DocumentStart));
     assert_eq!(editor(&named(NamedKey::ArrowDown), meta), Some(Command::DocumentEnd));
     assert_eq!(editor(&named(NamedKey::ArrowUp), meta | Modifiers::SHIFT), Some(Command::DocumentStart));
     assert_eq!(editor(&named(NamedKey::Home), meta), Some(Command::DocumentStart));
     assert_eq!(editor(&named(NamedKey::End), meta), Some(Command::DocumentEnd));
-    // ⌥⌫ — удалить слово, ⌘⌫ — удалить до начала строки
+    // ⌥⌫ deletes a word, ⌘⌫ deletes to the start of the line
     assert_eq!(editor(&named(NamedKey::Backspace), alt), Some(Command::DeleteWord));
     assert_eq!(editor(&named(NamedKey::Backspace), Modifiers::CONTROL), Some(Command::DeleteWord));
     assert_eq!(editor(&named(NamedKey::Backspace), meta), Some(Command::LineDeleteBackward));
-    // ⌥⌦ — удалить слово вперёд
+    // ⌥⌦ deletes a word forward
     assert_eq!(editor(&named(NamedKey::Delete), alt), Some(Command::DeleteWordForward));
     assert_eq!(editor(&named(NamedKey::Delete), Modifiers::CONTROL), Some(Command::DeleteWordForward));
-    // ⌘ не заменяет Ctrl для переключения вкладок
+    // ⌘ does not replace Ctrl for switching tabs
     assert_eq!(command(&[Scope::Global], &named(NamedKey::Tab), Modifiers::CONTROL), Some(Command::NextTab));
     assert_eq!(command(&[Scope::Global], &named(NamedKey::Tab), meta), None);
-    // Подпись сочетаний на Mac
+    // Shortcut labels on Mac
     assert_eq!(super::label(Scope::Global, Command::FocusMode), "⌘ + Shift + F");
     assert_eq!(super::label(Scope::Navigation, Command::WordLeft), "⌥ + ←");
     assert_eq!(super::label(Scope::Navigation, Command::DocumentStart), "⌘ + ↑");

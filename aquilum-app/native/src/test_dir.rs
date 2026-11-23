@@ -1,6 +1,6 @@
 pub fn tempdir() -> tempfile::TempDir {
     let root = aquilum_core::search::paths::canonical_path(&std::env::temp_dir());
-    tempfile::Builder::new().tempdir_in(root).expect("временный каталог")
+    tempfile::Builder::new().tempdir_in(root).expect("temporary directory")
 }
 
 pub fn command() -> masonry::core::keyboard::Modifiers {

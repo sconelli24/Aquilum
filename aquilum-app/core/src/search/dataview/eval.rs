@@ -66,7 +66,7 @@ pub fn evaluate(expr: &Expr, scope: &Scope<'_>) -> Result<Value, String> {
         }
         Expr::Binary { operator, left, right } => binary(*operator, left, right, scope),
         Expr::Lambda { .. } => Err(
-            "Стрелочная функция бывает только аргументом «filter», «map», «any» или «all»".to_owned(),
+            "An arrow function can only be an argument of 'filter', 'map', 'any' or 'all'".to_owned(),
         ),
     }
 }
@@ -179,7 +179,7 @@ fn file_property(name: &str, row: &Row) -> Result<Value, String> {
         },
         other => {
             return Err(format!(
-                "У файла нет поля «{other}»: есть link, path, name, folder, ctime, mtime, size, tags"
+                "File has no field '{other}': available fields are link, path, name, folder, ctime, mtime, size, tags"
             ))
         }
     })
@@ -234,7 +234,7 @@ fn apply_lambda(
     scope: &Scope<'_>,
 ) -> Result<Value, String> {
     let Some(parameter) = parameters.first() else {
-        return Err(format!("У стрелочной функции в «{name}» нет параметра"));
+        return Err(format!("The arrow function in '{name}' has no parameter"));
     };
     let mut results = Vec::with_capacity(items.len());
     for item in &items {
@@ -256,7 +256,7 @@ fn apply_lambda(
         "all" => Value::Bool(results.iter().all(Value::truthy)),
         other => {
             return Err(format!(
-                "Функция «{other}» не принимает стрелочную функцию: её ждут filter, map, any, all"
+                "Function '{other}' does not accept an arrow function: only filter, map, any, all do"
             ))
         }
     })
@@ -286,7 +286,7 @@ fn binary(operator: BinaryOp, left: &Expr, right: &Expr, scope: &Scope<'_>) -> R
         BinaryOp::Multiply => multiply(left, right),
         BinaryOp::Divide => arithmetic(left, right, |l, r| l / r),
         BinaryOp::Modulo => arithmetic(left, right, |l, r| l % r),
-        BinaryOp::And | BinaryOp::Or => unreachable!("обработаны выше"),
+        BinaryOp::And | BinaryOp::Or => unreachable!("handled above"),
     })
 }
 

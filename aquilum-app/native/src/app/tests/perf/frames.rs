@@ -34,9 +34,9 @@ fn partial_frames(scale: f64, width: u32, height: u32, steps: u32) {
         partial.draw_frame(&layers, w, hh, scale, theme::background(), i == 0).unwrap();
         let full = render_full(&layers, w, hh, scale);
         let differ = differing_pixels(partial.frame_pixels(), full.frame_pixels());
-        assert_eq!(differ, 0, "шаг {i}: частичная отрисовка расходится с полной в {differ} пикселях");
+        assert_eq!(differ, 0, "step {i}: partial render differs from full render in {differ} pixels");
     }
-    assert!(partial.shifts > steps as usize / 2, "прокрутка сдвигает пиксели, а не перерисовывает колонку: сдвигов {}", partial.shifts);
+    assert!(partial.shifts > steps as usize / 2, "scroll shifts pixels instead of repainting the column: shifts {}", partial.shifts);
 }
 
 #[test]
@@ -51,16 +51,16 @@ fn live_cover_frames_match_full_frames() {
     let mut live = Renderer::new(2);
     crate::render::live::freeze(Some(0.0));
     live.draw_frame(&layers, w, hh, 1.0, theme::background(), true).unwrap();
-    assert!(live.has_live(), "обложка не стала живым слоем");
+    assert!(live.has_live(), "cover did not become a live layer");
     for step in 1..6 {
         let t = f64::from(step) * 0.137;
         crate::render::live::freeze(Some(t));
-        assert!(!live.live_frame(&layers).unwrap().is_empty(), "шаг {step}: живой слой не перерисован");
+        assert!(!live.live_frame(&layers).unwrap().is_empty(), "step {step}: live layer not repainted");
         let full = render_full(&layers, w, hh, 1.0);
         dump(&format!("live-{step}.png"), &live);
         dump(&format!("full-{step}.png"), &full);
         let differ = differing_pixels(live.frame_pixels(), full.frame_pixels());
-        assert_eq!(differ, 0, "шаг {step}: живой слой расходится с полной отрисовкой в {differ} пикселях");
+        assert_eq!(differ, 0, "step {step}: live layer differs from full render in {differ} pixels");
     }
     crate::render::live::freeze(None);
 }
@@ -77,13 +77,13 @@ fn every_animated_cover_changes_between_frames() {
         let mut live = Renderer::new(2);
         crate::render::live::freeze(Some(0.0));
         live.draw_frame(&layers, W as u16, H as u16, 1.0, theme::background(), true).unwrap();
-        assert!(live.has_live(), "{id}: обложка не стала живым слоем");
+        assert!(live.has_live(), "{id}: cover did not become a live layer");
         let first = live.frame_pixels().to_vec();
         crate::render::live::freeze(Some(0.5));
-        assert!(!live.live_frame(&layers).unwrap().is_empty(), "{id}: живой слой не перерисован");
+        assert!(!live.live_frame(&layers).unwrap().is_empty(), "{id}: live layer not repainted");
         let moved = differing_pixels(&first, live.frame_pixels());
         crate::render::live::freeze(None);
-        assert!(moved > 100, "{id}: между кадрами изменилось {moved} пикселей");
+        assert!(moved > 100, "{id}: {moved} pixels changed between frames");
     }
 }
 
@@ -103,10 +103,10 @@ fn the_animations_switch_does_not_touch_an_animated_cover() {
         renderer.draw_frame(&layers, W as u16, H as u16, 1.0, theme::background(), true).unwrap();
         renderer.has_live()
     };
-    assert!(alive(&mut h), "обложка не анимирована при включённых анимациях");
+    assert!(alive(&mut h), "cover is not animated with animations enabled");
     h.click(center.x, center.y);
-    assert!(!h.config().ui.animations && !crate::ui::motion::on(), "переключатель не выключил анимации");
-    assert!(alive(&mut h), "выключенные анимации остановили обложку");
+    assert!(!h.config().ui.animations && !crate::ui::motion::on(), "switch did not turn animations off");
+    assert!(alive(&mut h), "disabled animations stopped the cover");
 }
 
 #[test]
@@ -133,13 +133,13 @@ fn modal_intro_leaves_frames_like_full_redraw() {
             }
             if step == 12 && !close_early {
                 let dimmed = renderer.frame_pixels()[usize::from(w) * 4 + 4];
-                assert!(channel(dimmed, 8) < channel(corner, 8), "затемнение не наложено на середине появления");
+                assert!(channel(dimmed, 8) < channel(corner, 8), "dimming not applied mid-appearance");
             }
         }
         let (layers, _) = h.root.redraw();
         let full = render_full(&layers, w, hh, 1.0);
         let wrong = differing_pixels(renderer.frame_pixels(), full.frame_pixels());
-        assert_eq!(wrong, 0, "после появления (закрыто рано: {close_early}) кадр расходится с полной отрисовкой в {wrong} пикселях");
+        assert_eq!(wrong, 0, "after appearing (closed early: {close_early}) frame differs from full render in {wrong} pixels");
     }
 }
 
@@ -165,7 +165,7 @@ fn settings_scroll_frames_match_full_frames() {
         renderer.draw_frame(&layers, w, hh, 1.0, theme::background(), false).unwrap();
         let full = render_full(&layers, w, hh, 1.0);
         let differ = differing_pixels(renderer.frame_pixels(), full.frame_pixels());
-        assert_eq!(differ, 0, "шаг {step}: прокрутка настроек расходится с полной отрисовкой в {differ} пикселях");
+        assert_eq!(differ, 0, "step {step}: settings scroll differs from full render in {differ} pixels");
     }
-    assert!(renderer.shifts > before, "прокрутка настроек не сдвигала пиксели");
+    assert!(renderer.shifts > before, "settings scroll did not shift pixels");
 }

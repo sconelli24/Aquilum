@@ -22,7 +22,7 @@ impl App {
         let Some(opening) = self.opening.as_mut().filter(|opening| opening.done.is_none()) else { return false };
         let opened = match opening.rx.try_recv() {
             Err(TryRecvError::Empty) => return false,
-            received => received.unwrap_or_else(|_| Err(FileCommandError::Task { message: "чтение прервано".to_owned() })),
+            received => received.unwrap_or_else(|_| Err(FileCommandError::Task { message: "read interrupted".to_owned() })),
         };
         opening.done = Some(opened);
         self.show_active(root);
@@ -47,7 +47,7 @@ impl App {
         let (wake, read) = (Arc::clone(&self.workspace.wake), path.clone());
         crate::disk::run(move || {
             let opened = {
-                let _zone = aq_trace::zone("открытие: чтение файла");
+                let _zone = aq_trace::zone("open: file read");
                 Note::open(read)
             };
             if tx.send(opened).is_ok() {

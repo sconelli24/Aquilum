@@ -30,15 +30,15 @@ fn probes(h: &Harness) -> Vec<(&'static str, Point)> {
     let input = bounds(h, field(h));
     let scroll = bounds(h, h.app.tree.scroll_id().unwrap());
     vec![
-        ("отступ над кнопками", Point::new(new_note.center().x, new_note.y0 - size::SPACE_8 / 2.0)),
-        ("щель между кнопками", Point::new((new_note.x1 + new_folder.x0) / 2.0, new_note.center().y)),
-        ("щель между кнопками и полем", Point::new(input.center().x, (new_note.y1 + input.y0 - size::INPUT_XS_PADDING_Y) / 2.0)),
-        ("отступ под полем", Point::new(input.center().x, input.y1 + size::INPUT_XS_PADDING_Y + size::SPACE_8 / 2.0)),
-        ("полоса слева от поля", Point::new(scroll.x0 + 2.0, input.center().y)),
-        ("полоса справа от поля", Point::new(scroll.x1 - 2.0, input.center().y)),
-        ("строка дерева", bounds(h, h.app.tree.row_id("Кофе").unwrap()).center()),
-        ("пустое место дерева", Point::new(scroll.center().x, scroll.y1 - 20.0)),
-        ("правая часть окна", Point::new(700.0, 300.0)),
+        ("padding above the buttons", Point::new(new_note.center().x, new_note.y0 - size::SPACE_8 / 2.0)),
+        ("gap between the buttons", Point::new((new_note.x1 + new_folder.x0) / 2.0, new_note.center().y)),
+        ("gap between the buttons and the field", Point::new(input.center().x, (new_note.y1 + input.y0 - size::INPUT_XS_PADDING_Y) / 2.0)),
+        ("padding below the field", Point::new(input.center().x, input.y1 + size::INPUT_XS_PADDING_Y + size::SPACE_8 / 2.0)),
+        ("strip left of the field", Point::new(scroll.x0 + 2.0, input.center().y)),
+        ("strip right of the field", Point::new(scroll.x1 - 2.0, input.center().y)),
+        ("tree row", bounds(h, h.app.tree.row_id("Кофе").unwrap()).center()),
+        ("empty area of the tree", Point::new(scroll.center().x, scroll.y1 - 20.0)),
+        ("right part of the window", Point::new(700.0, 300.0)),
     ]
 }
 
@@ -52,11 +52,11 @@ fn a_click_or_a_tap_elsewhere_drops_the_focus_and_keeps_the_filter() {
         for (what, at) in probes(&h) {
             let center = bounds(&h, field).center();
             hit(&mut h, center, touch);
-            assert_eq!(h.root.focused_widget(), Some(field), "{what}: поле не получило фокус (касание: {touch})");
+            assert_eq!(h.root.focused_widget(), Some(field), "{what}: field did not get focus (touch: {touch})");
             hit(&mut h, at, touch);
-            assert_ne!(h.root.focused_widget(), Some(field), "{what}: фокус остался в поле (касание: {touch})");
-            assert_eq!(h.app.tree.filter_text(&h.root), "коф", "{what}: текст поиска пропал");
-            assert!(!names(&h).is_empty() && names(&h).len() < 4, "{what}: фильтр сбросился: {:?}", names(&h));
+            assert_ne!(h.root.focused_widget(), Some(field), "{what}: focus stayed in the field (touch: {touch})");
+            assert_eq!(h.app.tree.filter_text(&h.root), "коф", "{what}: search text disappeared");
+            assert!(!names(&h).is_empty() && names(&h).len() < 4, "{what}: filter was reset: {:?}", names(&h));
         }
     }
 }
@@ -71,9 +71,9 @@ fn a_press_inside_the_search_box_keeps_the_focus() {
         let input = bounds(&h, field);
         let edge = Point::new(input.center().x, input.y0 - size::INPUT_XS_PADDING_Y / 2.0);
         hit(&mut h, edge, touch);
-        assert_eq!(h.root.focused_widget(), Some(field), "нажатие в отступ внутри блока поиска сняло фокус (касание: {touch})");
+        assert_eq!(h.root.focused_widget(), Some(field), "press on padding inside the search block removed focus (touch: {touch})");
         hit(&mut h, input.center(), touch);
-        assert_eq!(h.root.focused_widget(), Some(field), "нажатие по самому полю сняло фокус (касание: {touch})");
+        assert_eq!(h.root.focused_widget(), Some(field), "press on the field itself removed focus (touch: {touch})");
     }
 }
 
@@ -86,10 +86,10 @@ fn losing_the_focus_hides_the_keyboard_and_getting_it_shows_it() {
     let center = bounds(&h, field).center();
     finger(&mut h, center);
     let _ = h.root.redraw();
-    assert!(seen(&h, |signal| matches!(signal, RenderRootSignal::StartIme)), "тап по полю не вызвал клавиатуру");
+    assert!(seen(&h, |signal| matches!(signal, RenderRootSignal::StartIme)), "tap on the field did not bring up the keyboard");
     let row = bounds(&h, h.app.tree.row_id("Кофе").unwrap()).center();
     h.signals.borrow_mut().clear();
     finger(&mut h, row);
     let _ = h.root.redraw();
-    assert!(seen(&h, |signal| matches!(signal, RenderRootSignal::EndIme)), "тап вне поля не спрятал клавиатуру");
+    assert!(seen(&h, |signal| matches!(signal, RenderRootSignal::EndIme)), "tap outside the field did not hide the keyboard");
 }

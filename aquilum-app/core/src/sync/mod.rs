@@ -46,11 +46,11 @@ pub enum SyncError {
 impl fmt::Display for SyncError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Store(error) => write!(formatter, "база синхронизации: {error}"),
+            Self::Store(error) => write!(formatter, "sync database: {error}"),
             Self::Remote(error) => write!(formatter, "{error}"),
             Self::File(error) => write!(formatter, "{error}"),
-            Self::Changed => formatter.write_str("файл изменился во время синхронизации"),
-            Self::Deletions { planned, synced } => write!(formatter, "удаляется {planned} из {synced} файлов, синхронизация остановлена"),
+            Self::Changed => formatter.write_str("file changed during sync"),
+            Self::Deletions { planned, synced } => write!(formatter, "deleting {planned} of {synced} files; sync stopped"),
         }
     }
 }

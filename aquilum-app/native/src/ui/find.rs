@@ -1,4 +1,4 @@
-//! Панель поиска по заметке (`PageSearchBar.tsx`): поле со счётчиком и кнопки переходов.
+//! In-note search bar (`PageSearchBar.tsx`): a field with a counter and navigation buttons.
 
 use masonry::core::{NewWidget, Widget, WidgetId};
 use masonry::layout::Length;

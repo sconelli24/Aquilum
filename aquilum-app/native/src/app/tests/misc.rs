@@ -23,21 +23,21 @@ fn removed_images_leave_caches() {
     let note = image_note(&h);
     h.open(note);
     wait_cached(&mut h);
-    assert_eq!(cached(&h), 2, "картинка не попала в кэш заметки и общий кэш");
+    assert_eq!(cached(&h), 2, "image did not reach the note cache and the shared cache");
     h.app.set_text(&mut h.root, crop::Rope::from("текст\n\nконец"));
     let _ = h.root.redraw();
-    assert_eq!(cached(&h), 0, "удалённая с холста картинка осталась в кэше");
+    assert_eq!(cached(&h), 0, "image removed from the canvas stayed in the cache");
     h.app.set_text(&mut h.root, crop::Rope::from("текст\n\n![](pic.png)\n\nконец"));
     wait_cached(&mut h);
     let embeds = h.app.embeds.clone().unwrap();
     std::fs::remove_file(h.vault.path().join("pic.png")).unwrap();
     embeds.forget_paths(&[h.vault.path().join("pic.png")]);
-    assert_eq!(cached(&h), 1, "общий кэш не забыл удалённый файл");
+    assert_eq!(cached(&h), 1, "shared cache did not forget the removed file");
     let gone = wait_until(100, 10, || {
         h.step();
         !matches!(embeds.media("pic.png", false).0, Fetch::Ready(_))
     });
-    assert!(gone, "удалённый файл остался в кэше заметки");
+    assert!(gone, "removed file stayed in the note cache");
 }
 
 #[test]
@@ -51,12 +51,12 @@ fn a_changed_picture_stays_until_its_new_version_loads() {
     image::RgbaImage::new(40, 60).save(h.vault.path().join("pic.png")).unwrap();
     embeds.forget_paths(&[h.vault.path().join("pic.png")]);
     let (shown, stamp) = embeds.media("pic.png", false);
-    assert!(matches!(shown, Fetch::Ready(_)) && stamp == before, "картинка пропала до загрузки новой версии, высота заметки прыгнет без пересчёта");
+    assert!(matches!(shown, Fetch::Ready(_)) && stamp == before, "image disappeared before the new version loaded, note height will jump without recalculation");
     let loaded = wait_until(100, 10, || {
         h.step();
         embeds.media("pic.png", false).1 != before
     });
-    assert!(loaded, "новая версия картинки не загрузилась");
+    assert!(loaded, "new image version did not load");
 }
 
 #[test]
@@ -65,11 +65,11 @@ fn leaving_the_note_lets_go_of_its_embeds() {
     let note = image_note(&h);
     h.open(note);
     wait_cached(&mut h);
-    assert_eq!(cached(&h), 2, "картинка не загрузилась");
+    assert_eq!(cached(&h), 2, "image did not load");
     let alive = h.app.embeds.as_ref().unwrap().watch();
     let _ = h.app.new_tab(&mut h.root);
     let _ = h.root.redraw();
-    assert!(!alive(), "вставки ушедшей заметки остались в памяти");
+    assert!(!alive(), "embeds of the departed note stayed in memory");
 }
 
 #[test]
@@ -82,7 +82,7 @@ fn settings_dropdown_toggles_like_web() {
     assert!(h.menu_open());
     h.snapshot("dropdown.png");
     h.click(816.0, 173.0);
-    assert!(!h.menu_open(), "повторный щелчок по полю не закрыл список");
+    assert!(!h.menu_open(), "second click on the field did not close the list");
     h.click(816.0, 173.0);
     assert!(h.menu_open());
     h.escape();
@@ -99,7 +99,7 @@ fn mcp_snapshot() {
     h.click(115.0, 364.0);
     assert_eq!(h.section(), Some(Section::Mcp));
     assert!(!h.config().mcp.enabled);
-    assert!(h.config().mcp.token.is_empty(), "токен не создаётся при открытии настроек");
+    assert!(h.config().mcp.token.is_empty(), "token is not created when opening settings");
     h.scroll((600.0, 400.0), 1.0, (0.0, -420.0));
     h.deliver();
     std::fs::write(out.join("mcp.png"), h.frame(W as u16, H as u16, 1.0).png()).unwrap();
@@ -170,7 +170,7 @@ fn unresolved_wiki_links_are_dimmed_like_tauri() {
         brush(&h, missing) != brush(&h, present)
     });
     assert!(brush(&h, present).is_some());
-    assert_ne!(brush(&h, missing), brush(&h, present), "ссылка на несуществующую заметку не приглушена");
+    assert_ne!(brush(&h, missing), brush(&h, present), "link to a nonexistent note is not dimmed");
 }
 
 #[test]
@@ -189,7 +189,7 @@ fn trimmed_renderer_draws_the_same_frame() {
     let before = renderer.png();
     renderer.trim();
     renderer.render(&layers, W as u16, H as u16, 1.0, theme::background()).unwrap();
-    assert!(before == renderer.png(), "после сброса кадр отличается");
+    assert!(before == renderer.png(), "frame differs after reset");
 }
 
 #[test]

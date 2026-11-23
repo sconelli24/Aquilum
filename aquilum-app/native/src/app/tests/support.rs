@@ -57,7 +57,7 @@ pub(super) fn dump(name: &str, renderer: &Renderer) {
 impl Harness {
     pub(super) fn watch_vault(&self) {
         let root = aquilum_core::search::paths::canonical_path(self.vault.path());
-        self.app.workspace.core.watcher.watch(&root).expect("наблюдатель за базой запущен");
+        self.app.workspace.core.watcher.watch(&root).expect("vault watcher started");
     }
 
     pub(super) fn write_note(&self, name: &str, text: &str) -> std::path::PathBuf {
@@ -168,7 +168,7 @@ impl Harness {
     pub(super) fn binding(&self, what: &str, pick: impl Fn(&Binding) -> bool) -> WidgetId {
         match &self.app.popup {
             Some(Popup::Settings { dialog, .. }) => dialog.bindings.iter().find_map(|(id, b)| pick(b).then_some(*id)).unwrap_or_else(|| panic!("{what}")),
-            _ => panic!("настройки не открыты"),
+            _ => panic!("settings not open"),
         }
     }
 
@@ -180,7 +180,7 @@ impl Harness {
     pub(super) fn nav(&self, section: Section) -> WidgetId {
         match &self.app.popup {
             Some(Popup::Settings { dialog, .. }) => dialog.nav.iter().find(|(_, s)| *s == section).map(|(id, _)| *id).unwrap(),
-            _ => panic!("настройки не открыты"),
+            _ => panic!("settings not open"),
         }
     }
 

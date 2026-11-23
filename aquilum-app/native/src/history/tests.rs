@@ -38,7 +38,7 @@ fn restore_and_revert_rewrite_note() {
     let with_three = versions
         .iter()
         .find(|v| matches!(view(&core, &note, &v.id), Some(VersionView::Full(texts)) if texts.text == "один\nдва\nтри\n"))
-        .unwrap_or_else(|| panic!("версия с «три»; версий {}", versions.len()));
+        .unwrap_or_else(|| panic!("version with «три»; versions {}", versions.len()));
     assert!(revert(&core, &note, with_three).unwrap());
     assert_eq!(std::fs::read_to_string(&note).unwrap(), "ноль\nодин\nдва\n");
     assert!(restore(&core, &note, with_three).unwrap());
@@ -63,10 +63,10 @@ fn a_big_version_shows_only_its_changed_lines() {
 fn a_revert_over_a_later_edit_keeps_the_later_text_in_a_conflict_copy() {
     let (vault, _data, core, note) = with_versions("раз\nдва\nтри\nчетыре\n", &[("раз\nДВА\nтри\nчетыре\n", Source::Me), ("раз\nДВА и ещё\nтри\nчетыре!\n", Source::Agent)]);
     let versions = page(&core, &note, None, PAGE_SIZE).versions;
-    let changed = versions.iter().find(|v| v.source == Source::Me).expect("версия с ДВА");
+    let changed = versions.iter().find(|v| v.source == Source::Me).expect("version with ДВА");
     assert!(revert(&core, &note, changed).unwrap());
     assert_eq!(std::fs::read_to_string(&note).unwrap(), "раз\nдва\nтри\nчетыре!\n");
-    let copy = std::fs::read_dir(vault.path()).unwrap().flatten().map(|e| e.path()).find(|p| p.to_string_lossy().contains("конфликт")).expect("копия-конфликт");
+    let copy = std::fs::read_dir(vault.path()).unwrap().flatten().map(|e| e.path()).find(|p| p.to_string_lossy().contains("conflict")).expect("conflict copy");
     assert!(std::fs::read_to_string(copy).unwrap().contains("ДВА и ещё"));
     core.shutdown();
 }
@@ -76,11 +76,11 @@ fn a_deleted_line_comes_back_through_the_gate_and_a_second_revert_does_nothing()
     let (_vault, _data, core, note) = with_versions("раз\nдва\nтри\n", &[("раз\nдва\nтри\n", Source::Agent), ("раз\nтри\n", Source::Agent), ("раз\nтри\nчетыре\n", Source::Agent)]);
     let deletion = page(&core, &note, None, PAGE_SIZE).versions.remove(1);
     assert!(revert(&core, &note, &deletion).unwrap());
-    assert_eq!(std::fs::read_to_string(&note).unwrap(), "раз\nдва\nтри\nчетыре\n", "удалённая строка вернулась, поздняя правка осталась");
+    assert_eq!(std::fs::read_to_string(&note).unwrap(), "раз\nдва\nтри\nчетыре\n", "the deleted line is back, the later edit stays");
     let total = page(&core, &note, None, PAGE_SIZE).total;
-    assert!(!revert(&core, &note, &deletion).unwrap(), "повторная отмена сообщает, что отменять нечего");
+    assert!(!revert(&core, &note, &deletion).unwrap(), "a repeated revert reports there is nothing to revert");
     assert_eq!(std::fs::read_to_string(&note).unwrap(), "раз\nдва\nтри\nчетыре\n");
-    assert_eq!(page(&core, &note, None, PAGE_SIZE).total, total, "повторная отмена не пишет версию");
+    assert_eq!(page(&core, &note, None, PAGE_SIZE).total, total, "a repeated revert writes no version");
     core.shutdown();
 }
 
@@ -97,12 +97,12 @@ fn a_revert_at_both_ends_of_a_big_note_writes_a_small_version() {
     edit(len..len, "Конец\n", Source::Me);
     let middle = body.find("строка 30000\n").unwrap() + "Начало\n".len();
     edit(middle..middle, "Середина\n", Source::Agent);
-    let typed = page(&core, &note, None, PAGE_SIZE).versions.into_iter().find(|v| v.source == Source::Me).expect("накопленная версия");
+    let typed = page(&core, &note, None, PAGE_SIZE).versions.into_iter().find(|v| v.source == Source::Me).expect("accumulated version");
     assert!(revert(&core, &note, &typed).unwrap());
-    assert_eq!(std::fs::read_to_string(&note).unwrap(), body.replace("строка 30000\n", "Середина\nстрока 30000\n"), "правки на обоих концах отменены одной командой");
+    assert_eq!(std::fs::read_to_string(&note).unwrap(), body.replace("строка 30000\n", "Середина\nстрока 30000\n"), "edits at both ends reverted by one command");
     let dir = aquilum_core::history::store::history_dir(&aquilum_core::search::paths::canonical_path(vault.path()), std::path::Path::new("a.md"));
     let newest = page(&core, &note, None, 1).versions.remove(0);
     let size = std::fs::metadata(dir.join(&newest.id)).unwrap().len();
-    assert!(size < 4096, "отмена записала версию {size} байт вместо пары участков");
+    assert!(size < 4096, "the revert wrote a {size}-byte version instead of a couple of ranges");
     core.shutdown();
 }

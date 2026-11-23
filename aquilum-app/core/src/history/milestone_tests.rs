@@ -88,6 +88,6 @@ fn a_change_is_small_by_characters_and_fits_by_bytes() {
     assert!(is_small(&text.as_str(), &single(splice)).unwrap());
     let long = format!("было{}", "я".repeat(250));
     assert!(!is_small(&long.as_str(), &single(Splice { inserted: long.len() - base.len(), ..splice })).unwrap());
-    assert!(!is_small(&text.as_str(), &single(Splice { removed: 200, ..splice })).unwrap(), "удаление в 200 байт не мелкая правка");
+    assert!(!is_small(&text.as_str(), &single(Splice { removed: 200, ..splice })).unwrap(), "a 200-byte deletion is not a small edit");
     assert!(fits(1000, &single(splice)) && !fits(1 << 20, &single(splice)));
 }

@@ -1,6 +1,6 @@
-//! Области прокрутки, о которых знает поиск изменений: окно просмотра в координатах окна и
-//! смещение содержимого. Благодаря им прокрутка сдвигает уже нарисованные пиксели, а
-//! растрируется только открывшаяся полоса.
+//! Scroll regions known to the change detector: the viewport in window coordinates and
+//! the content offset. Thanks to them scrolling shifts already-drawn pixels, and
+//! only the newly exposed strip is rasterized.
 
 use std::cell::RefCell;
 

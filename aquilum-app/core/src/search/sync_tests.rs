@@ -28,19 +28,19 @@ fn the_writer_lives_only_while_there_is_something_to_write() {
     let note = vault.join("Заметка.md");
     write(&note, "первое слово");
     let cancelled = AtomicBool::new(false);
-    assert!(!synchronizer.holds_writer(), "открытие не создаёт писателя");
+    assert!(!synchronizer.holds_writer(), "opening does not create a writer");
 
     synchronizer.full_scan(&cancelled).unwrap();
-    assert!(!synchronizer.holds_writer(), "писатель не отпущен после записи");
-    drop(index.index.writer::<tantivy::TantivyDocument>(15_000_000).expect("блокировка индекса отпущена"));
+    assert!(!synchronizer.holds_writer(), "writer not released after write");
+    drop(index.index.writer::<tantivy::TantivyDocument>(15_000_000).expect("index lock released"));
 
     synchronizer.full_scan(&cancelled).unwrap();
-    assert!(!synchronizer.holds_writer(), "неизменённая база писателя не создаёт");
+    assert!(!synchronizer.holds_writer(), "an unchanged vault does not create a writer");
 
     write(&note, "второе слово");
     synchronizer.apply_paths(HashSet::from([note])).unwrap();
-    assert!(!synchronizer.holds_writer(), "писатель не отпущен после правки");
-    assert!(!index.search(&Request::new("второе")).unwrap().results.is_empty(), "правка видна поиску сразу");
+    assert!(!synchronizer.holds_writer(), "writer not released after edit");
+    assert!(!index.search(&Request::new("второе")).unwrap().results.is_empty(), "the edit is visible to search immediately");
 }
 
 #[test]
@@ -75,5 +75,5 @@ fn a_folder_path_indexes_or_forgets_everything_under_it() {
     assert!(synchronizer.apply_paths(HashSet::from([folder.clone(), vault.join("Архив")])).unwrap());
 
     assert_eq!((found("перенесённая"), found("вложенная"), found("соседняя"), found("переехала")), (0, 0, 1, 1));
-    assert!(!synchronizer.apply_paths(HashSet::from([folder])).unwrap(), "повторное удаление не трогает индекс");
+    assert!(!synchronizer.apply_paths(HashSet::from([folder])).unwrap(), "repeated removal does not touch the index");
 }

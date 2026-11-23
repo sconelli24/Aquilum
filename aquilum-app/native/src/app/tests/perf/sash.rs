@@ -41,7 +41,7 @@ fn sash_drag_cost() {
     let (sidebar, panel) = (chrome.sidebar_sash, chrome.panel_parts.sash);
     let left = drag(&mut b, sidebar, 3.0);
     let right = drag(&mut b, panel, 3.0);
-    eprintln!("левая панель: сцена {:?}, растр {:?}; правая панель: сцена {:?}, растр {:?}", left.0, left.1, right.0, right.1);
+    eprintln!("left panel: scene {:?}, raster {:?}; right panel: scene {:?}, raster {:?}", left.0, left.1, right.0, right.1);
     if let Ok(out) = std::env::var("AQ_TRACE") {
         aq_trace::write(std::path::Path::new(&out)).unwrap();
     }

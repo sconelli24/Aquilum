@@ -9,7 +9,7 @@ use crate::render::paint::convert;
 
 impl Tracker {
     pub(super) fn top(&self) -> Level {
-        *self.stack.last().expect("корень стека")
+        *self.stack.last().expect("stack root")
     }
 
     pub(super) fn lift(&self, region: Option<usize>) -> f64 {
@@ -41,7 +41,7 @@ impl Tracker {
 
     pub(super) fn pop(&mut self) {
         if self.stack.len() > 1 {
-            let level = self.stack.pop().expect("уровень стека");
+            let level = self.stack.pop().expect("stack level");
             if let Some(region) = level.region
                 && self.top().region != Some(region)
             {

@@ -178,7 +178,7 @@ pub fn groups() -> Vec<(&'static str, Vec<(&'static str, String)>)> {
         if groups.last().is_none_or(|(last, _)| *last != title) {
             groups.push((title, Vec::new()));
         }
-        groups.last_mut().expect("группа").1.push((binding.label, chords.join(" / ")));
+        groups.last_mut().expect("group").1.push((binding.label, chords.join(" / ")));
     }
     groups
 }

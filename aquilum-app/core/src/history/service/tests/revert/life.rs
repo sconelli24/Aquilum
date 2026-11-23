@@ -19,7 +19,7 @@ fn a_revert_after_renaming_the_note_uses_the_moved_history() {
     story.history.moved(&|| story.fixture.roots(), &story.note, &renamed);
     story.note = renamed;
     story.revert_nth(1);
-    assert_eq!(story.text(), "РАЗ\nдва\n", "история едет с заметкой, и отмена работает по новому пути");
+    assert_eq!(story.text(), "РАЗ\nдва\n", "the history moves with the note, and the revert works at the new path");
 }
 
 #[test]
@@ -39,9 +39,9 @@ fn a_revert_works_after_retention_removed_the_base_of_a_version() {
     story.edit(&[("раз", "РАЗ")], Source::Agent);
     story.history.name(&|| story.fixture.roots(), &story.note, Some(&first), "веха");
     remove_expired(&story.fixture.vault, 30);
-    assert_eq!(story.versions().len(), 3, "безымянная старая версия удалена, названная осталась");
+    assert_eq!(story.versions().len(), 3, "the unnamed old version is deleted, the named one stays");
     story.revert_nth(1);
-    assert_eq!(story.text(), "РАЗ\nдва\nтри\nчетыре\n", "версия, переписанная без базы, отменяется против оставшейся предыдущей");
+    assert_eq!(story.text(), "РАЗ\nдва\nтри\nчетыре\n", "a version rewritten without a base is reverted against the remaining previous one");
 }
 
 #[test]
@@ -53,7 +53,7 @@ fn a_full_legacy_version_between_deltas_is_reverted() {
     fs::write(&story.note, "раз\nДВА\nтри\n").unwrap();
     story.edit(&[("три", "три!")], Source::Agent);
     story.revert_nth(1);
-    assert_eq!(story.text(), "раз\nдва\nтри!\n", "полная версия посреди правок отменяется, и следующая за ней правка остаётся");
+    assert_eq!(story.text(), "раз\nдва\nтри!\n", "a full version amid edits is reverted, and the edit following it stays");
 }
 
 #[test]
@@ -63,7 +63,7 @@ fn an_emptied_note_gets_its_text_back() {
     story.agent("");
     story.agent("новое начало\n");
     story.revert_nth(1);
-    assert_eq!(story.text(), "весь текст\nзаметки\nновое начало\n", "очистка заметки отменяется, написанное после неё остаётся");
+    assert_eq!(story.text(), "весь текст\nзаметки\nновое начало\n", "clearing a note is reverted, what was written after it stays");
 }
 
 #[test]
@@ -75,7 +75,7 @@ fn a_note_deleted_outside_and_written_again_reverts_to_its_old_text() {
     story.agent("совсем новый\n");
     let last = story.versions().len() - 1;
     story.revert_nth(last);
-    assert_eq!(story.text(), "старый текст\nи правка\n", "отмена записи поверх удалённой заметки возвращает её прежний текст");
+    assert_eq!(story.text(), "старый текст\nи правка\n", "reverting a write over a deleted note returns its previous text");
 }
 
 #[test]
@@ -85,7 +85,7 @@ fn an_edit_on_disk_missing_from_history_survives_the_revert() {
     story.edit(&[("два", "ДВА")], Source::Agent);
     fs::write(&story.note, "раз\nДВА\nтри\nдописано снаружи\n").unwrap();
     story.revert_nth(1);
-    assert_eq!(story.text(), "раз\nдва\nтри\nдописано снаружи\n", "текст на диске, ещё не попавший в историю, сохраняется");
+    assert_eq!(story.text(), "раз\nдва\nтри\nдописано снаружи\n", "text on disk that has not reached the history yet is preserved");
 }
 
 #[test]
@@ -96,9 +96,9 @@ fn a_huge_note_reverts_by_regions_and_records_a_small_version() {
     story.edit(&[("строка текста 0\n", "Начало\nстрока текста 0\n"), ("строка текста 119999\n", "строка текста 119999\nКонец\n")], Source::Agent);
     story.edit(&[("строка текста 60000\n", "строка текста 60000 правка\n")], Source::Agent);
     story.revert_nth(1);
-    assert_eq!(story.text(), body.replace("строка текста 60000\n", "строка текста 60000 правка\n"), "правки на концах огромной заметки отменены, правка в середине осталась");
+    assert_eq!(story.text(), body.replace("строка текста 60000\n", "строка текста 60000 правка\n"), "edits at the ends of a huge note are reverted, the edit in the middle stayed");
     let dir = story.fixture.history_of("Огромная.md");
     let revert = story.versions().pop().unwrap();
     let size = fs::metadata(dir.join(&revert.id)).unwrap().len();
-    assert!(size < 4096, "отмена на концах огромной заметки записала версию {size} байт, а не копию заметки");
+    assert!(size < 4096, "reverting at the ends of a huge note wrote a {size}-byte version, not a copy of the note");
 }

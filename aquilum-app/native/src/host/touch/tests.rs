@@ -32,7 +32,7 @@ fn flick(touch: &mut Touch, start: Instant, step: f64) -> Instant {
         touch.frame(start + FRAME * k);
     }
     let end = start + FRAME * 10;
-    assert_eq!(touch.up(1, Point::new(100.0, 100.0 + step * 10.0), end), None, "после прокрутки нет нажатия");
+    assert_eq!(touch.up(1, Point::new(100.0, 100.0 + step * 10.0), end), None, "no tap after scrolling");
     end
 }
 
@@ -53,8 +53,8 @@ fn quick_taps_in_one_place_count_up() {
     assert_eq!(tap(&mut touch, start, 100.0), Some(1));
     assert_eq!(tap(&mut touch, ms(start, 300), 140.0), Some(2));
     assert_eq!(tap(&mut touch, ms(start, 600), 100.0), Some(3));
-    assert_eq!(tap(&mut touch, ms(start, 1000), 100.0), Some(1), "пауза дольше 300 мс начинает счёт заново");
-    assert_eq!(tap(&mut touch, ms(start, 1200), 400.0), Some(1), "касание дальше 100 dp начинает счёт заново");
+    assert_eq!(tap(&mut touch, ms(start, 1000), 100.0), Some(1), "a pause longer than 300 ms restarts the count");
+    assert_eq!(tap(&mut touch, ms(start, 1200), 400.0), Some(1), "a touch farther than 100 dp restarts the count");
 }
 
 #[test]
@@ -63,18 +63,18 @@ fn a_drag_past_the_slop_scrolls_with_the_finger_without_a_jump() {
     let mut touch = Touch::default();
     touch.down(1, Point::new(100.0, 100.0), start, DP);
     touch.moved(1, Point::new(100.0, 110.0), ms(start, 8));
-    assert_eq!(scrolled(&mut touch, ms(start, 8)), Vec2::ZERO, "в пределах 8 dp это ещё нажатие");
+    assert_eq!(scrolled(&mut touch, ms(start, 8)), Vec2::ZERO, "within 8 dp it is still a tap");
     touch.moved(1, Point::new(100.0, 130.0), ms(start, 16));
     let frame = touch.frame(ms(start, 16));
-    let (anchor, delta) = frame.scroll.expect("прокрутка");
-    assert_eq!(anchor, Point::new(100.0, 100.0), "прокрутка идёт в точке касания");
-    assert!(near(delta, Vec2::new(0.0, 14.0)), "первый шаг {delta:?} вместо 30 - 16");
+    let (anchor, delta) = frame.scroll.expect("scroll");
+    assert_eq!(anchor, Point::new(100.0, 100.0), "scrolling happens at the touch point");
+    assert!(near(delta, Vec2::new(0.0, 14.0)), "first step {delta:?} instead of 30 - 16");
     touch.moved(1, Point::new(100.0, 150.0), ms(start, 24));
     assert!(near(scrolled(&mut touch, ms(start, 24)), Vec2::new(0.0, 20.0)));
-    assert_eq!(touch.deadline(), None, "прокрутка отменяет долгое нажатие");
-    assert_eq!(touch.settle(ms(start, 100)), None, "палец ушёл в прокрутку раньше, чем устоялся, — границу под ним не хватаем");
+    assert_eq!(touch.deadline(), None, "scrolling cancels the long press");
+    assert_eq!(touch.settle(ms(start, 100)), None, "the finger started scrolling before settling - the edge under it is not grabbed");
     assert_eq!(touch.up(1, Point::new(100.0, 150.0), ms(start, 100)), None);
-    assert_eq!(scrolled(&mut touch, ms(start, 108)), Vec2::ZERO, "палец стоял перед отрывом — инерции нет");
+    assert_eq!(scrolled(&mut touch, ms(start, 108)), Vec2::ZERO, "the finger rested before lift-off - no inertia");
     assert!(!touch.active());
 }
 
@@ -86,14 +86,14 @@ fn holding_still_opens_the_context_menu_once_and_does_not_click() {
     assert_eq!(touch.deadline(), Some(start + TAP_TIMEOUT));
     assert_eq!(touch.settle(ms(start, 99)), None);
     assert_eq!(touch.settle(ms(start, 100)), Some(Point::new(50.0, 60.0)));
-    assert_eq!(touch.settle(ms(start, 150)), None, "палец устаивается один раз");
+    assert_eq!(touch.settle(ms(start, 150)), None, "the finger settles once");
     assert_eq!(touch.deadline(), Some(start + LONG_PRESS));
     touch.moved(1, Point::new(53.0, 62.0), ms(start, 200));
     assert_eq!(touch.long_press(ms(start, 399)), None);
     assert_eq!(touch.long_press(ms(start, 400)), Some(Point::new(50.0, 60.0)));
     assert_eq!(touch.long_press(ms(start, 500)), None);
     touch.moved(1, Point::new(100.0, 160.0), ms(start, 600));
-    assert_eq!(scrolled(&mut touch, ms(start, 600)), Vec2::ZERO, "после долгого нажатия палец не прокручивает");
+    assert_eq!(scrolled(&mut touch, ms(start, 600)), Vec2::ZERO, "after a long press the finger does not scroll");
     assert_eq!(touch.up(1, Point::new(100.0, 160.0), ms(start, 700)), None);
 }
 
@@ -105,16 +105,16 @@ fn a_second_finger_cancels_the_tap_and_pinches_after_the_span_slop() {
     touch.down(2, Point::new(200.0, 0.0), ms(start, 10), 1.0);
     assert_eq!(touch.deadline(), None);
     touch.moved(2, Point::new(210.0, 0.0), ms(start, 20));
-    assert!(touch.frame(ms(start, 20)).pinch.is_none(), "разлёт в пределах 16 dp ещё не щипок");
+    assert!(touch.frame(ms(start, 20)).pinch.is_none(), "a spread within 16 dp is not a pinch yet");
     touch.moved(2, Point::new(240.0, 0.0), ms(start, 30));
     touch.moved(2, Point::new(300.0, 0.0), ms(start, 40));
     let frame = touch.frame(ms(start, 40));
-    let (focus, delta) = frame.pinch.expect("щипок");
-    assert!((delta - 0.25).abs() < 1e-9, "масштаб {delta} вместо 300/240 - 1");
+    let (focus, delta) = frame.pinch.expect("pinch");
+    assert!((delta - 0.25).abs() < 1e-9, "scale {delta} instead of 300/240 - 1");
     assert_eq!(focus, Point::new(150.0, 0.0));
-    assert!(near(frame.scroll.expect("сдвиг центра").1, Vec2::new(45.0, 0.0)));
+    assert!(near(frame.scroll.expect("center shift").1, Vec2::new(45.0, 0.0)));
     assert_eq!(touch.up(2, Point::new(300.0, 0.0), ms(start, 50)), None);
-    assert_eq!(touch.up(1, Point::new(0.0, 0.0), ms(start, 60)), None, "два пальца — не нажатие");
+    assert_eq!(touch.up(1, Point::new(0.0, 0.0), ms(start, 60)), None, "two fingers are not a tap");
 }
 
 #[test]
@@ -123,9 +123,9 @@ fn a_flick_keeps_scrolling_at_the_speed_of_the_finger_and_stops() {
     let mut touch = Touch::default();
     let end = flick(&mut touch, start, 10.0);
     let steps: Vec<f64> = (1..400).map(|k| scrolled(&mut touch, end + FRAME * k).y).take_while(|&y| y > 0.0).collect();
-    assert!((steps[0] / 10.0 - 1.0).abs() < 0.05, "первый шаг инерции {} вместо 10", steps[0]);
-    assert!(steps.windows(2).all(|w| w[1] <= w[0]), "инерция не замедляется плавно: {steps:?}");
-    assert!(!touch.active(), "инерция не закончилась");
+    assert!((steps[0] / 10.0 - 1.0).abs() < 0.05, "first inertia step {} instead of 10", steps[0]);
+    assert!(steps.windows(2).all(|w| w[1] <= w[0]), "inertia does not slow down smoothly: {steps:?}");
+    assert!(!touch.active(), "inertia did not end");
 }
 
 #[test]
@@ -233,7 +233,7 @@ fn a_held_finger_drags_instead_of_scrolling() {
     assert_eq!(touch.settle(ms(start, 100)), Some(Point::new(100.0, 100.0)));
     touch.hold();
     touch.moved(1, Point::new(100.0, 300.0), ms(start, 50));
-    assert!(near(scrolled(&mut touch, ms(start, 58)), Vec2::ZERO), "удержание не прокручивает");
+    assert!(near(scrolled(&mut touch, ms(start, 58)), Vec2::ZERO), "holding does not scroll");
     assert_eq!(touch.up(1, Point::new(100.0, 300.0), ms(start, 80)), None);
-    assert!(!touch.held(), "отрыв снимает удержание");
+    assert!(!touch.held(), "lift-off releases the hold");
 }

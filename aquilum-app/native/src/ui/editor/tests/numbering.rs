@@ -38,7 +38,7 @@ fn removing_the_space_after_a_number_and_typing_it_back_keeps_the_number() {
     named(&mut root, NamedKey::Backspace);
     assert_eq!(text(&root), "7. a\n8. b\n9. c\n10. d\n11.");
     named(&mut root, NamedKey::Enter);
-    assert_eq!(text(&root), "7. a\n8. b\n9. c\n10. d\n11.\n", "строка без пробела — уже не пункт");
+    assert_eq!(text(&root), "7. a\n8. b\n9. c\n10. d\n11.\n", "a line without a space is no longer an item");
     named(&mut root, NamedKey::Backspace);
     typing(&mut root, " x");
     assert_eq!(text(&root), "7. a\n8. b\n9. c\n10. d\n11. x");

@@ -43,7 +43,7 @@ pub fn palette(tm: &Theme, text: Color) -> Vec<Brush> {
     let code = [tm.editor_code_keyword, tm.editor_code_string, tm.editor_code_number, tm.editor_code_comment, tm.editor_code_function, tm.editor_code_type, tm.editor_code_property];
     let extra = [tm.text_secondary, tm.text_danger, tm.text_on_accent, tm.text_muted, tm.text_success, tm.text_link.multiply_alpha(0.6), tm.text_warning, tm.text_info];
     let tags = palette::NAMES[..palette::TAG_COLORS].iter().filter_map(|name| palette::color(name, tm)).map(|color| blend(color, text, 0.3));
-    // Цвет темы, совпадающий с её текстом, — цвет текста этого поля.
+    // A theme color matching its text is this field's text color.
     let own = |color: Color| if color == tm.editor_text { text } else { color };
     let headings = [tm.editor_heading_1_color, tm.editor_heading_2_color, tm.editor_heading_3_color, tm.editor_heading_4_color, tm.editor_heading_5_color, tm.editor_heading_6_color];
     let emphasis = [tm.editor_strong_color, tm.editor_em_color];

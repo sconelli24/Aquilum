@@ -48,7 +48,7 @@ fn vaults() -> Vaults {
             }
             done
         });
-        assert!(indexed, "база {workspace} не проиндексировалась за минуту");
+        assert!(indexed, "workspace {workspace} was not indexed within a minute");
     }
     Vaults { core, from, to, _directory: directory }
 }
@@ -74,10 +74,10 @@ fn a_batch_moves_its_own_files_copies_shared_ones_and_reports_only_outside_links
     assert_eq!(moved["brokenLinks"], json!(["Общая.md"]));
     assert_eq!(moved["files"], json!({ "moved": ["Files/кадр.png"], "copied": ["Files/схема.png"] }));
     for path in ["Созвон.md", "Ретро.md", "Files/кадр.png", "Files/схема.png"] {
-        assert!(vaults.to.join(path).is_file(), "{path} не в новой базе");
+        assert!(vaults.to.join(path).is_file(), "{path} is not in the new workspace");
     }
     assert!(!vaults.from.join("Созвон.md").exists() && !vaults.from.join("Files/кадр.png").exists());
-    assert!(vaults.from.join("Files/схема.png").is_file(), "общая картинка осталась у второй заметки");
+    assert!(vaults.from.join("Files/схема.png").is_file(), "the shared image stayed with the second note");
 }
 
 #[test]

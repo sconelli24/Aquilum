@@ -45,10 +45,10 @@ fn every_free_spot_of_the_header_drags_the_window() {
             }
         }
     }
-    assert!(dead.is_empty(), "шапка в этих точках и не тащит окно, и не отдаёт нажатие элементу: {dead:?}");
+    assert!(dead.is_empty(), "header at these points neither drags the window nor passes the press to an element: {dead:?}");
     let mut boxes = Vec::new();
     tabs(h.root.get_layer_root(0), &mut boxes);
     boxes.sort_by(|a, b| a.x0.total_cmp(&b.x0));
     let gap = (boxes[0].x1 + boxes[1].x0) / 2.0;
-    assert_eq!(press(&mut h, gap, size::TABS_HEIGHT / 2.0), (true, false), "между вкладками окно не тащится");
+    assert_eq!(press(&mut h, gap, size::TABS_HEIGHT / 2.0), (true, false), "window is not draggable between tabs");
 }

@@ -96,7 +96,7 @@ mod tests {
             }
             std::thread::sleep(std::time::Duration::from_millis(20));
         }
-        let book = book.expect("книга не загрузилась");
+        let book = book.expect("book failed to load");
         assert!(book.linked);
         assert_eq!(book.author, "Автор");
         assert_eq!(book.pages, Some((3, 10)));

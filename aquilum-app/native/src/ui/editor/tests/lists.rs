@@ -10,14 +10,14 @@ fn list_lines_inside_code_blocks_stay_plain_text() {
     named(&mut root, NamedKey::ArrowDown);
     named(&mut root, NamedKey::End);
     named(&mut root, NamedKey::Enter);
-    assert_eq!(text(&root), "```\n- один\n\n```", "Enter внутри блока кода не продолжает список");
+    assert_eq!(text(&root), "```\n- один\n\n```", "Enter inside a code block does not continue the list");
     let mut root = markdown_root("```\n1. а\n3. б\n```");
     click(&mut root, 100.0, 10.0);
     named(&mut root, NamedKey::ArrowDown);
     named(&mut root, NamedKey::ArrowDown);
     named(&mut root, NamedKey::End);
     typing(&mut root, "x");
-    assert_eq!(text(&root), "```\n1. а\n3. бx\n```", "номера в блоке кода не пересчитываются");
+    assert_eq!(text(&root), "```\n1. а\n3. бx\n```", "numbers in a code block are not renumbered");
 }
 
 #[test]

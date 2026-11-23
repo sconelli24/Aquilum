@@ -84,5 +84,5 @@ pub fn run(args: Args, mut event_loop: EventLoop) -> Result<(), String> {
     {
         host.probe = host.args.memory_probe.clone().map(|out| crate::memory_probe::Probe::new(out, host.args.probe_notes.clone()));
     }
-    event_loop.run_app_on_demand(host).map_err(|e| format!("цикл событий завершился с ошибкой: {e}"))
+    event_loop.run_app_on_demand(host).map_err(|e| format!("event loop exited with an error: {e}"))
 }

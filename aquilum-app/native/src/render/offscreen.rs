@@ -1,4 +1,4 @@
-//! Отрисовка элементов интерфейса во внеэкранные растровые кисти peniko.
+//! Rendering interface elements into offscreen raster peniko brushes.
 
 use vello_cpu::{Pixmap, RasterizerSettings};
 

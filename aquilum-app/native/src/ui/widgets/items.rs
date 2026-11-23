@@ -17,8 +17,8 @@ use crate::ui::{text, theme};
 
 use super::{Press, Pressed};
 
-/// Иконка без действия: квадрат `container`, внутри иконка `size` с обводкой `stroke` в
-/// пикселях (как `vector-effect: non-scaling-stroke`).
+/// Icon without an action: a `container` square holding an icon of `size` with a `stroke` outline in
+/// pixels (like `vector-effect: non-scaling-stroke`).
 pub struct IconView {
     icon: Icon,
     container: f64,
@@ -77,7 +77,7 @@ impl Widget for IconView {
 
     fn paint(&mut self, ctx: &mut PaintCtx<'_>, _props: &PropertiesRef<'_>, painter: &mut Painter<'_>) {
         let origin = ctx.content_box().center() - masonry::kurbo::Vec2::new(self.size / 2.0, self.size / 2.0);
-        // Обводка задана в пикселях, а `draw` ждёт единицы сетки 24×24.
+        // The stroke is given in pixels, but `draw` expects 24x24 grid units.
         let stroke = self.stroke * 24.0 / self.size;
         self.icon.turned(self.turn()).draw(painter, origin, self.size, stroke, (self.color)());
     }

@@ -47,10 +47,10 @@ fn missing(arguments: &Value, key: &str) -> String {
         .map(|fields| fields.keys().cloned().collect::<Vec<_>>())
         .unwrap_or_default();
     if given.is_empty() {
-        return format!("Не заполнен аргумент «{key}»: аргументов не передано вовсе");
+        return format!("Argument “{key}” is missing: no arguments were passed at all");
     }
     format!(
-        "Не заполнен аргумент «{key}»; переданы: {}",
+        "Argument “{key}” is missing; received: {}",
         given.join(", ")
     )
 }
@@ -67,9 +67,9 @@ pub fn optional_names(
     }
     let list = value
         .as_array()
-        .ok_or_else(|| format!("Аргумент «{key}» должен быть списком строк"))?;
+        .ok_or_else(|| format!("Argument “{key}” must be a list of strings"))?;
     if list.is_empty() {
-        return Err(format!("Список «{key}» пуст"));
+        return Err(format!("List “{key}” is empty"));
     }
     list.iter()
         .map(|item| {
@@ -77,7 +77,7 @@ pub fn optional_names(
                 .map(str::trim)
                 .filter(|value| !value.is_empty())
                 .map(str::to_owned)
-                .ok_or_else(|| format!("Аргумент «{key}»: строки списка не могут быть пустыми"))
+                .ok_or_else(|| format!("Argument “{key}”: list strings must not be empty"))
         })
         .collect::<Result<Vec<_>, _>>()
         .map(Some)
@@ -113,7 +113,7 @@ pub fn text_window(pages: &mut Pages<'_>, section: Range<usize>, arguments: &Val
     let (body, chars) = read_chars(pages, from..from.saturating_add(size).min(section.end)).map_err(|error| error.to_string())?;
     let total = section.end.min(chars).saturating_sub(section.start);
     if offset > total {
-        return Err(format!("Смещение {offset} за концом текста: всего символов {total}"));
+        return Err(format!("Offset {offset} is past the end of the text: {total} characters in total"));
     }
     let end = offset + size.min(total - offset);
     Ok(json!({ "content": body, "totalChars": total, "truncated": end < total, "nextOffset": (end < total).then_some(end) }))

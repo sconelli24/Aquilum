@@ -41,12 +41,12 @@ fn million_notes_frame() {
     for count in [10_000usize, 1_000_000] {
         let started = Instant::now();
         let graph = Arc::new(synthetic(count));
-        eprintln!("{count}: граф собран за {:?}", started.elapsed());
+        eprintln!("{count}: graph built in {:?}", started.elapsed());
         let mut view = GraphView::build(Some(graph), Status::Ready, Display::default(), None, None);
         view.size = Size::new(1400.0, 900.0);
         view.scale_factor = 1.5;
         view.camera.jump_to(view.bounds(), view.size.width, view.size.height);
-        for (name, zoom) in [("целиком", 1.0), ("ближе", 40.0)] {
+        for (name, zoom) in [("whole", 1.0), ("closer", 40.0)] {
             view.camera.move_to(view.camera.center_x, view.camera.center_y, view.camera.scale * zoom);
             let started = Instant::now();
             let frames = 5;
@@ -55,10 +55,10 @@ fn million_notes_frame() {
                 view.step(1.0 / 60.0);
                 assert!(view.scene().is_some());
             }
-            eprintln!("{count} {name}: кадр {:?}", started.elapsed() / frames);
+            eprintln!("{count} {name}: frame {:?}", started.elapsed() / frames);
             let started = Instant::now();
             let hit = view.node_at(Point::new(700.0, 450.0));
-            eprintln!("{count} {name}: поиск узла {:?} -> {hit:?}", started.elapsed());
+            eprintln!("{count} {name}: node lookup {:?} -> {hit:?}", started.elapsed());
         }
     }
     if let Ok(out) = std::env::var("AQ_TRACE") {

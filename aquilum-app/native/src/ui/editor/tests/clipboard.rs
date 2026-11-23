@@ -93,7 +93,7 @@ fn pasted_url_becomes_titled_link() {
     named(&mut root, NamedKey::End);
     paste(&mut root, " https://x.org/a ");
     let pasted = text(&root);
-    let placeholder = pasted.split('[').nth(2).and_then(|s| s.split(']').next()).expect("заглушка").to_owned();
+    let placeholder = pasted.split('[').nth(2).and_then(|s| s.split(']').next()).expect("placeholder").to_owned();
     assert!(placeholder.starts_with("Fetching Title#"));
     let id = editor_id(&root);
     root.edit_widget(id, |mut w| TextEditor::resolve_link_title(&mut w.downcast(), &placeholder, "X*Y"));

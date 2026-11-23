@@ -88,7 +88,7 @@ fn benchmark_save_breakdown() {
         write_note(&bench.vault, 7, 60 + round);
         let transaction = connection.transaction().unwrap();
         let started = Instant::now();
-        let probe = crate::search::index_document::probe_one(&transaction, &saved, &saved.metadata().unwrap()).unwrap().expect("заметка изменилась");
+        let probe = crate::search::index_document::probe_one(&transaction, &saved, &saved.metadata().unwrap()).unwrap().expect("note changed");
         crate::search::index_document::apply(&bench.vault, &bench.search_index, &writer, &transaction, &saved, probe).unwrap();
         steps[0].push(started.elapsed());
         let started = Instant::now();

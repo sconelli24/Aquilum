@@ -79,7 +79,7 @@ mod tests {
         let mut left = std::fs::read_dir(&data).unwrap().map(|entry| entry.unwrap().file_name().to_string_lossy().into_owned()).collect::<Vec<_>>();
         left.sort();
         assert_eq!(left, ["settings.json", "ui-state.sqlite3", "window-state.json"]);
-        assert!(!local.exists(), "профиль WebView2 и опустевшая папка удалены");
+        assert!(!local.exists(), "the WebView2 profile and the emptied folder were removed");
     }
 
     #[test]
@@ -95,7 +95,7 @@ mod tests {
 
         migrate_legacy_data(&target);
 
-        assert!(!target.join("search-v2").exists(), "поисковый кэш строится заново, его не копируют");
+        assert!(!target.join("search-v2").exists(), "the search cache is rebuilt, not copied");
         assert!(target.join("settings.json").exists());
         assert!(target.join("ui-state.sqlite3").exists());
         assert_eq!(

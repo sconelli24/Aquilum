@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2024"
 publish = false
 
-# Отдельный workspace: Masonry берётся из git и тянет свои версии Parley и vello.
+# Separate workspace: Masonry comes from git and pulls in its own versions of Parley and vello.
 [workspace]
 
 [dependencies]
-# Основная ветка xilem: бэкенд vello_cpu есть только там. Ревизия зафиксирована.
+# xilem main branch: the vello_cpu backend exists only there. Revision is pinned.
 masonry = { git = "https://github.com/linebender/xilem", rev = "271a27a6d4a930f7878d404f9014e3c50a3a9b88", default-features = false }
 masonry_imaging = { git = "https://github.com/linebender/xilem", rev = "271a27a6d4a930f7878d404f9014e3c50a3a9b88", default-features = false, features = ["imaging_vello_cpu"] }
 imaging_vello_cpu = "0.0.1"

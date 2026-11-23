@@ -29,7 +29,7 @@ fn ask(method: &JNIStr, argument: &str) -> Option<String> {
 }
 
 fn open(uri: &str, mode: &str) -> std::io::Result<File> {
-    let fd = java::ask_int(jni_str!("openDocument"), [uri, mode]).ok_or_else(|| std::io::Error::other("документ не открылся"))?;
+    let fd = java::ask_int(jni_str!("openDocument"), [uri, mode]).ok_or_else(|| std::io::Error::other(crate::i18n::t("native.android.documentNotOpened")))?;
     Ok(unsafe { File::from_raw_fd(fd) })
 }
 

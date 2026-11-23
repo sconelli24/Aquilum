@@ -15,7 +15,7 @@ fn scroll_damage_report() {
     };
     let ids = h.app.note_ids.as_ref().unwrap();
     let (viewport, column) = (rect_of(&h, ids.scroll.id(), spec.scale), rect_of(&h, ids.body.id(), spec.scale));
-    eprintln!("окно {}x{}@{}; область прокрутки {viewport:?}; колонка текста x {:.0}..{:.0}", spec.width, spec.height, spec.scale, column.x0, column.x1);
+    eprintln!("window {}x{}@{}; scroll area {viewport:?}; text column x {:.0}..{:.0}", spec.width, spec.height, spec.scale, column.x0, column.x1);
     let mut frames = Frames::new(&mut h, spec, std::env::var_os("AQ_CHECK").is_some());
     let screen = u64::from(frames.width) * u64::from(frames.height);
     let dy: f64 = std::env::var("AQ_DY").ok().and_then(|v| v.parse().ok()).unwrap_or(-25.0);
@@ -26,20 +26,20 @@ fn scroll_damage_report() {
         h.anim(std::time::Duration::from_millis(8));
         h.app.on_core_events(&mut h.root);
         let report = frames.draw(&mut h);
-        assert_eq!(report.differ, 0, "шаг {step}: прокрутка расходится с полной отрисовкой");
+        assert_eq!(report.differ, 0, "step {step}: scroll differs from the full render");
         let ids = h.app.note_ids.as_ref().unwrap();
         let column = rect_of(&h, ids.body.id(), spec.scale);
         let edges = (column.x0.round(), column.x1.round(), column.height().round());
         let big = report.raster * 4 > screen;
         if big || last.is_some_and(|l: (f64, f64, f64)| (l.0, l.1) != (edges.0, edges.1)) {
             wide += usize::from(big);
-            report.print(&format!("шаг {step}: колонка x {:.0}..{:.0} высота {:.0}, расхождений {}", edges.0, edges.1, edges.2, report.differ));
+            report.print(&format!("step {step}: column x {:.0}..{:.0} height {:.0}, differences {}", edges.0, edges.1, edges.2, report.differ));
         }
         last = Some(edges);
         reports.push(report);
     }
-    eprintln!("кадров с растром больше четверти экрана: {wide} из 200");
-    summary("прокрутка", &reports);
+    eprintln!("frames with raster over a quarter of the screen: {wide} of 200");
+    summary("scroll", &reports);
 }
 
 #[test]
@@ -48,17 +48,17 @@ fn caret_damage_report() {
     let spec = size();
     let mut h = setup(spec, &format!("Строка с **жирным** и `кодом`.\n\n{}", plain_body(40)));
     let mut frames = Frames::new(&mut h, spec, false);
-    for (label, paragraph) in [("каретка: первый щелчок в обычную строку", 3), ("каретка: другая обычная строка", 5), ("каретка: строка с разметкой", 0), ("каретка: обратно в обычную", 4)] {
+    for (label, paragraph) in [("caret: first click in a plain line", 3), ("caret: another plain line", 5), ("caret: line with markup", 0), ("caret: back to a plain one", 4)] {
         let point = line_point(&h, paragraph, spec.scale);
         click_at(&mut h, point, spec.scale);
         frames.draw(&mut h).print(label);
     }
     for i in 0..2 {
         h.key(Key::Named(NamedKey::ArrowDown), Modifiers::empty());
-        frames.draw(&mut h).print(&format!("каретка: стрелка вниз {i}"));
+        frames.draw(&mut h).print(&format!("caret: arrow down {i}"));
     }
     h.key(Key::Named(NamedKey::ArrowRight), Modifiers::empty());
-    frames.draw(&mut h).print("каретка: стрелка вправо");
+    frames.draw(&mut h).print("caret: arrow right");
 }
 
 #[test]
@@ -68,11 +68,11 @@ fn table_damage_report() {
     let mut h = setup(spec, &table_body(6));
     let mut frames = Frames::new(&mut h, spec, false);
     let (reports, border) = drag_border(&mut h, &mut frames, 8);
-    eprintln!("граница строки таблицы на y = {border:.0}");
+    eprintln!("table row border at y = {border:.0}");
     for (i, r) in reports.iter().enumerate().take(3) {
-        r.print(&format!("таблица {i}"));
+        r.print(&format!("table {i}"));
     }
-    summary("таблица", &reports);
+    summary("table", &reports);
 }
 
 #[test]
@@ -91,7 +91,7 @@ fn full_frame_report() {
         })
         .collect();
     times.sort_by(f64::total_cmp);
-    eprintln!("полный кадр {}x{}@{}: медиана {:.2} мс, лучший {:.2} мс", spec.width, spec.height, spec.scale, times[6], times[0]);
+    eprintln!("full frame {}x{}@{}: median {:.2} ms, best {:.2} ms", spec.width, spec.height, spec.scale, times[6], times[0]);
 }
 
 #[test]
@@ -102,7 +102,7 @@ fn caret_note_report() {
     let mut h = setup(spec, &std::fs::read_to_string(source).unwrap());
     let ids = h.app.note_ids.as_ref().unwrap();
     let body = rect_of(&h, ids.body.id(), spec.scale);
-    eprintln!("колонка текста {body:?}");
+    eprintln!("text column {body:?}");
     let mut frames = Frames::new(&mut h, spec, true);
     let dx: f64 = std::env::var("AQ_X").ok().and_then(|v| v.parse().ok()).unwrap_or(300.0);
     for step in 0..12 {
@@ -112,6 +112,6 @@ fn caret_note_report() {
         }
         click_at(&mut h, (x, y), spec.scale);
         let report = frames.draw(&mut h);
-        report.print(&format!("щелчок {step} в ({x:.0}, {y:.0}), расхождений {}", report.differ));
+        report.print(&format!("click {step} at ({x:.0}, {y:.0}), differences {}", report.differ));
     }
 }

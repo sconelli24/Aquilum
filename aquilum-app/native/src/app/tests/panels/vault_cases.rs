@@ -24,10 +24,10 @@ fn scrolling_keeps_the_renaming_and_a_click_commits_it() {
     h.type_text("Третья");
     let layer = state(&h).dialog.layer;
     h.act(layer, Scrolled(10.0));
-    assert_eq!(rename_field(&h), Some(field), "прокрутка подтвердила имя");
+    assert_eq!(rename_field(&h), Some(field), "scrolling confirmed the name");
 
     h.act(layer, DialogAnswer::Cancel);
-    assert!(matches!(h.app.popup, Some(Popup::Workspaces(_))), "клик мимо поля должен только подтвердить имя");
+    assert!(matches!(h.app.popup, Some(Popup::Workspaces(_))), "a click outside the field must only confirm the name");
     assert!(rename_field(&h).is_none());
     assert_eq!(names(places.path()), ["Первая", "Третья"]);
 }
@@ -52,8 +52,8 @@ fn a_vault_made_in_the_background_does_not_close_other_windows() {
     let made = crate::file_ops::create_folder(places.path(), "База знаний", 1).unwrap();
     h.app.picked_tx.send(Picked::NewVault(Ok(made.clone()))).unwrap();
     h.step();
-    assert!(matches!(h.app.popup, Some(Popup::Settings { .. })), "настройки закрылись");
-    assert!(h.app.workspace.core.ui_state.workspace(&made).is_some(), "новая база не запомнена");
+    assert!(matches!(h.app.popup, Some(Popup::Settings { .. })), "settings closed");
+    assert!(h.app.workspace.core.ui_state.workspace(&made).is_some(), "new vault not remembered");
 }
 
 #[test]

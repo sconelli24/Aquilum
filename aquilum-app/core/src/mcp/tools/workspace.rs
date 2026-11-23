@@ -17,31 +17,31 @@ pub fn definitions() -> Vec<Value> {
     vec![
         tool(
             "get_workspace",
-            "Текущая база знаний: путь, название, открытая сейчас заметка (activeNote) и готовность индекса.",
+            "Current workspace: path, name, the note currently open (activeNote) and index readiness.",
             json!({}),
             &[],
         ),
         tool(
             "list_workspaces",
-            "Все базы знаний, которые открывались в приложении. address — кратчайший однозначный хвост пути: его и передавайте другим инструментам аргументом workspace.",
+            "All workspaces that have been opened in the app. address is the shortest unambiguous path tail: pass it to other tools as the workspace argument.",
             json!({}),
             &[],
         ),
         tool(
             "switch_workspace",
-            "Переключить видимую базу знаний в окне интерфейса пользователя. ВНИМАНИЕ: это визуальное переключение окна приложения! Вызывать ТОЛЬКО если пользователь прямо попросил переключить базу на экране. Для чтения, поиска, создания и редактирования заметок в другой базе знаний НЕ вызывайте switch_workspace — передавайте аргумент workspace в нужный инструмент (read_note, update_note, search_notes и др.), они работают в фоне без переключения экрана пользователя.",
+            "Switch the visible workspace in the user's interface window. WARNING: this is a visual switch of the app window! Call ONLY if the user directly asked to switch the workspace on screen. For reading, searching, creating and editing notes in another workspace do NOT call switch_workspace; pass the workspace argument to the needed tool (read_note, update_note, search_notes, etc.), which work in the background without switching the user's screen.",
             json!({
-                "path": { "type": "string", "description": "Путь к папке базы знаний или её address из list_workspaces" },
-                "workspace": { "type": "string", "description": "Синоним path: путь к папке базы знаний или её address из list_workspaces" },
-                "note": { "type": "string", "description": "Заметка, которую открыть после переключения" },
+                "path": { "type": "string", "description": "Path to the workspace folder or its address from list_workspaces" },
+                "workspace": { "type": "string", "description": "Synonym of path: path to the workspace folder or its address from list_workspaces" },
+                "note": { "type": "string", "description": "Note to open after switching" },
             }),
             &[],
         ),
         tool(
             "open_note",
-            "Открыть заметку в интерфейсе приложения и сделать её активной вкладкой. ВНИМАНИЕ: это визуальное переключение экрана пользователя! Вызывать ТОЛЬКО по прямой просьбе пользователя открыть заметку на экране. Заметка из другой базы (workspace) переключит приложение на эту базу.",
+            "Open a note in the app interface and make it the active tab. WARNING: this is a visual switch of the user's screen! Call ONLY at the user's direct request to open the note on screen. A note from another workspace (workspace) will switch the app to that workspace.",
             json!({
-                "note": { "type": "string", "description": "Путь или название заметки" },
+                "note": { "type": "string", "description": "Note path or title" },
                 "workspace": workspace_property(),
             }),
             &["note"],
@@ -111,7 +111,7 @@ fn switch_workspace(core: &Core, arguments: &Value) -> Result<Value, String> {
     let input = optional_text(arguments, "path")
         .or_else(|| optional_text(arguments, "workspace"))
         .or_else(|| optional_text(arguments, "address"))
-        .ok_or_else(|| "Не указана база знаний (параметр «path» или «workspace»)".to_string())?;
+        .ok_or_else(|| "No workspace specified (parameter “path” or “workspace”)".to_string())?;
     let path = known_workspace(core, &input)?;
     switch_to(core, &path, optional_text(arguments, "note").as_deref())
 }
@@ -137,7 +137,7 @@ fn switch_to(core: &Core, path: &Path, note: Option<&str>) -> Result<Value, Stri
             .is_some_and(|active| same_path(&active, &root))
     });
     if !switched {
-        return Err("Приложение не успело переключиться на эту базу знаний".to_owned());
+        return Err("The app did not manage to switch to this workspace".to_owned());
     }
 
     let vault = Vault::active(core)?;

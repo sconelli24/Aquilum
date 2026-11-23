@@ -4,7 +4,7 @@ impl Harness {
     pub(super) fn type_search(&mut self, text: &str) {
         let field = match &self.app.popup {
             Some(Popup::Search(state)) => state.field_id(),
-            _ => panic!("поиск не открыт"),
+            _ => panic!("search not open"),
         };
         self.send(field, crate::ui::editor::TextAction::Changed(text.into()));
     }
@@ -27,7 +27,7 @@ impl Harness {
             self.app.on_core_events(&mut self.root);
             count(self) >= at_least
         });
-        assert!(found, "поиск не дал результатов");
+        assert!(found, "search gave no results");
         count(self)
     }
 }
@@ -78,7 +78,7 @@ fn an_unsaved_edit_is_found_as_soon_as_the_search_opens() {
 
     h.app.open_search(&mut h.root);
     h.type_search("щукаплывёт");
-    assert_eq!(h.wait_results(1), 1, "правка ищется сразу, без ожидания автосохранения");
+    assert_eq!(h.wait_results(1), 1, "edit is searchable immediately, without waiting for autosave");
 }
 
 #[test]
@@ -89,7 +89,7 @@ fn a_word_still_being_composed_already_searches() {
     h.app.open_search(&mut h.root);
     let field = match &h.app.popup {
         Some(Popup::Search(state)) => state.field_id(),
-        _ => panic!("поиск не открыт"),
+        _ => panic!("search not open"),
     };
     h.root.focus_on(Some(field));
     h.root.handle_text_event(masonry::core::TextEvent::Ime(masonry::core::Ime::Preedit("кофе".into(), Some((8, 8)))));

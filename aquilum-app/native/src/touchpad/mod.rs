@@ -106,7 +106,7 @@ impl Touchpad {
     }
 
     pub fn update(&self, at: Instant, scale: f64) -> (f32, f32, f32) {
-        let _zone = aq_trace::zone("тачпад: обновление");
+        let _zone = aq_trace::zone("touchpad: update");
         let contact = {
             let gesture = self.gesture().borrow();
             gesture.running && !gesture.inertia && !gesture.pinching
@@ -136,8 +136,8 @@ impl Touchpad {
         };
         drop(gesture);
         if aq_trace::enabled() && (dx, dy) != (0.0, 0.0) {
-            aq_trace::counter("тачпад: сырые", f64::from(dy));
-            aq_trace::counter("тачпад: от такта, мс", at.elapsed().as_secs_f64() * 1000.0);
+            aq_trace::counter("touchpad: raw", f64::from(dy));
+            aq_trace::counter("touchpad: since tick, ms", at.elapsed().as_secs_f64() * 1000.0);
         }
         (dx, dy, pinch)
     }

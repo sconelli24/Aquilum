@@ -132,11 +132,11 @@ pub fn restore_from_trash_impl(
     let relative = Some(original_path(&trash, &trashed))
         .filter(|relative| trashed.starts_with(&trash) && !relative.as_os_str().is_empty())
         .ok_or_else(|| FileCommandError::Io {
-            message: format!("не в корзине: {}", trashed.display()),
+            message: format!("not in the trash: {}", trashed.display()),
         })?;
     if !trashed.exists() {
         return Err(FileCommandError::Io {
-            message: format!("в корзине нет {}", relative.display()),
+            message: format!("the trash has no {}", relative.display()),
         });
     }
     let restored = relocate(&trashed, &canonical_path(workspace).join(relative), Placement::Workspace)?;
@@ -245,7 +245,7 @@ mod tests {
         assert_eq!(cleanup_trash_impl(directory.path(), 30).unwrap(), 2);
         assert!(!trash.join("Старая.md").exists());
         assert!(trash.join("Свежая.md").exists());
-        assert!(!trash.join("Проекты").exists(), "опустевшая папка убрана");
+        assert!(!trash.join("Проекты").exists(), "emptied folder removed");
     }
 
     #[test]
@@ -301,7 +301,7 @@ mod tests {
         assert_eq!(
             moved,
             trash_path(directory.path()).join("Проекты").join("Идея.md"),
-            "по месту в корзине виден исходный путь"
+            "the original path is visible from the place in the trash"
         );
     }
 
@@ -322,7 +322,7 @@ mod tests {
             fs::read_to_string(moved.join("Глубже").join("Вторая.md")).unwrap(),
             "ещё"
         );
-        assert_eq!(trash_state_impl(directory.path()).unwrap().count, 2, "считаются и вложенные файлы");
+        assert_eq!(trash_state_impl(directory.path()).unwrap().count, 2, "nested files are counted too");
     }
 
     #[test]
@@ -336,7 +336,7 @@ mod tests {
         assert_eq!(
             cleanup_trash_impl(directory.path(), 30).unwrap(),
             0,
-            "срок считается от удаления, а не от последней правки файлов"
+            "the retention period counts from deletion, not from the last edit of the files"
         );
 
         for entry in WalkDir::new(&moved).into_iter().filter_map(Result::ok) {
@@ -345,8 +345,8 @@ mod tests {
             }
         }
         assert_eq!(cleanup_trash_impl(directory.path(), 30).unwrap(), 2);
-        assert!(!moved.exists(), "папка уходит целиком, вместе с вложенными");
-        assert!(trash_path(directory.path()).exists(), "сама корзина остаётся");
+        assert!(!moved.exists(), "the folder goes whole, together with nested items");
+        assert!(trash_path(directory.path()).exists(), "the trash itself stays");
     }
 
     #[test]
@@ -366,10 +366,10 @@ mod tests {
             .into_iter()
             .map(|item| item.original)
             .collect::<Vec<_>>();
-        assert_eq!(originals, ["Идея.md", "Идея.md"], "обе копии помнят один прежний путь");
+        assert_eq!(originals, ["Идея.md", "Идея.md"], "both copies remember the same former path");
 
         let restored = restore_from_trash_impl(directory.path(), &second).unwrap().root;
-        assert_eq!(restored.file_name().unwrap(), "Идея.md", "копия возвращается под своим именем");
+        assert_eq!(restored.file_name().unwrap(), "Идея.md", "the copy is restored under its own name");
         assert!(!trash_path(directory.path()).join(".1").exists());
     }
 
@@ -403,7 +403,7 @@ mod tests {
         let root = crate::search::paths::canonical_path(directory.path());
         assert_eq!(restored, root.join("Проекты").join("Идея.md"));
         assert_eq!(fs::read_to_string(&restored).unwrap(), "мусор");
-        assert!(!trash_path(directory.path()).join("Проекты").exists(), "опустевшая папка в корзине убрана");
+        assert!(!trash_path(directory.path()).join("Проекты").exists(), "emptied folder in the trash removed");
     }
 
     #[test]
@@ -502,7 +502,7 @@ mod tests {
                 (folder.join("А.md"), trash.join(".1").join("А.md")),
                 (folder.join("Б.md"), trash.join("Б.md")),
             ],
-            "совпавший путь уходит в различитель, и операция сама называет это место"
+            "a clashing path goes into the disambiguator, and the operation itself names that place"
         );
 
         let trashed = crate::search::paths::canonical_path(&trash.join(".1").join("А.md"));

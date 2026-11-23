@@ -82,7 +82,7 @@ impl Story {
 
     fn revert_nth(&self, index: usize) -> Vec<String> {
         let version = self.versions().remove(index);
-        self.revert(&version).unwrap_or_else(|error| panic!("версия {index} не отменилась: {error}"))
+        self.revert(&version).unwrap_or_else(|error| panic!("version {index} was not reverted: {error}"))
     }
 }
 
@@ -103,7 +103,7 @@ fn reverting_the_latest_version_matches_restoring_the_one_before() {
         let all = story.versions();
         let before = story.version_text(&all[all.len() - 2].id);
         story.revert_nth(all.len() - 1);
-        assert_eq!(story.text(), before, "форма {index}: отмена последней версии равна восстановлению предыдущей");
+        assert_eq!(story.text(), before, "shape {index}: reverting the last version equals restoring the previous one");
     }
 }
 
@@ -115,7 +115,7 @@ fn a_version_from_the_middle_is_undone_and_later_edits_stay() {
     story.edit(&[("четыре", "ЧЕТЫРЕ")], Source::Agent);
     story.edit(&[("ЧЕТЫРЕ\n", "ЧЕТЫРЕ\nпять\n")], Source::Agent);
     let displaced = story.revert_nth(1);
-    assert_eq!(story.text(), "раз\nдва\nтри\nЧЕТЫРЕ\nпять\n", "удалённая в середине истории строка вернулась, поздние правки остались");
+    assert_eq!(story.text(), "раз\nдва\nтри\nЧЕТЫРЕ\nпять\n", "a line deleted in the middle of the history came back, later edits stayed");
     assert!(displaced.is_empty());
 }
 
@@ -126,10 +126,10 @@ fn a_typing_version_with_several_regions_is_undone_whole() {
     story.edit(&[("заголовок", "Заголовок")], Source::Me);
     story.edit(&[("абзац два\n", "")], Source::Me);
     story.edit(&[("три", "три!")], Source::Me);
-    assert_eq!(story.versions().len(), 2, "правки подряд копятся в одну веху");
+    assert_eq!(story.versions().len(), 2, "consecutive edits accumulate into one milestone");
     story.edit(&[("абзац один", "абзац один и ещё")], Source::Agent);
     story.revert_nth(1);
-    assert_eq!(story.text(), "заголовок\nабзац один и ещё\nабзац два\nабзац три\n", "все участки накопленной вехи отменены, правка агента осталась");
+    assert_eq!(story.text(), "заголовок\nабзац один и ещё\nабзац два\nабзац три\n", "all regions of the accumulated milestone are reverted, the agent edit stayed");
 }
 
 #[test]
@@ -139,6 +139,6 @@ fn a_later_edit_of_the_same_line_goes_aside_and_the_revert_wins() {
     story.edit(&[("два", "ДВА")], Source::Agent);
     story.edit(&[("ДВА", "ДВА и ещё")], Source::Agent);
     let displaced = story.revert_nth(1);
-    assert_eq!(story.text(), "раз\nдва\nтри\n", "отмена побеждает");
-    assert_eq!(displaced, ["ДВА и ещё"], "поздний текст той же строки уходит в копию-конфликт");
+    assert_eq!(story.text(), "раз\nдва\nтри\n", "the revert wins");
+    assert_eq!(displaced, ["ДВА и ещё"], "the later text of the same line goes into the conflict copy");
 }

@@ -41,7 +41,7 @@ fn block_fill(source: &str, name: &str) -> u32 {
             *seen.entry(row[PROBE_X]).or_default() += 1;
         }
     }
-    seen.into_iter().max_by_key(|(_, count)| *count).map(|(color, _)| color).expect("блок не нарисован")
+    seen.into_iter().max_by_key(|(_, count)| *count).map(|(color, _)| color).expect("block is not drawn")
 }
 
 #[test]
@@ -52,7 +52,7 @@ fn a_dataview_card_has_the_same_fill_as_a_code_block_in_both_themes() {
         crate::ui::theme::apply_setting(if dark { "dark" } else { "light" }, dark, "#1471eb");
         let code = block_fill("```js\nx\n```", "card-code.png");
         let card = block_fill("```dataview\nTABLE file.name\n```", "card-dataview.png");
-        assert_eq!(format!("{card:08x}"), format!("{code:08x}"), "фон dataview отличается от блока кода (тёмная тема: {dark})");
+        assert_eq!(format!("{card:08x}"), format!("{code:08x}"), "dataview background differs from the code block (dark theme: {dark})");
     }
     crate::ui::theme::apply_setting(if before { "dark" } else { "light" }, before, "#1471eb");
 }

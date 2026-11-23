@@ -16,7 +16,7 @@ pub enum Value {
 #[derive(Clone, Copy)]
 pub enum Setter {
     Config(fn(&mut AppConfig, &Value)),
-    /// Правка токена показанной темы (`tokens::INPUTS` или `tokens::NUMBERS`).
+    /// Edit of a token of the shown theme (`tokens::INPUTS` or `tokens::NUMBERS`).
     ThemeValue(&'static str),
     VaultSync(fn(&mut SyncSettings, &Value)),
     Scale,

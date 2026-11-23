@@ -16,7 +16,7 @@ fn reload_ignores_own_write_and_sees_external_one() {
     assert_eq!(note.reload().map(|text| text.to_string()).as_deref(), Some("другой текст"));
     note.edit();
     assert!(note.deadline().is_some());
-    assert_eq!(note.reload(), None, "несохранённая правка не затирается");
+    assert_eq!(note.reload(), None, "an unsaved edit is not overwritten");
 }
 
 #[test]
@@ -25,9 +25,9 @@ fn typing_is_written_after_a_short_pause() {
     let before = Instant::now();
     note.edit();
     let due = note.deadline().unwrap();
-    assert!(due >= before + QUIET && due <= Instant::now() + QUIET, "запись через {QUIET:?} после правки");
+    assert!(due >= before + QUIET && due <= Instant::now() + QUIET, "write {QUIET:?} after the edit");
     note.save_soon();
-    assert!(note.deadline().unwrap() <= Instant::now(), "правка извне записывается сразу");
+    assert!(note.deadline().unwrap() <= Instant::now(), "an external edit is written immediately");
 }
 
 #[test]
@@ -36,5 +36,5 @@ fn nonstop_typing_is_still_written_within_the_longest_wait() {
     let first = Instant::now() - LONGEST + Duration::from_millis(500);
     note.since = Some(first);
     note.edit();
-    assert_eq!(note.deadline(), Some(first + LONGEST), "непрерывный набор не откладывает запись дольше {LONGEST:?}");
+    assert_eq!(note.deadline(), Some(first + LONGEST), "continuous typing does not delay the write beyond {LONGEST:?}");
 }

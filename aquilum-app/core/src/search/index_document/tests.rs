@@ -61,7 +61,7 @@ fn a_big_note_is_indexed_by_pages_and_an_edit_rewrites_only_the_last_page() {
     let before = keys(&database);
 
     let found = index.search(&Request::new("редкоеслово")).unwrap().results;
-    assert_eq!(found.len(), 1, "страницы одной заметки — один результат");
+    assert_eq!(found.len(), 1, "pages of one note give one result");
     assert_eq!(found[0].match_offset, text[..text.find("редкоеслово").unwrap()].encode_utf16().count());
     assert!(found[0].snippet.contains("редкоеслово"));
     assert_eq!(index.search(&Request::new("абзац")).unwrap().results.len(), 1);
@@ -72,7 +72,7 @@ fn a_big_note_is_indexed_by_pages_and_an_edit_rewrites_only_the_last_page() {
     let after = keys(&database);
     assert_eq!(index.document_count(), pages);
     assert_eq!(before.len(), after.len());
-    assert_eq!(before[..before.len() - 1], after[..after.len() - 1], "прежние страницы не переписаны");
+    assert_eq!(before[..before.len() - 1], after[..after.len() - 1], "previous pages are not rewritten");
     assert_ne!(before.last(), after.last());
 }
 

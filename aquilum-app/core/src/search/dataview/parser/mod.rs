@@ -11,10 +11,10 @@ pub fn parse(text: &str) -> Result<Query, String> {
     if let Some(token) = cursor.peek() {
         let found = cursor.text_of(token);
         let hint = match token.piece {
-            Piece::Word(_) => ". Если это ещё одна колонка, перед ней нужна запятая",
+            Piece::Word(_) => ". If this is another column, it needs a comma before it",
             _ => "",
         };
-        return Err(format!("Лишнее в запросе после разбора: «{found}»{hint}"));
+        return Err(format!("Unexpected input after the end of the query: '{found}'{hint}"));
     }
     Ok(parsed)
 }
@@ -114,8 +114,8 @@ impl<'a> Cursor<'a> {
             return Ok(());
         }
         Err(match self.peek() {
-            Some(token) => format!("Ожидается {expected}, а не «{}»", self.text_of(token)),
-            None => format!("Запрос кончился, а ожидается {expected}"),
+            Some(token) => format!("Expected {expected}, not '{}'", self.text_of(token)),
+            None => format!("The query ended, but {expected} is expected"),
         })
     }
 }

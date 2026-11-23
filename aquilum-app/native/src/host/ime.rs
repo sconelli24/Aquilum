@@ -11,7 +11,7 @@ fn focused_editor(root: &RenderRoot) -> Option<&TextEditor> {
 #[cfg(not(target_os = "android"))]
 fn surrounding(editor: Option<&TextEditor>) -> ImeSurroundingText {
     let (_, text, cursor, anchor) = editor.map(|editor| editor.surrounding(None)).unwrap_or_default();
-    ImeSurroundingText::new(text, cursor, anchor).expect("выдержка редактора короче 4000 байт и на границах символов")
+    ImeSurroundingText::new(text, cursor, anchor).expect("the editor excerpt is under 4000 bytes and on character boundaries")
 }
 
 fn hint(editor: Option<&TextEditor>) -> ImeHint {
@@ -35,7 +35,7 @@ impl Host {
             .with_hint_and_purpose(hint(editor), ImePurpose::Normal)
             .with_surrounding_text(text.clone());
         let capabilities = ImeCapabilities::new().with_cursor_area().with_hint_and_purpose().with_surrounding_text();
-        let request = ImeEnableRequest::new(capabilities, data).expect("запрос IME: возможности и данные согласованы");
+        let request = ImeEnableRequest::new(capabilities, data).expect("IME request: capabilities and data are consistent");
         self.ime_enabled = window.request_ime_update(ImeRequest::Enable(request)).is_ok();
         self.ime_text = self.ime_enabled.then_some(text);
     }

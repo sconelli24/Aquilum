@@ -50,16 +50,16 @@ mod tests {
 
     fn store(body: &str) -> Connection {
         let mut connection = crate::search::metadata::memory();
-        let transaction = connection.transaction().expect("транзакция");
-        crate::search::index_document::index_text(&transaction, std::path::Path::new("C:/vault"), Path::new("C:/vault/Дела.md"), body).expect("индексация");
-        transaction.commit().expect("фиксация");
+        let transaction = connection.transaction().expect("transaction");
+        crate::search::index_document::index_text(&transaction, std::path::Path::new("C:/vault"), Path::new("C:/vault/Дела.md"), body).expect("indexing");
+        transaction.commit().expect("commit");
         connection
     }
 
     #[test]
     fn tasks_survive_a_round_trip_through_the_index() {
         let connection = store("- [ ] написать\n- [x] отправить");
-        let found = read(&connection, &["C:/vault/Дела.md".to_owned()]).expect("чтение");
+        let found = read(&connection, &["C:/vault/Дела.md".to_owned()]).expect("read");
         let tasks = &found["C:/vault/Дела.md"];
         assert_eq!(tasks.len(), 2);
         assert_eq!(tasks[0].text, "написать");
@@ -70,11 +70,11 @@ mod tests {
     #[test]
     fn reindexing_replaces_the_previous_tasks() {
         let mut connection = store("- [ ] старая");
-        let transaction = connection.transaction().expect("транзакция");
-        crate::search::index_document::index_text(&transaction, std::path::Path::new("C:/vault"), Path::new("C:/vault/Дела.md"), "- [ ] новая").expect("снова");
-        transaction.commit().expect("фиксация");
+        let transaction = connection.transaction().expect("transaction");
+        crate::search::index_document::index_text(&transaction, std::path::Path::new("C:/vault"), Path::new("C:/vault/Дела.md"), "- [ ] новая").expect("again");
+        transaction.commit().expect("commit");
 
-        let found = read(&connection, &["C:/vault/Дела.md".to_owned()]).expect("чтение");
+        let found = read(&connection, &["C:/vault/Дела.md".to_owned()]).expect("read");
         assert_eq!(found["C:/vault/Дела.md"].len(), 1);
         assert_eq!(found["C:/vault/Дела.md"][0].text, "новая");
     }
@@ -82,11 +82,11 @@ mod tests {
     #[test]
     fn removing_a_document_takes_its_tasks_with_it() {
         let mut connection = store("- [ ] написать");
-        let transaction = connection.transaction().expect("транзакция");
-        crate::search::pages::remove(&transaction, "C:/vault/Дела.md").expect("удаление");
-        transaction.commit().expect("фиксация");
+        let transaction = connection.transaction().expect("transaction");
+        crate::search::pages::remove(&transaction, "C:/vault/Дела.md").expect("removal");
+        transaction.commit().expect("commit");
 
-        let found = read(&connection, &["C:/vault/Дела.md".to_owned()]).expect("чтение");
+        let found = read(&connection, &["C:/vault/Дела.md".to_owned()]).expect("read");
         assert!(found.is_empty());
     }
 }

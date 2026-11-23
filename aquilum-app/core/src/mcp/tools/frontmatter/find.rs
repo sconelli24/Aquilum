@@ -66,7 +66,7 @@ fn equals_from(arguments: &Value) -> Result<Vec<(String, String)>, String> {
     let Some(fields) = arguments.get("match") else {
         return Ok(Vec::new());
     };
-    let fields = fields.as_object().ok_or("Аргумент «match» должен быть объектом вида {«ключ»: «значение»}")?;
+    let fields = fields.as_object().ok_or("Argument “match” must be an object of the form {“key”: “value”}")?;
     fields.iter().map(|(key, value)| Ok((key.trim().to_owned(), scalar(key, value)?))).collect()
 }
 

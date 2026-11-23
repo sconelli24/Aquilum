@@ -18,15 +18,15 @@ fn typing_below_the_view_scrolls_after_the_caret_and_pasting_keeps_the_page() {
         named(&mut root, NamedKey::Enter);
         typing(&mut root, &format!("строка {line} "));
         let at = caret(&root);
-        assert!(at.y0 >= 0.0 && at.y1 <= 300.5, "каретка за краем окна после строки {line}: {at:?}");
+        assert!(at.y0 >= 0.0 && at.y1 <= 300.5, "caret is outside the window after line {line}: {at:?}");
     }
     typing(&mut root, &"слово ".repeat(80));
     let at = caret(&root);
-    assert!(at.y0 >= 0.0 && at.y1 <= 300.5, "каретка за краем окна после переноса строки: {at:?}");
+    assert!(at.y0 >= 0.0 && at.y1 <= 300.5, "caret is outside the window after a line wrap: {at:?}");
     let top = |root: &RenderRoot| root.get_widget_with_tag(TAG).unwrap().ctx().window_transform().translation().y;
     let before = top(&root);
     paste(&mut root, &"\nвставка".repeat(40));
-    assert_eq!(top(&root), before, "вставка прокрутила страницу");
+    assert_eq!(top(&root), before, "paste scrolled the page");
 }
 
 #[test]
@@ -39,7 +39,7 @@ fn pasting_at_the_end_of_a_note_scrolled_to_the_bottom_keeps_the_page() {
     let top = |root: &RenderRoot| root.get_widget_with_tag(TAG).unwrap().ctx().window_transform().translation().y;
     let before = top(&root);
     paste(&mut root, &"вставка\n".repeat(100));
-    assert_eq!(top(&root), before, "вставка в конец прокрутила страницу");
+    assert_eq!(top(&root), before, "paste at the end scrolled the page");
 }
 
 #[test]
@@ -47,8 +47,8 @@ fn scrolling_far_repaints_visible_paragraphs() {
     let body: String = (0..400).map(|i| format!("Абзац {i}\n")).collect();
     let mut root = scrolled(TextEditor::new(&body), 400, 300);
     wheel(&mut root, (200.0, 150.0), (0.0, -5000.0));
-    let painted = root.get_widget_with_tag(TAG).expect("редактор").inner().painted;
-    assert!(painted.0 <= 5000.0 && painted.1 >= 5300.0, "нарисовано {painted:?}, а видно 5000..5300");
+    let painted = root.get_widget_with_tag(TAG).expect("editor").inner().painted;
+    assert!(painted.0 <= 5000.0 && painted.1 >= 5300.0, "painted {painted:?}, but 5000..5300 is visible");
 }
 
 #[test]
@@ -74,9 +74,9 @@ fn measuring_above_the_view_does_not_move_the_text() {
         let from = offset(&root);
         set(&mut root, from - 100.0);
         shifted |= (offset(&root) - (from - 100.0)).abs() > 1.0;
-        assert_eq!(at(&root, 110.0), before, "текст сдвинулся при прокрутке вверх с {from}");
+        assert_eq!(at(&root, 110.0), before, "text shifted when scrolling up from {from}");
     }
-    assert!(shifted, "оценки выше видимой области ни разу не уточнились");
+    assert!(shifted, "estimates above the visible area were never refined");
 }
 
 #[test]
@@ -90,14 +90,14 @@ fn a_long_code_line_scrolls_sideways_instead_of_wrapping() {
     let before = at(&root);
     wheel(&mut root, (300.0, 66.0), (-200.0, 0.0));
     let wheeled = at(&root);
-    assert!(wheeled > before + 10, "строка кода не прокрутилась вбок: {before} → {wheeled}");
+    assert!(wheeled > before + 10, "code line did not scroll sideways: {before} -> {wheeled}");
     let track = {
         let w = root.get_widget_with_tag(TAG).unwrap();
         let bottom = w.inner().top_of(code.find("после").unwrap()).unwrap();
         (w.ctx().window_transform() * masonry::kurbo::Point::new(0.0, bottom - 4.0)).y
     };
     drag(&mut root, (120.0, track), (360.0, track));
-    assert!(at(&root) > wheeled + 10, "ползунок полосы прокрутки не тянется: {wheeled} → {}", at(&root));
+    assert!(at(&root) > wheeled + 10, "scrollbar thumb cannot be dragged: {wheeled} -> {}", at(&root));
 }
 
 #[test]
@@ -123,12 +123,12 @@ fn dragging_a_selection_past_the_edge_scrolls_smoothly() {
         root.handle_window_event(WindowEvent::AnimFrame(std::time::Duration::from_millis(16)));
         let _ = root.redraw();
         let step = last - offset(&root);
-        assert!(step > 1.0 && step < 20.0, "шаг прокрутки за кадр {step}");
+        assert!(step > 1.0 && step < 20.0, "scroll step per frame {step}");
         last = offset(&root);
     }
     let caret = root.get_widget_with_tag(TAG).unwrap();
     let top = caret.ctx().window_transform().transform_rect_bbox(caret.inner().caret_rect()).y0;
-    assert!(top < 0.0 && top > -80.0, "выделение не идёт за указателем: каретка на {top}");
+    assert!(top < 0.0 && top > -80.0, "selection does not follow the pointer: caret at {top}");
 }
 
 #[test]
@@ -139,7 +139,7 @@ fn pressing_the_scrollbar_keeps_the_text_focused() {
     root.focus_on(Some(editor));
     let _ = root.redraw();
     super::support::click(&mut root, 397.0, 20.0);
-    assert_eq!(root.focused_widget(), Some(editor), "полоса прокрутки сняла фокус с текста");
+    assert_eq!(root.focused_widget(), Some(editor), "scrollbar took focus away from the text");
 }
 
 #[test]
@@ -160,5 +160,5 @@ fn the_keyboard_keeps_a_tapped_table_cell_in_view() {
     let editor = editor_id(&root);
     root.edit_widget(editor, |mut w| TextEditor::keep_caret(&mut w.downcast::<TextEditor>()));
     let _ = root.redraw();
-    assert!((offset(&root) - before).abs() < 1.0, "окно уехало с ячейки: {before} → {}", offset(&root));
+    assert!((offset(&root) - before).abs() < 1.0, "window moved away from the cell: {before} -> {}", offset(&root));
 }

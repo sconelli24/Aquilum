@@ -141,7 +141,7 @@ impl<W: Widget> Widget for ScrollArea<W> {
         let shift = self.shift(offset);
         ctx.set_animated_child_scroll_translation(&mut self.child, shift);
         if self.axis == Axis::Vertical {
-            aq_trace::counter("прокрутка: смещение", self.offset);
+            aq_trace::counter("scroll: offset", self.offset);
             let id = ctx.widget_id().to_raw();
             crate::render::scroll::publish(id, ctx.window_transform().transform_rect_bbox(self.viewport.to_rect()), offset);
             self.published = Some(id);

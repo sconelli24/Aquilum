@@ -9,8 +9,8 @@ use crate::test_dir::command;
 use crate::ui::editor::TextEditor;
 use crate::ui::scroll::ScrollArea;
 
-pub(super) const TAG: WidgetTag<TextEditor> = WidgetTag::named("редактор");
-pub(super) const PAGE: WidgetTag<ScrollArea<TextEditor>> = WidgetTag::named("страница");
+pub(super) const TAG: WidgetTag<TextEditor> = WidgetTag::named("editor");
+pub(super) const PAGE: WidgetTag<ScrollArea<TextEditor>> = WidgetTag::named("page");
 
 fn mount(widget: NewWidget<impl Widget + ?Sized>, width: u32, height: u32) -> RenderRoot {
     let options = crate::test_dir::options(width, height, 1.0);
@@ -44,15 +44,15 @@ pub(super) fn markdown_root(text: &str) -> RenderRoot {
 }
 
 pub(super) fn editor_id(root: &RenderRoot) -> WidgetId {
-    root.get_widget_with_tag(TAG).expect("редактор").id()
+    root.get_widget_with_tag(TAG).expect("editor").id()
 }
 
 pub(super) fn text(root: &RenderRoot) -> String {
-    root.get_widget_with_tag(TAG).expect("редактор").inner().text()
+    root.get_widget_with_tag(TAG).expect("editor").inner().text()
 }
 
 pub(super) fn selected(root: &RenderRoot) -> String {
-    root.get_widget_with_tag(TAG).expect("редактор").inner().selected()
+    root.get_widget_with_tag(TAG).expect("editor").inner().selected()
 }
 
 pub(super) fn press(root: &mut RenderRoot, key: Key, modifiers: Modifiers) {

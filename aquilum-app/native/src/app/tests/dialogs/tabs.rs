@@ -60,10 +60,10 @@ fn tab_menu_renames_note_in_tab() {
     h.send(strip, TitlebarAction::Menu(id, masonry::kurbo::Point::new(300.0, 20.0)));
     let layer = match &h.app.popup {
         Some(Popup::FileMenu { layer, tab: Some(_), .. }) => *layer,
-        _ => panic!("меню вкладки"),
+        _ => panic!("tab menu"),
     };
     h.send(layer, crate::ui::menu::MenuChoice::Item(0));
-    let field = h.app.rename_field.expect("поле переименования во вкладке");
+    let field = h.app.rename_field.expect("rename field in the tab");
     assert_eq!(h.root.focused_widget(), Some(field.id()));
     h.send(field.id(), crate::ui::editor::TextAction::Entered("Новое имя".into()));
     assert!(h.app.rename_field.is_none());

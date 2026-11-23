@@ -56,8 +56,8 @@ fn vertical_gesture_over_wide_embed_scrolls_the_page() {
     for _ in 0..5 {
         wheel(&mut root, (200.0, 30.0), (-1.5, -12.0));
     }
-    let offset = root.get_widget_with_tag(PAGE).expect("страница").inner().offset();
-    assert!(offset >= 50.0, "жест над таблицей не прокрутил страницу: смещение {offset}");
+    let offset = root.get_widget_with_tag(PAGE).expect("page").inner().offset();
+    assert!(offset >= 50.0, "gesture over the table did not scroll the page: offset {offset}");
 }
 
 #[test]

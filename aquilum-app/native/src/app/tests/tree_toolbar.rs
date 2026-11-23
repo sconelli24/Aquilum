@@ -21,21 +21,21 @@ fn touch(path: &std::path::Path, seconds: u64) {
 #[test]
 fn toolbar_is_four_small_buttons_above_the_tree() {
     let h = Harness::new();
-    let ids = h.app.tree.toolbar_ids().expect("ряд кнопок над деревом");
+    let ids = h.app.tree.toolbar_ids().expect("button row above the tree");
     let rects: Vec<Rect> = ids.iter().map(|&id| rect(&h, id)).collect();
     for r in &rects {
-        assert_eq!((r.width(), r.height()), (size::SIZE_24, size::SIZE_24), "кнопка не размера S");
+        assert_eq!((r.width(), r.height()), (size::SIZE_24, size::SIZE_24), "button is not size S");
     }
     assert_eq!(rects[1].x0 - rects[0].x1, size::SPACE_6);
     assert_eq!(rects[2].x0 - rects[1].x1, size::SPACE_6);
     let tree = rect(&h, h.app.tree.scroll_id().unwrap());
-    assert_eq!(rects[3].x1, tree.x1 - size::SPACE_8, "«Свернуть всё» не прижата вправо");
+    assert_eq!(rects[3].x1, tree.x1 - size::SPACE_8, "\"Collapse all\" is not pushed to the right");
     assert_eq!(rects[0].x0, tree.x0 + size::SPACE_8);
     assert!(rects.iter().all(|r| r.y0 == rects[0].y0));
-    let first = rect(&h, h.app.tree.row_id("a").expect("строка заметки"));
-    let field = rect(&h, h.app.tree.filter_field().expect("поле поиска"));
-    assert_eq!(field.y0 - size::INPUT_XS_PADDING_Y - rects[0].y1, size::SPACE_4 + size::SPACE_8, "поле поиска не под кнопками с отступом 8");
-    assert_eq!(first.y0 - (field.y1 + size::INPUT_XS_PADDING_Y), size::SPACE_8, "между полем и деревом нет линии, только отступы");
+    let first = rect(&h, h.app.tree.row_id("a").expect("note row"));
+    let field = rect(&h, h.app.tree.filter_field().expect("search field"));
+    assert_eq!(field.y0 - size::INPUT_XS_PADDING_Y - rects[0].y1, size::SPACE_4 + size::SPACE_8, "search field is not under the buttons with an 8 padding");
+    assert_eq!(first.y0 - (field.y1 + size::INPUT_XS_PADDING_Y), size::SPACE_8, "no line between the field and the tree, only padding");
 }
 
 #[test]
@@ -45,14 +45,14 @@ fn new_note_goes_into_clicked_folder_and_starts_rename() {
     std::fs::create_dir(&folder).unwrap();
     std::fs::write(folder.join("план.md"), "").unwrap();
     h.app.tree.paths_changed(&mut h.root, std::slice::from_ref(&folder));
-    let row = h.app.tree.row_id("Проекты").expect("строка папки");
+    let row = h.app.tree.row_id("Проекты").expect("folder row");
     press(&mut h, row);
     let [new_note, ..] = h.app.tree.toolbar_ids().unwrap();
     press(&mut h, new_note);
     let created = folder.join("Без названия.md");
-    assert!(created.is_file(), "заметка не создана в выбранной папке");
-    assert_eq!(h.app.tabs.active().path.as_deref(), Some(created.as_path()), "новая заметка не открылась");
-    assert_eq!(h.app.tree.renaming(), Some(created), "строка новой заметки не перешла в переименование");
+    assert!(created.is_file(), "note not created in the selected folder");
+    assert_eq!(h.app.tabs.active().path.as_deref(), Some(created.as_path()), "new note did not open");
+    assert_eq!(h.app.tree.renaming(), Some(created), "new note row did not switch to renaming");
 }
 
 #[test]
@@ -62,10 +62,10 @@ fn new_note_rename_field_has_focus_and_selected_name() {
     press(&mut h, new_note);
     let created = h.vault.path().join("Без названия.md");
     for round in 0..2 {
-        let field = h.app.tree.rename_field().expect("поле переименования");
-        assert_eq!(h.root.focused_widget(), Some(field), "фокус не в поле переименования (проход {round})");
+        let field = h.app.tree.rename_field().expect("rename field");
+        assert_eq!(h.root.focused_widget(), Some(field), "focus is not in the rename field (pass {round})");
         let editor = h.root.get_widget(field).and_then(|w| w.downcast::<crate::ui::editor::TextEditor>()).unwrap();
-        assert_eq!(editor.inner().selected_text().as_deref(), Some("Без названия"), "имя не выделено (проход {round})");
+        assert_eq!(editor.inner().selected_text().as_deref(), Some("Без названия"), "name is not selected (pass {round})");
         h.app.tree.paths_changed(&mut h.root, std::slice::from_ref(&created));
         h.app.on_core_events(&mut h.root);
         let _ = h.root.redraw();
@@ -78,10 +78,10 @@ fn new_folder_without_selection_goes_to_root_and_starts_rename() {
     let [_, new_folder, ..] = h.app.tree.toolbar_ids().unwrap();
     press(&mut h, new_folder);
     let created = h.vault.path().join("Без названия");
-    assert!(created.is_dir(), "папка не создана в корне");
+    assert!(created.is_dir(), "folder not created in the root");
     assert_eq!(h.app.tree.renaming(), Some(created.clone()));
     press(&mut h, new_folder);
-    assert!(h.vault.path().join("Без названия 1").is_dir(), "вторая папка не получила свободное имя");
+    assert!(h.vault.path().join("Без названия 1").is_dir(), "second folder did not get a free name");
 }
 
 #[test]
@@ -93,12 +93,12 @@ fn collapse_all_closes_folders_and_remembers_it() {
     h.app.tree.paths_changed(&mut h.root, std::slice::from_ref(&folder));
     let row = h.app.tree.row_id("Проекты").unwrap();
     press(&mut h, row);
-    assert!(h.app.tree.names().contains(&"план".to_owned()), "папка не раскрылась");
+    assert!(h.app.tree.names().contains(&"план".to_owned()), "folder did not expand");
     let [.., collapse] = h.app.tree.toolbar_ids().unwrap();
     press(&mut h, collapse);
     assert_eq!(h.app.tree.names(), ["Проекты", "a"]);
     let reopened = FileTree::new(Some(h.vault.path().to_path_buf()), h._data.path(), std::sync::Arc::new(|| {}));
-    assert_eq!(reopened.names(), ["Проекты", "a"], "свёрнутое дерево не запомнилось");
+    assert_eq!(reopened.names(), ["Проекты", "a"], "collapsed tree was not remembered");
 }
 
 #[test]
@@ -114,7 +114,7 @@ fn sort_menu_reorders_the_tree_and_remembers_the_choice() {
     assert_eq!(h.app.tree.names(), ["a", "b", "c"]);
     let [_, _, sort, _] = h.app.tree.toolbar_ids().unwrap();
     press(&mut h, sort);
-    let Some(Popup::SortMenu { layer, .. }) = h.app.popup else { panic!("меню сортировки не открылось") };
+    let Some(Popup::SortMenu { layer, .. }) = h.app.popup else { panic!("sort menu did not open") };
     let labels: Vec<String> = Sort::ALL.iter().map(|s| crate::i18n::t(s.label())).collect();
     let items: Vec<&str> = labels.iter().map(String::as_str).collect();
     let plain = crate::ui::menu::Menu::new("", &items);
@@ -124,28 +124,28 @@ fn sort_menu_reorders_the_tree_and_remembers_the_choice() {
     let content = rect(&h, plain_id).width();
     h.root.remove_layer(plain_id);
     let list = rect(&h, layer).width();
-    assert!(list >= content + size::SIZE_20 + size::GAP_MD, "список сортировки уже подписей: {list} < {content} + галочка");
+    assert!(list >= content + size::SIZE_20 + size::GAP_MD, "sort list is narrower than the labels: {list} < {content} + checkmark");
     let modified_new = Sort::ALL.iter().position(|s| *s == Sort::ModifiedNew).unwrap();
     let choice = masonry::core::ErasedAction::from(Box::new(crate::ui::menu::MenuChoice::Item(modified_new)));
     h.app.on_action(&mut h.root, layer, choice);
-    assert!(h.app.popup.is_none(), "меню не закрылось после выбора");
+    assert!(h.app.popup.is_none(), "menu did not close after selection");
     assert_eq!(h.app.tree.names(), ["c", "b", "a"]);
     let reopened = FileTree::new(Some(vault), h._data.path(), std::sync::Arc::new(|| {}));
-    assert_eq!(reopened.sort(), Sort::ModifiedNew, "выбор сортировки не запомнился");
+    assert_eq!(reopened.sort(), Sort::ModifiedNew, "sort choice was not remembered");
     press(&mut h, sort);
     assert!(matches!(h.app.popup, Some(Popup::SortMenu { .. })));
     press(&mut h, sort);
-    assert!(h.app.popup.is_none(), "повторный щелчок по кнопке не закрыл меню");
+    assert!(h.app.popup.is_none(), "second click on the button did not close the menu");
 }
 
 #[test]
 fn search_button_in_the_rail_opens_the_omni_search() {
     let mut h = Harness::new();
-    let search = h.app.chrome.as_ref().expect("оболочка").search_button;
-    assert!(rect(&h, search).x1 <= rect(&h, h.app.tree.scroll_id().unwrap()).x0, "кнопка поиска не в левой колонке иконок");
+    let search = h.app.chrome.as_ref().expect("chrome").search_button;
+    assert!(rect(&h, search).x1 <= rect(&h, h.app.tree.scroll_id().unwrap()).x0, "search button is not in the left icon column");
     assert!(!matches!(h.app.popup, Some(Popup::Search(_))));
     press(&mut h, search);
-    assert!(matches!(h.app.popup, Some(Popup::Search(_))), "омнипоиск не открылся");
+    assert!(matches!(h.app.popup, Some(Popup::Search(_))), "omnisearch did not open");
 }
 
 #[test]
@@ -165,5 +165,5 @@ fn new_notes_go_to_the_folder_from_settings() {
     for created in [inbox.join("Без названия.md"), inbox.join("Без названия 1.md"), inbox.join("Идея.md"), vault.join("Проекты").join("План.md")] {
         assert!(created.is_file(), "{}", created.display());
     }
-    assert!(!vault.join("Без названия.md").exists() && !vault.join("Идея.md").exists(), "заметка попала в корень");
+    assert!(!vault.join("Без названия.md").exists() && !vault.join("Идея.md").exists(), "note ended up in the root");
 }

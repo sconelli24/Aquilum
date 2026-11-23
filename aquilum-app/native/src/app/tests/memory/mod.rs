@@ -54,11 +54,11 @@ fn exercise(h: &mut Harness, renderer: &mut crate::render::Renderer) -> String {
     });
     h.escape();
     settle(h, renderer);
-    format!("[набор {typed} стирание {erased} поиск {found}/{searched}]")
+    format!("[typing {typed} erasing {erased} search {found}/{searched}]")
 }
 
 fn line(step: &str) {
-    eprintln!("{step:<32} куча {:>7.1} МБ", mb(crate::memory_probe::heap()));
+    eprintln!("{step:<32} heap {:>7.1} MB", mb(crate::memory_probe::heap()));
 }
 
 #[test]
@@ -76,9 +76,9 @@ fn memory_session_report() {
         h.app.interface.set_panel_mode(&mode);
     }
     let mut renderer = crate::render::Renderer::new(2);
-    assert!(super::perf::wait_index(&h.app.workspace.core, &vault.to_string_lossy()), "индекс не готов");
+    assert!(super::perf::wait_index(&h.app.workspace.core, &vault.to_string_lossy()), "index not ready");
     settle(&mut h, &mut renderer);
-    line("старт");
+    line("start");
     for note in &notes {
         let started = std::time::Instant::now();
         h.app.open_in(&mut h.root, note.clone(), true);
@@ -87,7 +87,7 @@ fn memory_session_report() {
         let shown = started.elapsed().as_millis();
         let ready = settle(&mut h, &mut renderer);
         let name = note.file_stem().unwrap_or_default().to_string_lossy().chars().take(20).collect::<String>();
-        line(&format!("открыта {name}, кадр {shown}+{ready} мс"));
+        line(&format!("opened {name}, frame {shown}+{ready} ms"));
         if let Some(out) = &zones {
             aq_trace::write(std::path::Path::new(out)).unwrap();
         }
@@ -104,7 +104,7 @@ fn memory_session_report() {
             if !method.is_empty() {
                 h.app.interface.set_analysis_method(method);
             }
-            line(&format!("панель {panel}"));
+            line(&format!("panel {panel}"));
         }
         let ids: Vec<_> = h.app.tabs.tabs().iter().map(|t| t.id).collect();
         let mut spent = Vec::new();
@@ -126,7 +126,7 @@ fn memory_session_report() {
             std::thread::sleep(std::time::Duration::from_millis(idle));
             settle(&mut h, &mut renderer);
         }
-        line(&format!("круг вкладок {}: кадр+вставки, мс {}", round + 1, spent.join(" ")));
+        line(&format!("tab round {}: frame+embeds, ms {}", round + 1, spent.join(" ")));
         if std::env::var_os("AQ_REPORT_ROUNDS").is_some() {
             eprintln!("{}", crate::memory_probe::report());
         }
@@ -144,7 +144,7 @@ fn memory_session_report() {
         std::thread::sleep(std::time::Duration::from_millis(50));
     }
     settle(&mut h, &mut renderer);
-    line("граф");
+    line("graph");
     let graph_tab = h.app.tabs.active_id();
     let note_tab = h.app.tabs.tabs().iter().map(|t| t.id).find(|id| *id != graph_tab);
     if let Some(id) = note_tab
@@ -152,7 +152,7 @@ fn memory_session_report() {
     {
         h.app.show_active(&mut h.root);
         settle(&mut h, &mut renderer);
-        line("граф в фоне, открыта заметка");
+        line("graph in background, note open");
         if h.app.tabs.select(graph_tab) {
             h.app.show_active(&mut h.root);
             settle(&mut h, &mut renderer);
@@ -160,7 +160,7 @@ fn memory_session_report() {
     }
     let _ = h.app.close_active_tab(&mut h.root);
     settle(&mut h, &mut renderer);
-    line("закрыта вкладка графа");
+    line("graph tab closed");
     if std::env::var_os("AQ_REPORT_GRAPH").is_some() {
         eprintln!("{}", crate::memory_probe::report());
     }
@@ -170,6 +170,6 @@ fn memory_session_report() {
     }
     let _ = h.app.close_active_tab(&mut h.root);
     settle(&mut h, &mut renderer);
-    line("все вкладки закрыты");
+    line("all tabs closed");
     eprintln!("{}", crate::memory_probe::report());
 }

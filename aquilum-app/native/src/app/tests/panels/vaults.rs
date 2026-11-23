@@ -14,7 +14,7 @@ fn synced(h: &Harness, path: &std::path::Path) -> bool {
 fn answer_delete(h: &mut Harness, path: &std::path::Path, answer: DialogAnswer) {
     choose(h, path, DELETE);
     let (confirm, cancel) = state(h).cancel();
-    assert!(cancel.downcast_ref::<DialogAnswer>().is_some() && confirm != state(h).dialog.layer, "нет вопроса об удалении");
+    assert!(cancel.downcast_ref::<DialogAnswer>().is_some() && confirm != state(h).dialog.layer, "no delete confirmation");
     h.act(confirm, answer);
     crate::disk::wait();
 }
@@ -30,10 +30,10 @@ fn new_vaults_in_one_folder_get_different_names_and_open_for_renaming() {
 
     h.app.picked_tx.send(Picked::NewVault(Ok(made[1].clone()))).unwrap();
     h.step();
-    let field = rename_field(&h).expect("новая база не перешла в переименование");
+    let field = rename_field(&h).expect("new vault did not enter rename mode");
     assert_eq!(h.root.focused_widget(), Some(field));
     let editor = h.root.get_widget(field).unwrap().downcast::<TextEditor>().unwrap();
-    assert_eq!(editor.inner().selection(), 0..editor.inner().len(), "имя не выделено целиком");
+    assert_eq!(editor.inner().selection(), 0..editor.inner().len(), "name not fully selected");
     h.settle();
     h.snapshot("vault-rename.png");
 
@@ -43,7 +43,7 @@ fn new_vaults_in_one_folder_get_different_names_and_open_for_renaming() {
     assert!(renamed.is_dir() && !made[1].exists());
     assert!(rename_field(&h).is_none());
     assert!(rows(&h).iter().any(|(_, path, _)| same_path(path, &renamed)));
-    assert!(same_path(h.app.tree.root().unwrap(), &vaults[0]), "открытая база не должна меняться");
+    assert!(same_path(h.app.tree.root().unwrap(), &vaults[0]), "the open vault must not change");
 }
 
 #[test]
@@ -61,7 +61,7 @@ fn renaming_the_open_vault_moves_it_and_keeps_its_tabs() {
     assert_eq!(state(&h).error.as_deref(), None);
     assert!(renamed.is_dir() && !vaults[0].exists());
     assert!(same_path(h.app.tree.root().unwrap(), &renamed));
-    assert!(h.app.shows(&renamed.join("a.md")), "вкладка не вернулась после переименования");
+    assert!(h.app.shows(&renamed.join("a.md")), "tab did not come back after the rename");
     assert_eq!(h.app.workspace.core.ui_state.workspace(&renamed).unwrap().id, id);
     assert_eq!(rows(&h).len(), 1);
 }
@@ -80,15 +80,15 @@ fn a_taken_name_is_reported_and_escape_or_back_cancel_only_the_renaming() {
     choose(&mut h, &vaults[1], RENAME);
     assert_eq!(state(&h).error.as_deref(), None);
     h.escape();
-    assert!(matches!(h.app.popup, Some(Popup::Workspaces(_))), "Escape закрыл окно баз");
+    assert!(matches!(h.app.popup, Some(Popup::Workspaces(_))), "Escape closed the vaults window");
     assert!(rename_field(&h).is_none());
 
     choose(&mut h, &vaults[1], RENAME);
     h.type_text("Третья");
     h.app.back(&mut h.root);
-    assert!(matches!(h.app.popup, Some(Popup::Workspaces(_))), "«Назад» закрыл окно баз");
+    assert!(matches!(h.app.popup, Some(Popup::Workspaces(_))), "Back closed the vaults window");
     assert!(rename_field(&h).is_none());
-    assert!(vaults[1].is_dir(), "«Назад» должен отменять, а не сохранять имя");
+    assert!(vaults[1].is_dir(), "Back must cancel, not save the name");
 }
 
 #[test]
@@ -135,7 +135,7 @@ fn duplicating_a_vault_copies_its_notes_next_to_it() {
     let mut h = Harness::with(Some(&vaults[0]), 1.0);
     open_dialog(&mut h);
     choose(&mut h, &vaults[0], DUPLICATE);
-    assert!(h.wait_for(|h| rename_field(h).is_some()), "копия не появилась в списке");
+    assert!(h.wait_for(|h| rename_field(h).is_some()), "copy did not appear in the list");
     let copy = places.path().join("Первая (1)");
     assert_eq!(std::fs::read_to_string(copy.join("a.md")).unwrap(), "Первая");
     assert_eq!(rows(&h).len(), 2);
@@ -155,7 +155,7 @@ fn sync_is_toggled_per_vault_and_needs_dropbox_to_turn_on() {
 
     choose(&mut h, &vaults[1], SYNC);
     assert!(synced(&h, &vaults[1]) && !synced(&h, &vaults[0]));
-    assert_eq!(h.section(), Some(Section::Sync), "без входа в Dropbox должен открыться раздел синхронизации");
+    assert_eq!(h.section(), Some(Section::Sync), "without a Dropbox login the sync section must open");
 }
 
 #[test]
@@ -167,13 +167,13 @@ fn the_vault_menu_opens_from_the_dots_and_a_right_click_and_back_closes_it() {
     let bounds = h.root.get_widget(row(&h, &vaults[0])).unwrap().ctx().bounding_box();
     h.pointer_move(bounds.center().x, bounds.center().y);
     h.click(bounds.x1 - crate::ui::tokens::size::SPACE_8 - 12.0, bounds.center().y);
-    assert!(menu_layer(&h).is_some(), "«⋯» не открыли меню");
+    assert!(menu_layer(&h).is_some(), "ellipsis did not open the menu");
     h.snapshot("vault-menu.png");
 
     h.app.back(&mut h.root);
-    assert!(menu_layer(&h).is_none(), "«Назад» не закрыл меню");
+    assert!(menu_layer(&h).is_none(), "Back did not close the menu");
     assert!(matches!(h.app.popup, Some(Popup::Workspaces(_))));
 
     h.press(pointer_at(bounds.center().x, bounds.center().y, 1.0), PointerButton::Secondary, MOUSE);
-    assert!(menu_layer(&h).is_some(), "правый клик не открыл меню");
+    assert!(menu_layer(&h).is_some(), "right click did not open the menu");
 }

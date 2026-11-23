@@ -17,7 +17,7 @@ pub fn rebuild(dir: &Path, id: &str) -> io::Result<Rebuilt> {
         let delta = delta::read(&dir.join(chain.last().map_or("", String::as_str)))?;
         let Some(base) = delta.base else { break };
         if !dir.join(&base).is_file() || chain.contains(&base) {
-            return Err(io::Error::new(io::ErrorKind::NotFound, "нет версии, от которой записаны правки"));
+            return Err(io::Error::new(io::ErrorKind::NotFound, "no version the edits were recorded against"));
         }
         chain.push(base);
     }

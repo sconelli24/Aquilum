@@ -34,7 +34,7 @@ impl Account {
     }
 
     pub fn token(&self) -> Result<String, RemoteError> {
-        let mut tokens = self.tokens.lock().expect("токены облака");
+        let mut tokens = self.tokens.lock().expect("cloud tokens");
         if tokens.expires > millis(SystemTime::now()) + MARGIN_MS {
             return Ok(tokens.access.clone());
         }
@@ -42,7 +42,7 @@ impl Account {
     }
 
     pub fn renew(&self) -> Result<String, RemoteError> {
-        self.refresh(&mut self.tokens.lock().expect("токены облака"))
+        self.refresh(&mut self.tokens.lock().expect("cloud tokens"))
     }
 
     fn refresh(&self, tokens: &mut Tokens) -> Result<String, RemoteError> {

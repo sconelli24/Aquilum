@@ -141,7 +141,7 @@ mod tests {
 
         let page = deletion_page_impl(root, 0, 20).unwrap();
 
-        assert_eq!(page.total, 2, "слияние с корзиной не склеивает удаления");
+        assert_eq!(page.total, 2, "merging with the trash does not glue deletions together");
         assert_eq!(page.deletions[0].files, 2);
         assert_eq!(page.deletions[1].original, "Архив/Раньше.md");
     }

@@ -6,24 +6,24 @@ fn app_starts_with_manual_update_popup_after_repeated_failures() {
     let h = Harness::new();
     let data_dir = h.app.workspace.data_dir.clone();
 
-    // Симулируем 2 неудачные попытки обновления до новой версии
+    // Simulate 2 failed update attempts to the new version
     Attempt::record(&data_dir, "99.0.0", "https://example.com/download");
     Attempt::record(&data_dir, "99.0.0", "https://example.com/download");
 
-    // Перезапуск приложения с тем же каталогом данных
+    // Restart the app with the same data directory
     let mut h = h.restarted(1.0);
     h.app.on_core_events(&mut h.root);
     let _ = h.root.redraw();
 
-    // Проверяем, что открылся диалог предложения скачать вручную
+    // Check that the dialog offering a manual download opened
     assert!(
         matches!(h.app.popup, Some(Popup::Confirm(_, crate::app::confirm::Confirmed::ManualUpdate(_)))),
-        "диалог ручного обновления не открылся после неудачных попыток"
+        "manual update dialog did not open after failed attempts"
     );
 
-    // Закрытие по Escape
+    // Close with Escape
     h.escape();
-    assert!(h.app.popup.is_none(), "диалог ручного обновления не закрылся по Escape");
+    assert!(h.app.popup.is_none(), "manual update dialog did not close on Escape");
 }
 
 #[test]
@@ -31,10 +31,10 @@ fn a_dismissed_update_leaves_only_the_settings_row() {
     let mut h = Harness::new();
     h.app.updater.offer("99.0.0");
     h.app.on_core_events(&mut h.root);
-    let close = h.app.update.bar.as_ref().map(|(_, bar)| bar.close).expect("полоса обновления показана");
+    let close = h.app.update.bar.as_ref().map(|(_, bar)| bar.close).expect("update bar shown");
     h.act(close, crate::ui::widgets::Pressed);
-    assert!(h.app.update.bar.is_none(), "полоса не закрылась");
+    assert!(h.app.update.bar.is_none(), "bar did not close");
     assert!(h.app.interface.update_dismissed("99.0.0"));
     h.app.rebuild(&mut h.root);
-    assert!(h.app.update.bar.is_none(), "закрытая версия снова предложена");
+    assert!(h.app.update.bar.is_none(), "dismissed version was offered again");
 }

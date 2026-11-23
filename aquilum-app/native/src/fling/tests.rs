@@ -20,8 +20,8 @@ fn accelerating_motion_uses_the_recent_average_speed() {
         let t = 0.008 * f64::from(k);
         trail.push(after(start, t), 0.0, 2000.0 * t + 30000.0 * t * t);
     }
-    let (vx, vy) = trail.velocity(after(start, 0.04)).expect("скорость по шести точкам");
-    assert!(vx.abs() < 1e-6 && (vy - 3200.0).abs() < 1.0, "скорость {vy} вместо 3200 (средняя за последние 40 мс)");
+    let (vx, vy) = trail.velocity(after(start, 0.04)).expect("velocity from six points");
+    assert!(vx.abs() < 1e-6 && (vy - 3200.0).abs() < 1.0, "velocity {vy} instead of 3200 (average over the last 40 ms)");
 }
 
 #[test]
@@ -30,8 +30,8 @@ fn two_samples_give_a_straight_line() {
     let mut trail = Trail::default();
     trail.push(start, 0.0, 0.0);
     trail.push(after(start, 0.01), 30.0, 0.0);
-    let (vx, _) = trail.velocity(after(start, 0.01)).expect("скорость по двум точкам");
-    assert!((vx - 3000.0).abs() < 0.5, "скорость {vx} вместо 3000");
+    let (vx, _) = trail.velocity(after(start, 0.01)).expect("velocity from two points");
+    assert!((vx - 3000.0).abs() < 0.5, "velocity {vx} instead of 3000");
     assert!(Trail::default().velocity(start).is_none());
 }
 
@@ -69,7 +69,7 @@ fn a_pause_before_release_means_the_finger_stopped() {
         trail.push(after(start, 0.01 * f64::from(k)), 0.0, 40.0 * f64::from(k));
     }
     assert!(trail.velocity(after(start, 0.04)).is_some());
-    assert!(trail.velocity(after(start, 0.081)).is_none(), "палец стоял дольше 40 мс, а скорость осталась");
+    assert!(trail.velocity(after(start, 0.081)).is_none(), "finger rested longer than 40 ms, yet velocity remained");
 }
 
 #[test]
@@ -81,8 +81,8 @@ fn a_pause_forgets_the_movement_before_it() {
     }
     trail.push(after(start, 0.09), 0.0, 160.0);
     trail.push(after(start, 0.1), 0.0, 160.0);
-    let (_, vy) = trail.velocity(after(start, 0.1)).expect("скорость после паузы");
-    assert!(vy.abs() < 1e-6, "после паузы скорость {vy} взялась из старого движения");
+    let (_, vy) = trail.velocity(after(start, 0.1)).expect("velocity after a pause");
+    assert!(vy.abs() < 1e-6, "after a pause velocity {vy} came from the old movement");
 }
 
 #[test]
@@ -92,8 +92,8 @@ fn a_sample_at_the_same_moment_replaces_the_previous_one() {
     trail.push(start, 0.0, 0.0);
     trail.push(after(start, 0.01), 0.0, 10.0);
     trail.push(after(start, 0.01), 0.0, 20.0);
-    let (_, vy) = trail.velocity(after(start, 0.01)).expect("скорость");
-    assert!((vy - 2000.0).abs() < 0.5, "скорость {vy} вместо 2000");
+    let (_, vy) = trail.velocity(after(start, 0.01)).expect("velocity");
+    assert!((vy - 2000.0).abs() < 0.5, "velocity {vy} instead of 2000");
 }
 
 #[test]
@@ -102,8 +102,8 @@ fn a_fling_travels_as_far_and_as_long_as_on_android() {
     let steps = steps(Fling::spline(start, (0.0, 1000.0), 1.0), start);
     let path: f64 = steps.iter().sum();
     let ms = steps.len() as f64 * FRAME.as_secs_f64() * 1000.0;
-    assert!((path - 194.3).abs() < 0.5, "путь {path} вместо 194,3 (OverScroller.getSplineFlingDistance)");
-    assert!((555.0..=572.0).contains(&ms), "длительность {ms} мс вместо 555 (OverScroller.getSplineFlingDuration)");
+    assert!((path - 194.3).abs() < 0.5, "path {path} instead of 194.3 (OverScroller.getSplineFlingDistance)");
+    assert!((555.0..=572.0).contains(&ms), "duration {ms} ms instead of 555 (OverScroller.getSplineFlingDuration)");
 }
 
 #[test]
@@ -111,15 +111,15 @@ fn a_fling_starts_at_the_speed_of_the_finger_and_slows_down_smoothly() {
     let start = Instant::now();
     let steps = steps(Fling::spline(start, (0.0, 3000.0), 2.0), start);
     let first = 3000.0 * FRAME.as_secs_f64();
-    assert!((0.95..=1.0).contains(&(steps[0] / first)), "первый шаг {} вместо {first}", steps[0]);
-    assert!(steps.windows(2).all(|w| w[1] <= w[0] && w[1] >= 0.0), "шаги не убывают: {steps:?}");
-    assert!(*steps.last().unwrap() < 1.0, "остановка обрывом: {:?}", &steps[steps.len() - 3..]);
+    assert!((0.95..=1.0).contains(&(steps[0] / first)), "first step {} instead of {first}", steps[0]);
+    assert!(steps.windows(2).all(|w| w[1] <= w[0] && w[1] >= 0.0), "steps do not decrease: {steps:?}");
+    assert!(*steps.last().unwrap() < 1.0, "abrupt stop: {:?}", &steps[steps.len() - 3..]);
 }
 
 #[test]
 fn a_fling_keeps_its_direction() {
     let start = Instant::now();
     let mut fling = Fling::spline(start, (-300.0, 400.0), 1.0);
-    let (x, y) = fling.advance(start + FRAME).expect("шаг");
-    assert!((x / y + 0.75).abs() < 1e-9, "направление {x}:{y} вместо -3:4");
+    let (x, y) = fling.advance(start + FRAME).expect("step");
+    assert!((x / y + 0.75).abs() < 1e-9, "direction {x}:{y} instead of -3:4");
 }

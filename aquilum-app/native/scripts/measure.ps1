@@ -1,23 +1,23 @@
-# Замер памяти и простоя нативного окна Aquilum.
+# Memory and idle measurement of the Aquilum native window.
 #
-#   powershell -File native\scripts\measure.ps1 [-Exe путь] [-Threads 0,2,4] [-Idle 10] [-File заметка.md]
+#   powershell -File native\scripts\measure.ps1 [-Exe path] [-Threads 0,2,4] [-Idle 10] [-File note.md]
 #
-# Прототип на Freya (probes/freya) меряется тем же скриптом:
+# The Freya prototype (probes/freya) is measured with the same script:
 #   measure.ps1 -Exe <freya-probe.exe> -Threads 0 -Size 1646x981 -Env FREYA_RENDERER=software -Label freya-software
 #
-# Для каждого числа потоков vello_cpu: запускает окно, ждёт первый кадр и прогон прокрутки, затем
-# Idle секунд простоя (по ним считается CPU), снимает память и закрывает окно через WM_CLOSE, чтобы
-# приложение успело записать свои замеры. Числа сравнимы с замерами WebView2 в memory-footprint.
+# For each vello_cpu thread count: launches the window, waits for the first frame and the scroll run, then
+# idles for Idle seconds (CPU is computed from that), samples memory and closes the window via WM_CLOSE so that the
+# app can write its own measurements. Numbers are comparable to the WebView2 measurements in memory-footprint.
 param(
   [string]$Exe = "$PSScriptRoot\..\..\..\.artifacts\cargo-native\release\aquilum-native.exe",
   [int[]]$Threads = @(0, 2, 4),
   [int]$Idle = 10,
   [string]$Size = "2881x1717",
   [string]$File = "",
-  # Переменная окружения для запускаемого процесса, «ИМЯ=значение».
+  # Environment variable for the launched process, "NAME=value".
   [string]$Env = "",
   [string]$Label = "aquilum-native",
-  # Дополнительные аргументы запускаемому окну, например @("--focus") для пробы Masonry.
+  # Extra arguments for the launched window, e.g. @("--focus") for the Masonry probe.
   [string[]]$ExtraArgs = @()
 )
 
@@ -45,7 +45,7 @@ foreach ($t in $Threads) {
     if ($p.MainWindowHandle -ne 0) { $windowMs = $sw.ElapsedMilliseconds; break }
     Start-Sleep -Milliseconds 10
   }
-  # Прогон прокрутки идёт сразу после первого кадра; даём ему закончиться и окну успокоиться.
+  # The scroll run starts right after the first frame; let it finish and the window settle.
   Start-Sleep -Seconds 3
 
   $p.Refresh()

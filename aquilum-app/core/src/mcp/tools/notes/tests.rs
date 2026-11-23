@@ -67,7 +67,7 @@ fn reports_missing_find_target_instead_of_silently_doing_nothing() {
 fn refuses_to_replace_several_occurrences_unless_asked() {
     let note = "маркер и ещё маркер\n";
     let error = compose(note, &replacing("маркер", "замена", false)).unwrap_err();
-    assert!(error.contains("2"), "в ошибке названо число вхождений: {error}");
+    assert!(error.contains("2"), "the error names the occurrence count: {error}");
     assert_eq!(
         compose(note, &replacing("маркер", "замена", true)).unwrap(),
         "замена и ещё замена\n"
@@ -79,7 +79,7 @@ fn inserts_under_the_requested_heading_and_keeps_the_rest() {
     let updated = compose(SECTIONS, &under("underHeading", "## Два", "вставка")).unwrap();
     assert!(updated.contains("## Два\n\nвставка\n\nещё"));
     assert!(updated.contains("### Три\n\nглубже"));
-    assert!(updated.ends_with('\n'), "финальный перевод строки не теряется");
+    assert!(updated.ends_with('\n'), "the trailing newline is not lost");
     assert!(compose(SECTIONS, &under("underHeading", "Нет такого", "вставка")).is_err());
 }
 
@@ -96,7 +96,7 @@ fn replaces_a_section_without_touching_its_neighbours() {
 fn replacing_a_section_stops_at_the_next_heading_of_the_same_level() {
     let updated = compose(SECTIONS, &under("replaceSection", "## Два", "новое")).unwrap();
     assert!(updated.contains("## Два\n\nновое"));
-    assert!(!updated.contains("глубже"), "вложенный раздел входит в заменяемый");
+    assert!(!updated.contains("глубже"), "the nested section is part of the replaced one");
     assert!(updated.starts_with("# Один\n\nтекст\n"));
 }
 
@@ -104,7 +104,7 @@ fn replacing_a_section_stops_at_the_next_heading_of_the_same_level() {
 fn refuses_an_ambiguous_heading() {
     let note = "## Два\n\nпервый\n\n## Два\n\nвторой\n";
     let error = compose(note, &under("replaceSection", "Два", "новое")).unwrap_err();
-    assert!(error.contains("2"), "в ошибке названо число заголовков: {error}");
+    assert!(error.contains("2"), "the error names the heading count: {error}");
 }
 
 #[test]
@@ -113,8 +113,8 @@ fn an_empty_replacement_deletes_the_text_or_empties_the_section() {
     assert_eq!(compose(NOTE, &deleting).unwrap(), "# Заголовок\n\nПервый.\n");
     let emptying = edit_from(&json!({ "mode": "replaceSection", "heading": "## Два", "content": "" })).unwrap();
     assert_eq!(compose(SECTIONS, &emptying).unwrap(), "# Один\n\nтекст\n\n## Два\n");
-    assert!(edit_from(&json!({ "mode": "replace", "content": "" })).is_err(), "пустой replace стёр бы заметку");
-    assert!(edit_from(&json!({ "mode": "findReplace", "find": "x" })).is_err(), "content обязателен");
+    assert!(edit_from(&json!({ "mode": "replace", "content": "" })).is_err(), "an empty replace would erase the note");
+    assert!(edit_from(&json!({ "mode": "findReplace", "find": "x" })).is_err(), "content is required");
 }
 
 #[test]

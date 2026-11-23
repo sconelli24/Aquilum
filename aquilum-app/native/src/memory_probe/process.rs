@@ -95,19 +95,19 @@ pub(super) fn breakdown() -> String {
         } else if info.Type == MEM_MAPPED {
             let len = unsafe { GetMappedFileNameW(process, info.BaseAddress, &mut name_buf) } as usize;
             if len == 0 {
-                "отображение без файла".to_owned()
+                "mapping without a file".to_owned()
             } else {
                 let path = String::from_utf16_lossy(&name_buf[..len]);
                 let file = path.rsplit('\\').next().unwrap_or(&path).to_owned();
                 let ext = file.rsplit_once('.').map(|(_, e)| e.to_ascii_lowercase()).unwrap_or_default();
                 match ext.as_str() {
-                    "ttf" | "otf" | "ttc" | "fon" => "файл шрифта".to_owned(),
-                    "idx" | "pos" | "term" | "store" | "fast" | "fieldnorm" => "файл индекса tantivy".to_owned(),
-                    _ => format!("файл {file}"),
+                    "ttf" | "otf" | "ttc" | "fon" => "font file".to_owned(),
+                    "idx" | "pos" | "term" | "store" | "fast" | "fieldnorm" => "tantivy index file".to_owned(),
+                    _ => format!("file {file}"),
                 }
             }
         } else {
-            "частная (кучи, стеки)".to_owned()
+            "private (heaps, stacks)".to_owned()
         };
         let pages = size / PAGE;
         let mut query: Vec<PSAPI_WORKING_SET_EX_INFORMATION> = (0..pages)
@@ -135,7 +135,7 @@ pub(super) fn breakdown() -> String {
     let _ = unsafe { GetProcessMemoryInfo(process, (&raw mut counters).cast(), size_of::<PROCESS_MEMORY_COUNTERS_EX>() as u32) };
     let total = groups.values().fold(Usage::default(), |a, u| Usage { commit: a.commit + u.commit, ws: a.ws + u.ws, private_ws: a.private_ws + u.private_ws });
     let mut text = format!(
-        "частный рабочий набор {:.1} МБ · рабочий набор {:.1} МБ · private bytes {:.1} МБ · пик рабочего набора {:.1} МБ\n",
+        "private working set {:.1} MB · working set {:.1} MB · private bytes {:.1} MB · peak working set {:.1} MB\n",
         mb(total.private_ws),
         mb(counters.WorkingSetSize),
         mb(counters.PrivateUsage),
@@ -145,7 +145,7 @@ pub(super) fn breakdown() -> String {
     let mut sorted: Vec<_> = groups.into_iter().collect();
     sorted.sort_by_key(|(_, u)| std::cmp::Reverse(u.private_ws));
     for (name, u) in sorted.iter().take(12) {
-        text.push_str(&format!("  {:>7.1} частн. · {:>7.1} РН · {:>7.1} выделено  {name}\n", mb(u.private_ws), mb(u.ws), mb(u.commit)));
+        text.push_str(&format!("  {:>7.1} private · {:>7.1} WS · {:>7.1} committed  {name}\n", mb(u.private_ws), mb(u.ws), mb(u.commit)));
     }
     text
 }
@@ -179,11 +179,11 @@ fn heaps() -> String {
         let _ = unsafe { HeapUnlock(*heap) };
     }
     let process = unsafe { GetProcessHeap() }.ok();
-    let mut text = String::from("  кучи Windows (выделено регионов · занято блоков · из них блоков ≥1 МБ):\n");
+    let mut text = String::from("  Windows heaps (regions committed · blocks in use · of which blocks >=1 MB):\n");
     let mut rows: Vec<_> = handles.iter().zip(sums).collect();
     rows.sort_by_key(|(_, s)| std::cmp::Reverse(s.0 + s.2));
     for (heap, (committed, busy, large)) in rows.into_iter().take(8) {
-        let name = if Some(*heap) == process { "основная куча процесса" } else { "другая куча" };
+        let name = if Some(*heap) == process { "the process's main heap" } else { "another heap" };
         text.push_str(&format!("    {:>7.1} · {:>7.1} · {:>7.1}  {name} {:?}\n", mb(committed), mb(busy), mb(large), heap.0));
     }
     text

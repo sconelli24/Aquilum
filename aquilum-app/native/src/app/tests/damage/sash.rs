@@ -19,10 +19,10 @@ fn dragging_the_sidebar_edge_repaints_the_edge_but_not_the_tree() {
         pointer(&mut h, at.x + f64::from(i) * 4.0 * spec.scale, at.y, spec.scale, true);
         h.deliver();
         let report = frames.draw(&mut h);
-        report.print(&format!("шаг {i}"));
-        assert_eq!(report.differ, 0, "шаг {i}: частичный кадр расходится с полным");
+        report.print(&format!("step {i}"));
+        assert_eq!(report.differ, 0, "step {i}: partial frame differs from the full one");
         let inside: f64 = report.causes.iter().map(|r| r.intersect(tree)).map(|r| r.width().max(0.0) * r.height().max(0.0)).sum();
-        assert!(inside < tree.area() * 0.05, "шаг {i}: дерево перерисовано на {inside:.0} px из {:.0}", tree.area());
+        assert!(inside < tree.area() * 0.05, "step {i}: tree repainted {inside:.0} px of {:.0}", tree.area());
     }
     release(&mut h, at.x, at.y, spec.scale);
 }

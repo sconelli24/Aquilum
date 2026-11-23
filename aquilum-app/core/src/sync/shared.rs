@@ -20,7 +20,7 @@ impl Shared {
     }
 
     pub(super) fn lock(&self) -> MutexGuard<'_, State> {
-        self.state.lock().expect("состояние синхронизации")
+        self.state.lock().expect("sync state")
     }
 
     pub(super) fn connected(&self) -> bool {

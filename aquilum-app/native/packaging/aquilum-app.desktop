@@ -4,6 +4,6 @@ Comment=Fast local-first Markdown knowledge base
 Exec=aquilum-app
 StartupWMClass=aquilum-app
 Icon=aquilum-app
-Name=Aquilum
+Name=Apus
 Terminal=false
 Type=Application

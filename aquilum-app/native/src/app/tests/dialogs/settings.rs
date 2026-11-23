@@ -8,7 +8,7 @@ fn settings_dialog_applies_changes() {
     h.click(242.0, 578.0);
     assert_eq!(h.section(), Some(Section::Ui));
 
-    let themes = h.binding("переключатель темы", |b| matches!(b, Binding::Choice(_)));
+    let themes = h.binding("theme switch", |b| matches!(b, Binding::Choice(_)));
     let widget = h.root.get_widget(themes).unwrap();
     let light = widget.downcast::<crate::ui::settings::controls::Segmented>().unwrap().inner().segment(1).unwrap().center() + widget.ctx().bounding_box().origin().to_vec2();
     h.click(light.x, light.y);
@@ -48,7 +48,7 @@ fn trash_section_restores_deleted_note() {
     h.click(242.0, 578.0);
     h.open_section(Section::Trash);
     assert_eq!(h.section(), Some(Section::Trash));
-    let restore = h.binding("в корзине есть заметка", |b| matches!(b, Binding::Button(Action::Restore(_))));
+    let restore = h.binding("trash has a note", |b| matches!(b, Binding::Button(Action::Restore(_))));
     h.send(restore, crate::ui::widgets::Pressed);
     assert!(vault.join("a.md").exists());
 }
@@ -58,13 +58,13 @@ fn arrows_step_number_fields_like_tauri() {
     let mut h = Harness::new();
     h.app.open_settings(&mut h.root);
     let _ = h.root.redraw();
-    let field = h.binding("поле размера шрифта", |b| matches!(b, Binding::Number { number, .. } if number.blank));
+    let field = h.binding("font size field", |b| matches!(b, Binding::Number { number, .. } if number.blank));
     let before = h.config().ui.font.font_size_base;
     h.root.focus_on(Some(field));
     assert!(h.app.settings_key(&mut h.root, &Key::Named(NamedKey::ArrowUp), Modifiers::empty()).is_some());
     assert_eq!(h.config().ui.font.font_size_base, before + 1);
     let _ = h.root.redraw();
-    let field = h.root.focused_widget().expect("фокус остался в поле");
+    let field = h.root.focused_widget().expect("focus stayed in the field");
     h.root.focus_on(Some(field));
     h.app.settings_key(&mut h.root, &Key::Named(NamedKey::ArrowDown), Modifiers::empty());
     h.app.settings_key(&mut h.root, &Key::Named(NamedKey::ArrowDown), Modifiers::empty());
@@ -78,25 +78,25 @@ fn font_size_field_keeps_focus_and_blank_means_default() {
     h.click(242.0, 578.0);
     let nav = h.root.get_widget(h.nav(Section::Editor)).unwrap().ctx().bounding_box();
     h.click(nav.center().x, nav.center().y);
-    let field = |h: &Harness| h.binding("поле размера шрифта", |b| matches!(b, Binding::Number { number, .. } if number.blank));
+    let field = |h: &Harness| h.binding("font size field", |b| matches!(b, Binding::Number { number, .. } if number.blank));
     let rect = h.root.get_widget(field(&h)).unwrap().ctx().bounding_box();
     h.click(rect.center().x, rect.center().y);
     h.key(Key::Named(NamedKey::End), Modifiers::empty());
     h.key(Key::Named(NamedKey::Backspace), Modifiers::empty());
     let _ = h.root.redraw();
-    assert_eq!(h.config().editor.font.font_size_base, 12, "меньше 12 не бывает, как в Таури");
-    assert_eq!(h.root.focused_widget(), Some(field(&h)), "фокус слетел");
+    assert_eq!(h.config().editor.font.font_size_base, 12, "not below 12, as in Tauri");
+    assert_eq!(h.root.focused_widget(), Some(field(&h)), "focus was lost");
     h.key(Key::Named(NamedKey::Backspace), Modifiers::empty());
     let _ = h.root.redraw();
-    assert_eq!(h.config().editor.font.font_size_base, 16, "пустое поле — размер по умолчанию");
-    assert_eq!(h.root.focused_widget(), Some(field(&h)), "фокус слетел");
+    assert_eq!(h.config().editor.font.font_size_base, 16, "empty field: default size");
+    assert_eq!(h.root.focused_widget(), Some(field(&h)), "focus was lost");
     let text = |h: &Harness| h.root.get_widget(field(h)).and_then(|w| w.downcast::<crate::ui::editor::TextEditor>()).unwrap().inner().text();
     assert_eq!(text(&h), "");
     h.type_text("20");
     let _ = h.root.redraw();
     assert_eq!(h.config().editor.font.font_size_base, 20);
     assert_eq!(text(&h), "20");
-    assert_eq!(h.root.focused_widget(), Some(field(&h)), "фокус слетел");
+    assert_eq!(h.root.focused_widget(), Some(field(&h)), "focus was lost");
 }
 
 #[test]
@@ -124,26 +124,26 @@ fn mcp_code_scrolls_sideways() {
     }
     let layer = match &h.app.popup {
         Some(Popup::Settings { dialog, .. }) => dialog.layer,
-        _ => panic!("настройки закрылись"),
+        _ => panic!("settings closed"),
     };
     let mut blocks = Vec::new();
     find(&h.root, layer, &mut blocks);
-    assert!(!blocks.is_empty(), "блоков кода нет");
+    assert!(!blocks.is_empty(), "no code blocks");
     let offset = |h: &Harness, id| h.root.get_widget(id).unwrap().downcast::<Sideways>().unwrap().inner().offset();
     let visible = blocks.iter().copied().find(|&id| {
         let r = h.root.get_widget(id).unwrap().ctx().bounding_box();
         r.y0 > 60.0 && r.y1 < f64::from(H) - 20.0
     });
-    let id = visible.expect("ни один блок кода не виден");
+    let id = visible.expect("no code block is visible");
     let rect = h.root.get_widget(id).unwrap().ctx().bounding_box();
     let (x, y) = (rect.x0 + 20.0, rect.y1 - 8.0);
     h.drag((x, y), (x + 150.0, y));
     h.settle();
     let dragged = offset(&h, id);
-    assert!(dragged > 0.0, "перетаскивание ползунка не сдвинуло код");
+    assert!(dragged > 0.0, "dragging the thumb did not scroll the code");
     h.scroll((rect.center().x, rect.center().y), 1.0, (60.0, 0.0));
     h.settle();
-    assert!(offset(&h, id) < dragged, "горизонтальный жест не прокрутил код");
+    assert!(offset(&h, id) < dragged, "horizontal gesture did not scroll the code");
     h.snapshot("mcp-code.png");
 }
 
@@ -152,11 +152,11 @@ fn animations_switch_turns_motion_off_and_on() {
     let mut h = Harness::new();
     h.click(242.0, 578.0);
     assert!(h.config().ui.animations && crate::ui::motion::on());
-    let switch = h.binding("переключатель анимаций", |b| matches!(b, Binding::Switch(_)));
+    let switch = h.binding("animations switch", |b| matches!(b, Binding::Switch(_)));
     let center = h.root.get_widget(switch).unwrap().ctx().bounding_box().center();
     h.click(center.x, center.y);
     assert!(!h.config().ui.animations);
-    assert!(!crate::ui::motion::on(), "после выключения анимации продолжают идти");
+    assert!(!crate::ui::motion::on(), "animations keep running after being turned off");
     h.click(center.x, center.y);
     assert!(h.config().ui.animations && crate::ui::motion::on());
 }
@@ -170,14 +170,14 @@ fn wiped_after_confirmation(section: Section, wipe: Wipe, kept: &str, wiped: &st
     h.click(242.0, 578.0);
     h.open_section(section);
     let confirm_layer = |h: &Harness| match &h.app.popup {
-        Some(Popup::Settings { dialog, .. }) => dialog.confirm.as_ref().expect("окно подтверждения").0.layer,
-        _ => panic!("настройки закрылись"),
+        Some(Popup::Settings { dialog, .. }) => dialog.confirm.as_ref().expect("confirmation dialog").0.layer,
+        _ => panic!("settings closed"),
     };
 
-    let clear = h.binding("кнопка очистки", |b| matches!(b, Binding::Button(Action::Wipe(found)) if *found == wipe));
+    let clear = h.binding("clear button", |b| matches!(b, Binding::Button(Action::Wipe(found)) if *found == wipe));
     h.act(clear, crate::ui::widgets::Pressed);
     h.act(confirm_layer(&h), crate::ui::dialog::DialogAnswer::Cancel);
-    assert!(file.exists(), "отмена всё стёрла");
+    assert!(file.exists(), "cancel wiped everything");
 
     h.act(clear, crate::ui::widgets::Pressed);
     h.act(confirm_layer(&h), crate::ui::dialog::DialogAnswer::Confirm);
@@ -205,5 +205,5 @@ fn going_to_the_background_keeps_the_open_settings() {
     h.click(242.0, 578.0);
     h.open_section(Section::Editor);
     h.app.save_reader(&mut h.root);
-    assert_eq!(h.section(), Some(Section::Editor), "после ухода в фон приложение забыло открытые настройки");
+    assert_eq!(h.section(), Some(Section::Editor), "after going to the background the app forgot the open settings");
 }

@@ -1,118 +1,118 @@
 # Aquilum
 
-**Aquilum** — сверхбыстрый локальный (local-first) редактор персональной и командной базы знаний. Интерфейс нативный: **Rust**, **Masonry**, **winit** и **vello_cpu**, без WebView.
+**Aquilum** is an ultra-fast local-first editor for a personal and team knowledge base. The interface is native: **Rust**, **Masonry**, **winit** and **vello_cpu**, with no WebView.
 
-Приложение создано для тех, кто ценит максимальную производительность, приватность и удобство работы с мыслями, текстами и проектами.
+The app is made for those who value maximum performance, privacy and a comfortable way to work with thoughts, texts and projects.
 
-- **Данные принадлежат вам**: заметки хранятся в обычных `.md` файлах на вашем диске в любой удобной папке.
-- **Бесконфликтная архитектура**: правки обрабатываются в памяти через CRDT (**Yrs**, Yjs на Rust), сохраняя целостность при параллельных изменениях.
-- **Локальная скорость**: поисковый движок, аналитика и кэширование реализованы на **Rust** с локальной базой данных SQLite.
-- **Никаких облачных привязок**: работает полностью офлайн без подписок и телеметрии.
+- **Your data belongs to you**: notes are stored in plain `.md` files on your disk, in any folder you like.
+- **Conflict-free architecture**: edits are processed in memory through a CRDT (**Yrs**, Yjs in Rust), preserving integrity under concurrent changes.
+- **Local speed**: the search engine, analytics and caching are implemented in **Rust** with a local SQLite database.
+- **No cloud lock-in**: works fully offline, with no subscriptions and no telemetry.
 
 ---
 
-## Стек
+## Stack
 
-| Слой | Технологии |
+| Layer | Technologies |
 | --- | --- |
-| Язык | **Rust** (edition 2024) |
-| Окно и ввод | **winit 0.31** (свой хост, без `masonry_winit`), DirectManipulation для тачпада на Windows |
-| Интерфейс | **Masonry** (виджеты Xilem) — форк `masonry_core` в `aquilum-app/native/vendor/` |
-| Текст | **Parley** (раскладка), **harfrust** (шейпинг), **skrifa** (шрифты), шрифты iA Writer встроены |
-| Отрисовка | **vello_cpu** на процессоре (SSE4.2), форк в `vendor/` вместе с **glifo** (атлас глифов); свой учёт повреждённых областей, слои и штампы |
-| Вывод кадра | Windows: цепочка обмена **DXGI** (flip, WARP), остальные ОС: **softbuffer** |
-| Редактор | свой: Markdown с live preview, абзацы раскладываются только у видимой области, оценочные высоты и якорь прокрутки как в CodeMirror 6, разбор разметки только вокруг правки |
-| Хранение и ядро | `aquilum-app/core`: **SQLite** (rusqlite), **Yrs** (CRDT), **tantivy** (полнотекстовый поиск), **notify** (слежение за файлами), MCP-сервер |
-| Картинки | **image** (PNG, JPEG, WebP, GIF, BMP); PNG и JPEG декодируются сразу под размер показа (`png`, `jpeg-decoder`) |
-| Экспорт PDF | **krilla** |
-| Сеть | **ureq** + **rustls** (обновления, загрузка картинок, заголовки ссылок) |
-| Установщики | **cargo-packager** (NSIS, `.app`, DMG, AppImage) и **nfpm** (deb, rpm) |
+| Language | **Rust** (edition 2024) |
+| Window and input | **winit 0.31** (own host, without `masonry_winit`), DirectManipulation for the touchpad on Windows |
+| Interface | **Masonry** (Xilem widgets): a fork of `masonry_core` in `aquilum-app/native/vendor/` |
+| Text | **Parley** (layout), **harfrust** (shaping), **skrifa** (fonts), iA Writer fonts embedded |
+| Rendering | **vello_cpu** on the CPU (SSE4.2), forked in `vendor/` together with **glifo** (glyph atlas); own damage-region tracking, layers and stamps |
+| Frame output | Windows: **DXGI** swap chain (flip, WARP), other OSes: **softbuffer** |
+| Editor | own: Markdown with live preview, paragraphs are laid out only in the visible area, estimated heights and a scroll anchor like in CodeMirror 6, markup is parsed only around the edit |
+| Storage and core | `aquilum-app/core`: **SQLite** (rusqlite), **Yrs** (CRDT), **tantivy** (full-text search), **notify** (file watching), MCP server |
+| Images | **image** (PNG, JPEG, WebP, GIF, BMP); PNG and JPEG are decoded directly to the display size (`png`, `jpeg-decoder`) |
+| PDF export | **krilla** |
+| Network | **ureq** + **rustls** (updates, image downloads, link titles) |
+| Installers | **cargo-packager** (NSIS, `.app`, DMG, AppImage) and **nfpm** (deb, rpm) |
 
 ---
 
-## Возможности
+## Features
 
-### 📝 Live Preview редактор
-- **Бесшовный просмотр на лету**: форматирование Markdown (заголовки, списки, цитаты, оформление текста) преобразуется сразу в процессе ввода без разделения экрана на код и превью.
-- **Интерактивные таблицы**: визуальный табличный редактор с поддержкой навигации с клавиатуры (<kbd>Tab</kbd>, <kbd>Enter</kbd>, <kbd>Esc</kbd>), добавления/удаления строк и столбцов через контекстное меню.
-- **Коллауты и блоки выносок**: поддержка информационных блоков `[!note]`, `[!warning]`, `[!quote]`, `[!book]` и других.
-- **Вики-ссылки и автодополнение**: умная система двусторонних ссылок `[[Имя заметки|Псевдоним]]` и тегов `#тег` со всплывающим списком подсказок.
-- **Метаданные Frontmatter**: сворачиваемый блок YAML-метаданных с валидацией и подсветкой типов.
-- **Внутристраничный поиск**: быстрый поиск и замена по открытой заметке (<kbd>Ctrl</kbd> + <kbd>F</kbd>) с циклической навигацией по совпадениям.
+### 📝 Live Preview editor
+- **Seamless on-the-fly preview**: Markdown formatting (headings, lists, quotes, text styling) is rendered immediately as you type, with no split between code and preview.
+- **Interactive tables**: a visual table editor with keyboard navigation (<kbd>Tab</kbd>, <kbd>Enter</kbd>, <kbd>Esc</kbd>) and adding/removing rows and columns through the context menu.
+- **Callouts**: support for information blocks `[!note]`, `[!warning]`, `[!quote]`, `[!book]` and others.
+- **Wiki links and autocomplete**: a smart system of two-way links `[[Note name|Alias]]` and tags `#tag` with a popup suggestion list.
+- **Frontmatter metadata**: a collapsible YAML metadata block with validation and type highlighting.
+- **In-page search**: fast find and replace in the open note (<kbd>Ctrl</kbd> + <kbd>F</kbd>) with cyclic navigation through matches.
 
-### 📚 Встроенная читалка книг (EPUB / FB2)
-- Чтение книг прямо внутри приложения без необходимости открывать сторонние программы.
-- Автоматическое сохранение прогресса, процента прочитанного и точной позиции в книге (CFI).
-- **Цитаты со связью**: выделение фрагмента текста в книге создаёт в заметке блок цитаты `> [!quote]` со ссылкой `aquilum-reader:`. Клик по сноске в заметке мгновенно открывает книгу на точном месте цитаты.
+### 📚 Built-in book reader (EPUB / FB2)
+- Read books right inside the app, without opening third-party programs.
+- Automatic saving of progress, percentage read and the exact position in the book (CFI).
+- **Linked quotes**: selecting a text fragment in a book creates a `> [!quote]` quote block in the note with an `aquilum-reader:` link. Clicking the footnote in the note instantly opens the book at the exact place of the quote.
 
-### 📊 Движок аналитических запросов Dataview
-- Встроенный легковесный и быстрый движок табличных запросов на Rust:
+### 📊 Dataview analytical query engine
+- A built-in lightweight and fast table query engine in Rust:
   ```dataview
-  TABLE file.mtime AS "Изменено", status AS "Статус"
-  FROM "Проекты"
+  TABLE file.mtime AS "Modified", status AS "Status"
+  FROM "Projects"
   WHERE status != "done"
   ```
-- Поддержка агрегатов и периодов: `count`, `delta`, `sum`, интервалов дат (`span`, `dur`, `today`, `now`).
-- **Интерактивные задачи**: переключение чекбоксов задач прямо в ячейках таблицы Dataview мгновенно обновляет соответствующий Markdown-файл на диске.
-- **Компактный обратный отсчёт**: таймеры дедлайнов с отображением секунд при остатке менее минуты и компактным маркером завершения.
+- Support for aggregates and periods: `count`, `delta`, `sum`, date intervals (`span`, `dur`, `today`, `now`).
+- **Interactive tasks**: toggling task checkboxes right in Dataview table cells instantly updates the corresponding Markdown file on disk.
+- **Compact countdown**: deadline timers that show seconds when less than a minute remains, with a compact completion marker.
 
-### 🕸️ Интерактивный 2D-граф знаний
-- Наглядная карта связей между всеми заметками вашей базы в реальном времени.
-- Физическая симуляция упругости связей с плавной регулировкой масштаба.
-- **Режимы подсветки времени**:
-  - `Created`: цветовая шкала по времени создания заметок.
-  - `Modified`: подсветка по недавним изменениям.
-  - `None`: лаконичный монохромный режим.
-- Фокусировка на выбранной заметке и подсветка смежных рёбер.
+### 🕸️ Interactive 2D knowledge graph
+- A clear map of the links between all notes of your vault in real time.
+- Physical simulation of link elasticity with smooth zoom.
+- **Time highlight modes**:
+  - `Created`: a color scale by note creation time.
+  - `Modified`: highlighting by recent changes.
+  - `None`: a concise monochrome mode.
+- Focus on the selected note and highlighting of adjacent edges.
 
-### 🔗 Обратные ссылки и семантический анализ (Backlinks)
-- Правая панель с входящими и исходящими упоминаниями открытой заметки.
-- Семантические алгоритмы анализа смежности и контекста:
-  - **BM25F**: контекстный текстовый поиск с нормализацией полей.
-  - **Adamic-Adar**: графовый алгоритм определения общих соседей.
-  - **Wikixiv**: тематические рекомендации на базе анализа терминов.
+### 🔗 Backlinks and semantic analysis
+- A right panel with incoming and outgoing mentions of the open note.
+- Semantic algorithms for analyzing adjacency and context:
+  - **BM25F**: contextual text search with field normalization.
+  - **Adamic-Adar**: a graph algorithm for finding common neighbors.
+  - **Wikixiv**: topic recommendations based on term analysis.
 
-### 🕒 Локальная история версий (Note History)
-- Автоматическое создание версий в `.aquilum/history/` при редактировании и внешних правках.
-- Удобный просмотр истории с визуальным Diff (подсветка добавленных и удалённых строк).
-- Именование версий для закрепления ключевых контрольных точек.
-- Быстрое восстановление любой версии в один клик без потери текущего состояния.
+### 🕒 Local version history (Note History)
+- Versions are created automatically in `.aquilum/history/` on edits and external changes.
+- Convenient history browsing with a visual diff (added and removed lines are highlighted).
+- Naming of versions to pin key checkpoints.
+- Quick restore of any version in one click without losing the current state.
 
-### 🤖 Нативный MCP-сервер (Model Context Protocol)
-- Встроенный сервер по протоколам HTTP и STDIO для подключения к AI-ассистентам (Cursor, Claude Desktop, Antigravity и другим).
-- Набор инструментов для агентов:
-  - Поиск и фильтрация заметок (`search_notes`, `find_notes`, `note_outline`).
-  - Чтение и безопасное создание/изменение файлов (`read_note`, `create_note`, `update_note`).
-  - Управление связями и графом (`backlinks`, `outgoing_links`, `related_notes`).
-  - Работа с историей версий (`note_history`, `read_version`, `restore_version`).
-  - **Фоновые гостевые базы**: агент может читать и искать в любой ранее открывавшейся базе без переключения активного окна пользователя.
+### 🤖 Native MCP server (Model Context Protocol)
+- A built-in server over HTTP and STDIO for connecting to AI assistants (Cursor, Claude Desktop, Antigravity and others).
+- A set of tools for agents:
+  - Searching and filtering notes (`search_notes`, `find_notes`, `note_outline`).
+  - Reading and safely creating/changing files (`read_note`, `create_note`, `update_note`).
+  - Managing links and the graph (`backlinks`, `outgoing_links`, `related_notes`).
+  - Working with version history (`note_history`, `read_version`, `restore_version`).
+  - **Background guest vaults**: an agent can read and search in any previously opened vault without switching the user's active window.
 
-### 🗑️ Безопасная корзина (.trash)
-- Защита от случайного удаления: файлы и их история перемещаются в локальную корзину базы с возможностью моментального восстановления.
+### 🗑️ Safe trash (.trash)
+- Protection against accidental deletion: files and their history are moved to the vault's local trash with the possibility of instant restore.
 
 ---
 
-## Быстрый старт
+## Quick start
 
-### Требования
-- **Rust**: актуальная стабильная версия (`rustup update stable`)
-- **Visual Studio Build Tools** (для Windows): компонент C++ x64/x86 build tools
-- **Node.js** v20+ — только ради `npm run dev` (пересборка на лету); без него то же делает `aquilum-app\native\watch.bat`
+### Requirements
+- **Rust**: current stable version (`rustup update stable`)
+- **Visual Studio Build Tools** (for Windows): the C++ x64/x86 build tools component
+- **Node.js** v20+: only for `npm run dev` (rebuild on the fly); without it, `aquilum-app\native\watch.bat` does the same
 
-### Запуск для разработки
+### Running for development
 
 ```powershell
 cd aquilum-app
 npm run dev
 ```
 
-Собирает, открывает окно и перезапускает его после каждой правки кода, ядра, стилей или переводов. Каталог данных отдельный — `com.dmitriy.aquilum-app.native-dev`. В окне F12 включает подсветку перерисовки (в релизе её нет).
+Builds, opens the window and restarts it after each change to the code, core, styles or translations. The data directory is separate: `com.dmitriy.aquilum-app.native-dev`. In the window, F12 turns on repaint highlighting (not available in release).
 
-`aquilum-app\native\run.bat` собирает release и открывает окно с обычными данными.
+`aquilum-app\native\run.bat` builds release and opens the window with the regular data.
 
 ---
 
-## Проверки
+## Checks
 
 ```powershell
 cd aquilum-app
@@ -121,20 +121,20 @@ cargo test --workspace
 
 ---
 
-## Сборка релиза
+## Release build
 
-Все пакеты собирает workflow `Release` в публичном репозитории (Actions → Release, запуск руками):
+All packages are built by the `Release` workflow in the public repository (Actions → Release, started manually):
 
-- Windows — установщик NSIS `Aquilum_<версия>_x64-setup.exe`;
-- macOS — DMG и архивы `.app.tar.gz` для автообновления (Apple Silicon и Intel);
-- Linux — AppImage, `.deb` и `.rpm`;
-- `latest.json` для автообновления, все файлы подписаны тем же ключом minisign.
+- Windows: the NSIS installer `Aquilum_<version>_x64-setup.exe`;
+- macOS: DMG and `.app.tar.gz` archives for auto-update (Apple Silicon and Intel);
+- Linux: AppImage, `.deb` and `.rpm`;
+- `latest.json` for auto-update; all files are signed with the same minisign key.
 
-Упаковка — [cargo-packager](https://github.com/crabnebula-dev/cargo-packager) (`[package.metadata.packager]` в `aquilum-app/native/Cargo.toml`) и [nfpm](https://nfpm.goreleaser.com) (`aquilum-app/native/packaging/nfpm.yaml`). Установщик ставится поверх прежней версии на Tauri. Перед выгрузкой каждый пакет ставится и запускается на чистой машине; локальная сборка установщика Windows описана в `aquilum-app/README.md`.
+Packaging uses [cargo-packager](https://github.com/crabnebula-dev/cargo-packager) (`[package.metadata.packager]` in `aquilum-app/native/Cargo.toml`) and [nfpm](https://nfpm.goreleaser.com) (`aquilum-app/native/packaging/nfpm.yaml`). The installer installs over the previous Tauri version. Before upload, each package is installed and launched on a clean machine; building the Windows installer locally is described in `aquilum-app/README.md`.
 
 ---
 
-## Автор
-- **Разработчик**: Dmitriy Chaplinskiy
+## Author
+- **Developer**: Dmitriy Chaplinskiy
 - **Telegram**: [@dmitriy_yiu](https://t.me/dmitriy_yiu)
-- **Лицензия**: [GNU AGPL-3.0-only](LICENSE). © 2026 Dmitriy Chaplinskiy. Публичная страница, исходники и релизы: [Freaction/Aquilum](https://github.com/Freaction/Aquilum).
+- **License**: [GNU AGPL-3.0-only](LICENSE). © 2026 Dmitriy Chaplinskiy. Public page, sources and releases: [Freaction/Aquilum](https://github.com/Freaction/Aquilum).

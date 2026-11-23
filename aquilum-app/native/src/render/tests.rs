@@ -53,11 +53,11 @@ fn color_bbox(renderer: &Renderer) -> Option<(u32, u32, u32, u32)> {
 fn render_emoji(scale: f64) -> (u32, u32, u32, u32) {
     let (layers, _) = root("ab 🦀", scale).redraw();
     let mut renderer = Renderer::new(0);
-    renderer.render(&layers, W, H, scale, BG).expect("кадр");
-    color_bbox(&renderer).expect("эмодзи нарисован")
+    renderer.render(&layers, W, H, scale, BG).expect("frame");
+    color_bbox(&renderer).expect("emoji is drawn")
 }
 
-/// На imaging_vello_cpu 0.0.1 (vello_cpu 0.0.7) масштаб окна не применялся к цветным глифам.
+/// On imaging_vello_cpu 0.0.1 (vello_cpu 0.0.7) the window scale was not applied to color glyphs.
 #[test]
 fn color_glyphs_follow_window_scale() {
     let (x0, y0, x1, _) = render_emoji(1.0);
@@ -65,7 +65,7 @@ fn color_glyphs_follow_window_scale() {
     let near = |a: u32, b: f64| (f64::from(a) - b).abs() <= 3.0;
     assert!(near(sx0, f64::from(x0) * 1.75), "x: {x0} → {sx0}");
     assert!(near(sy0, f64::from(y0) * 1.75), "y: {y0} → {sy0}");
-    assert!(near(sx1 - sx0, f64::from(x1 - x0) * 1.75), "ширина: {} → {}", x1 - x0, sx1 - sx0);
+    assert!(near(sx1 - sx0, f64::from(x1 - x0) * 1.75), "width: {} → {}", x1 - x0, sx1 - sx0);
 }
 
 #[test]
@@ -89,7 +89,7 @@ fn big_image_frame_cost() {
         let (layers, _) = root.redraw();
         renderer.draw_frame(&layers, 1200, 800, 1.0, BG, true).unwrap();
     }
-    eprintln!("кадр с картинкой 3000×2000: {:?}", start.elapsed() / frames);
+    eprintln!("frame with a 3000×2000 image: {:?}", start.elapsed() / frames);
 }
 
 #[test]
@@ -108,11 +108,11 @@ fn published_frame_survives_regions_that_miss_it() {
         painter.ctx.render_with(&mut pixmap, &mut painter.resources, vello_cpu::RasterizerSettings::default());
         pixmap.data()[4 * 8 + 4].r
     };
-    assert_eq!(center(true), 200, "кадр не нарисован");
+    assert_eq!(center(true), 200, "the frame was not drawn");
     for _ in 0..3 {
         center(false);
     }
-    assert_eq!(center(true), 200, "кадр пропал после областей, которые его не задевали");
+    assert_eq!(center(true), 200, "the frame vanished after regions that did not touch it");
 }
 
 #[test]
@@ -129,9 +129,9 @@ fn overlay_leaves_no_trace() {
     overlay.flash(Area { x: 4, y: 6, w: 20, h: 10 }, Mark::Raster);
     let shown = overlay.show(&mut canvas, &mut stamps, &[(Area { x: 0, y: 0, w: 64, h: 48 }, Mark::Region), (Area { x: 60, y: 40, w: 30, h: 30 }, Mark::Layer)]);
     assert!(shown.is_some());
-    assert_ne!(canvas.2, clean, "подсветка видна");
+    assert_ne!(canvas.2, clean, "the highlight is visible");
     stamps.restore(&mut canvas);
-    assert_eq!(canvas.2, clean, "после подсветки холст прежний");
+    assert_eq!(canvas.2, clean, "after the highlight the canvas is unchanged");
 }
 
 #[test]
@@ -147,9 +147,9 @@ fn graph_frame_is_copied_exactly_like_the_rasterizer_draws_it() {
     let _ = root.redraw();
     let (layers, _) = root.redraw();
     let mut renderer = Renderer::new(0);
-    renderer.render(&layers, W, H, scale, BG).expect("кадр");
-    assert!(renderer.blitted, "картинка графа копируется напрямую");
-    let frame = renderer.frame(&layers).expect("кадр");
+    renderer.render(&layers, W, H, scale, BG).expect("frame");
+    assert!(renderer.blitted, "the graph image is copied directly");
+    let frame = renderer.frame(&layers).expect("frame");
     let mut painter = paint::Painter::new(W, H, paint::settings(0));
     painter.begin(0, 0, W, H);
     frame.paint_into(&mut painter);
@@ -158,7 +158,7 @@ fn graph_frame_is_copied_exactly_like_the_rasterizer_draws_it() {
     let pixmap = vello_cpu::PixmapMut::new(W, H, bytemuck::cast_slice_mut(&mut expected)).unwrap();
     painter.ctx.render_with(pixmap, &mut painter.resources, vello_cpu::RasterizerSettings { pixel_format: PIXEL_FORMAT, ..Default::default() });
     let differ = renderer.frame_pixels().iter().zip(&expected).filter(|(a, b)| a != b).count();
-    assert_eq!(differ, 0, "кадр с прямым копированием совпадает с растеризатором");
+    assert_eq!(differ, 0, "a frame with direct copying matches the rasterizer");
 }
 
 #[test]

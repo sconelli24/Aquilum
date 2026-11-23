@@ -70,7 +70,7 @@ fn a_folder_moves_as_every_note_inside_it() {
             target.join("А.md").to_string_lossy().into_owned(),
             target.join("Глубже").join("Б.md").to_string_lossy().into_owned(),
         ],
-        "только заметки, вложенность сохраняется"
+        "notes only, nesting is preserved"
     );
 }
 

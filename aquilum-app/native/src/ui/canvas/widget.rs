@@ -61,6 +61,7 @@ impl Widget for CanvasView {
             self.camera.limit(MIN_SCALE, MAX_SCALE);
             ctx.request_layout();
             ctx.request_paint_only();
+            ctx.request_post_paint();
         }
         if let Some(at) = self.moved_at
             && Instant::now().duration_since(at) >= CAMERA_SETTLE
@@ -80,6 +81,7 @@ impl Widget for CanvasView {
             self.hint.clear();
             self.notice_line.clear();
             ctx.request_paint_only();
+            ctx.request_post_paint();
         }
     }
 

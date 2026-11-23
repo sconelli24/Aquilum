@@ -47,7 +47,7 @@ mod imp {
     }
 
     pub fn alert(text: &str) {
-        rfd::MessageDialog::new().set_title("Aquilum").set_description(text).set_level(rfd::MessageLevel::Error).show();
+        rfd::MessageDialog::new().set_title("Apus").set_description(text).set_level(rfd::MessageLevel::Error).show();
     }
 }
 

@@ -20,14 +20,14 @@ struct Marks {
 }
 
 fn marks(source: &str, available: f64) -> Marks {
-    let drawing = math(source, 16.0, available).expect("формула нарисована");
+    let drawing = math(source, 16.0, available).expect("formula is drawn");
     assert!(drawing.height > 16.0, "{}", drawing.height);
     let mut marks = Marks::default();
     for item in &drawing.items {
         match item {
             Item::Glyphs(font, _, run, color) => marks.glyphs.extend(run.iter().map(|g| (Point::new(g.x.into(), g.y.into()), color.is_some(), font.data.clone()))),
             Item::Path(path, color, _) => marks.rules.push((path.bounding_box(), color.is_some())),
-            _ => panic!("в формуле только глифы и линии"),
+            _ => panic!("formula has only glyphs and rules"),
         }
     }
     marks
@@ -36,10 +36,10 @@ fn marks(source: &str, available: f64) -> Marks {
 #[test]
 fn a_fraction_draws_both_parts_around_a_centered_bar() {
     let m = marks(r"\frac{a}{b}", 600.0);
-    let [(bar, _)] = m.rules[..] else { panic!("одна черта дроби: {:?}", m.rules) };
-    assert!((bar.center().x - 300.0).abs() < 1.0, "формула не по центру: {bar:?}");
-    let [(a, ..), (b, ..)] = &m.glyphs[..] else { panic!("два глифа") };
-    assert!(a.y < bar.y0 && b.y > bar.y1, "числитель и знаменатель не по разные стороны черты: {a:?} {b:?} {bar:?}");
+    let [(bar, _)] = m.rules[..] else { panic!("one fraction bar: {:?}", m.rules) };
+    assert!((bar.center().x - 300.0).abs() < 1.0, "formula is not centered: {bar:?}");
+    let [(a, ..), (b, ..)] = &m.glyphs[..] else { panic!("two glyphs") };
+    assert!(a.y < bar.y0 && b.y > bar.y1, "numerator and denominator are not on opposite sides of the bar: {a:?} {b:?} {bar:?}");
 }
 
 #[test]
@@ -95,9 +95,9 @@ fn a_display_block_is_drawn_until_the_caret_enters_it() {
     let doc = laid(text, None);
     let drawn = doc.paragraphs().filter(|p| matches!(p.embed.map(|e| &e.view), Some(View::Drawing(_)))).count();
     assert_eq!(drawn, 1);
-    assert_eq!(doc.bottom(2) - doc.top(2), 0.0, "исходник формулы виден вместе с рисунком");
-    let doc = laid(text, Some(text.find("sqrt").expect("формула")));
-    assert!(doc.bottom(2) - doc.top(2) > 0.0, "внутри формулы не видно исходника");
+    assert_eq!(doc.bottom(2) - doc.top(2), 0.0, "formula source is visible together with the drawing");
+    let doc = laid(text, Some(text.find("sqrt").expect("formula")));
+    assert!(doc.bottom(2) - doc.top(2) > 0.0, "source is not visible inside the formula");
 }
 
 #[test]
@@ -105,18 +105,18 @@ fn inline_formulas_replace_their_source_on_the_text_baseline() {
     let text = r"Энергия $E = mc^2$, дробь $\frac{a}{b}$ и строка $$ x^2 + y^2 = z^2 $$ и высокая $\dfrac{\dfrac{a}{b}}{c}$ и $\frac{a$";
     let doc = laid(text, None);
     let p = doc.paragraph(0);
-    assert_eq!(formulas(p.decor()).len(), 4, "незакрытая формула должна остаться исходником");
+    assert_eq!(formulas(p.decor()).len(), 4, "an unclosed formula must stay as source");
     let found = boxes(p.layout());
     assert_eq!(found.len(), 4);
     for ((b, line), formula) in found.iter().zip(formulas(p.decor())) {
-        assert!((b.y + formula.ascent - line.baseline).abs() < 0.5, "формула не на базовой линии: {b:?} {line:?}");
-        assert!(b.y >= line.block_min_coord - 0.5 && line.baseline + formula.depth <= line.block_max_coord + 0.5, "формула вылезла из строки: {b:?} {line:?}");
+        assert!((b.y + formula.ascent - line.baseline).abs() < 0.5, "formula is not on the baseline: {b:?} {line:?}");
+        assert!(b.y >= line.block_min_coord - 0.5 && line.baseline + formula.depth <= line.block_max_coord + 0.5, "formula stuck out of the line: {b:?} {line:?}");
         assert!(b.width > 10.0);
     }
-    assert!(found[2].0.height > found[0].0.height, "$$ в строке не в выключном стиле");
+    assert!(found[2].0.height > found[0].0.height, "$$ in a line is not in display style");
     let height = |text: &str| laid(text, None).paragraph(0).layout().height();
-    assert_eq!(height(r"Буква $x$"), height("Буква x"), "низкая формула раздвинула строку");
-    assert!(height(r"Дробь $\dfrac{\dfrac{a}{b}}{c}$") > height("Дробь"), "высокая формула не раздвинула строку");
-    let inside = laid(text, Some(text.find("mc^2").expect("формула")));
-    assert_eq!(formulas(inside.paragraph(0).decor()).len(), 3, "под кареткой должен быть исходник");
+    assert_eq!(height(r"Буква $x$"), height("Буква x"), "a short formula stretched the line");
+    assert!(height(r"Дробь $\dfrac{\dfrac{a}{b}}{c}$") > height("Дробь"), "a tall formula did not stretch the line");
+    let inside = laid(text, Some(text.find("mc^2").expect("formula")));
+    assert_eq!(formulas(inside.paragraph(0).decor()).len(), 3, "source must be shown under the caret");
 }

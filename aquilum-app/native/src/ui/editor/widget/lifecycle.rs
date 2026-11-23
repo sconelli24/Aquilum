@@ -26,7 +26,7 @@ impl TextEditor {
     }
 
     pub(super) fn ensure_layout(&mut self, fcx: &mut masonry::parley::FontContext, lcx: &mut masonry::parley::LayoutContext<BrushIndex>, width: f64) {
-        let _zone = aq_trace::zone("редактор: вёрстка");
+        let _zone = aq_trace::zone("editor: layout");
         self.width = width;
         let compose = self.compose.as_ref().map(|(text, _)| (self.focus, text.as_str()));
         let wrap = (!self.single_line || self.wraps).then(|| (width - size::CARET_WIDTH * 2.0).max(0.0) as f32);

@@ -37,16 +37,16 @@ fn play(seed: u64) {
         let outcomes: Vec<_> = devices.iter().map(|device| device.sync(&remote)).collect();
         outcomes.iter().all(|outcome| outcome.failed.is_empty() && outcome.progress.total == 0)
     });
-    assert!(quiet, "зерно {seed}: устройства не успокоились за 10 кругов");
+    assert!(quiet, "seed {seed}: the devices did not settle within 10 rounds");
     for device in &devices {
-        assert_eq!(device.files(), remote.paths(), "зерно {seed}: файлы разошлись");
+        assert_eq!(device.files(), remote.paths(), "seed {seed}: files diverged");
         for path in device.files() {
-            assert_eq!(device.read(&path), remote.text(&path), "зерно {seed}: разный текст {path}");
+            assert_eq!(device.read(&path), remote.text(&path), "seed {seed}: different text in {path}");
         }
     }
     let kept: String = devices.iter().map(Device::kept_text).collect::<Vec<_>>().join("\n");
     for line in typed {
-        assert!(kept.lines().any(|kept| kept == line), "зерно {seed}: пропала строка «{line}»");
+        assert!(kept.lines().any(|kept| kept == line), "seed {seed}: line \"{line}\" was lost");
     }
 }
 

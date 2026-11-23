@@ -18,7 +18,7 @@ pub fn open(data: Vec<u8>) -> Option<Book> {
         record_offsets.push(offset);
     }
 
-    // Проверяем, есть ли встроенный EPUB ZIP (стандартный формат AZW3/KF8)
+    // Check whether there is an embedded EPUB ZIP (the standard AZW3/KF8 format)
     for &offset in &record_offsets {
         if offset + 4 <= data.len() && &data[offset..offset + 4] == b"PK\x03\x04" {
             let zip_data = data[offset..].to_vec();

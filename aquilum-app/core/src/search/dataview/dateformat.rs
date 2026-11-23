@@ -99,7 +99,7 @@ mod tests {
     use crate::search::note_date;
 
     fn at(text: &str) -> i64 {
-        note_date::parse(text).expect("дата разобрана")
+        note_date::parse(text).expect("date parsed")
     }
 
     #[test]

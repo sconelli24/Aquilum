@@ -15,15 +15,15 @@ fn note_reopens_at_saved_scroll_position() {
     h.root.handle_pointer_event(PointerEvent::Scroll(PointerScrollEvent { pointer: MOUSE, delta: ScrollDelta::PixelDelta(PhysicalPosition::new(0.0, -2500.0)), state }));
     h.deliver();
     let saved = note_offset(&h);
-    assert!(saved > 2000.0, "прокрутка не сработала: {saved}");
+    assert!(saved > 2000.0, "scroll did not work: {saved}");
     h.open(other);
     let _ = h.root.redraw();
     h.open(long);
     let _ = h.root.redraw();
-    assert!(h.app.restore_view(&mut h.root), "позиция не восстановлена");
+    assert!(h.app.restore_view(&mut h.root), "position not restored");
     let _ = h.root.redraw();
     let restored = note_offset(&h);
-    assert!((restored - saved).abs() < 1.0, "сохранено {saved}, восстановлено {restored}");
+    assert!((restored - saved).abs() < 1.0, "saved {saved}, restored {restored}");
 }
 
 fn long_note(h: &Harness) -> std::path::PathBuf {
@@ -57,7 +57,7 @@ fn a_restarted_app_reopens_a_long_note_at_the_place_it_was_left() {
     h.settle();
     h.deliver();
     h.app.capture_view(&h.root);
-    let saved = h.app.view.expect("позиция запомнена");
+    let saved = h.app.view.expect("position remembered");
     let mut h = h.restarted(1.0);
     h.app.restore(&mut h.root);
     h.parked();
@@ -66,7 +66,7 @@ fn a_restarted_app_reopens_a_long_note_at_the_place_it_was_left() {
         let _ = h.root.redraw();
     }
     h.app.capture_view(&h.root);
-    let reopened = h.app.view.expect("позиция после перезапуска");
-    assert_eq!(reopened.0, saved.0, "после перезапуска открылась другая часть заметки");
-    assert!((reopened.1 - saved.1).abs() < 1.0, "сдвиг внутри абзаца: было {}, стало {}", saved.1, reopened.1);
+    let reopened = h.app.view.expect("position after restart");
+    assert_eq!(reopened.0, saved.0, "a different part of the note opened after restart");
+    assert!((reopened.1 - saved.1).abs() < 1.0, "shift within the paragraph: was {}, now {}", saved.1, reopened.1);
 }

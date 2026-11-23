@@ -32,7 +32,7 @@ fn empty_value_counts_as_missing_and_all_conditions_hold_together() {
 fn only_requested_fields_come_back_by_any_case() {
     let fields = selected(&book(), &["author".to_owned(), "rating".to_owned()]);
     let object = fields.as_object().unwrap();
-    assert_eq!(object.len(), 1, "несуществующее поле не превращается в null");
+    assert_eq!(object.len(), 1, "a nonexistent field does not turn into null");
     assert_eq!(object["author"], "Иван Ефремов");
     assert!(selected(&book(), &[]).as_object().unwrap().is_empty());
     assert_eq!(value_of(&book(), "ПУТЬ К ФАЙЛУ"), Some(""));

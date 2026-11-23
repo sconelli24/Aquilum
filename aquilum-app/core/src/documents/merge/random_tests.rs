@@ -79,7 +79,7 @@ fn never_loses_a_line_typed_here_when_both_sides_changed() {
         let merged = merge(&base.join("\n"), &disk.join("\n"), &current.join("\n"));
         for line in current.iter().filter(|line| line.starts_with("здесь ")) {
             let kept = merged.text.split('\n').any(|merged| merged == line) || merged.result.displaced.contains(line);
-            assert!(kept, "строка «{line}» пропала: база {base:?}, там {disk:?}, здесь {current:?}, итог {:?}", merged.text);
+            assert!(kept, "line \"{line}\" was lost: base {base:?}, disk {disk:?}, current {current:?}, result {:?}", merged.text);
         }
     }
 }

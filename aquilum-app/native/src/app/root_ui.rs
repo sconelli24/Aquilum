@@ -35,7 +35,7 @@ impl App {
         self.show_update_bar(root);
     }
 
-    /// `preview` — цвет из открытого выбора цвета, ещё не сохранённый: акцент или цвет темы.
+    /// `preview` is a color from the open color picker that is not saved yet: the accent or the theme color.
     pub(in crate::app) fn restyle(&mut self, root: &mut RenderRoot, fonts: bool, preview: Option<(Setter, &str)>) {
         let before = theme::typography(&theme::current());
         self.apply_appearance(preview);

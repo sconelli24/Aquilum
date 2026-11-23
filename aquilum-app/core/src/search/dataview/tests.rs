@@ -39,7 +39,7 @@ fn list(key: &str, items: &[&str]) -> Field {
 }
 
 fn run(query: &str, rows: Vec<Row>) -> QueryOutput {
-    execute::run(&parse(query).expect("запрос разобран"), rows).expect("запрос посчитан")
+    execute::run(&parse(query).expect("query parsed"), rows).expect("query evaluated")
 }
 
 fn plain(cell: &Cell) -> String {
@@ -88,7 +88,7 @@ fn the_backlinks_query_builds_labelled_links_newest_first() {
     assert_eq!(
         plain(&output.rows[1]),
         "Безымянная",
-        "без поля title подписью становится имя заметки"
+        "without a title field the note name becomes the label"
     );
     assert_eq!(plain(&output.rows[2]), "Про доверие");
 }
@@ -126,7 +126,7 @@ fn sorting_uses_the_type_of_the_field_not_its_text() {
     assert_eq!(
         plain(&output.rows[0]),
         "Б",
-        "десять больше пяти, хотя как текст «10» меньше «5»"
+        "ten is greater than five, although as text '10' is less than '5'"
     );
 }
 
@@ -198,17 +198,17 @@ fn limit_and_the_hard_cap_both_report_what_was_dropped() {
         .collect::<Vec<_>>();
     let output = run("LIST LIMIT 2", rows);
     assert_eq!(output.rows.len(), 2);
-    assert_eq!(output.total, 2, "LIMIT обрезает до подсчёта итога");
+    assert_eq!(output.total, 2, "LIMIT truncates before the total is counted");
     assert!(!output.truncated);
 }
 
 #[test]
 fn an_unknown_file_property_says_which_ones_exist() {
     let error = execute::run(
-        &parse("TABLE file.автор").expect("разобран"),
+        &parse("TABLE file.автор").expect("parsed"),
         vec![note("Книга.md", DAY, Vec::new())],
     )
-    .expect_err("такого поля у файла нет");
+    .expect_err("the file has no such field");
     assert!(error.contains("автор"));
     assert!(error.contains("ctime"));
 }
@@ -290,7 +290,7 @@ fn the_recent_notes_query_formats_its_dates() {
         rows,
     );
 
-    assert_eq!(output.total, 1, "заметка месячной давности не попала в неделю");
+    assert_eq!(output.total, 1, "a month-old note is not in the week");
     assert_eq!(plain(&output.rows[0]), "Свежая мысль");
     assert_eq!(
         plain(&output.rows[1]),
@@ -309,12 +309,12 @@ fn the_stats_query_groups_the_whole_vault_into_one_table() {
     let output = run(HOME_STATS, rows);
 
     assert_eq!(output.width, 3);
-    assert_eq!(output.total, 3, "три строки сводки из одной группы");
+    assert_eq!(output.total, 3, "three summary rows from one group");
     assert_eq!(plain(&output.rows[0]), "Сегодня");
     assert_eq!(plain(&output.rows[1]), "1");
     assert_eq!(plain(&output.rows[3]), "Неделя");
     assert_eq!(plain(&output.rows[4]), "3");
-    assert_eq!(plain(&output.rows[5]), "+2", "на прошлой неделе была одна заметка");
+    assert_eq!(plain(&output.rows[5]), "+2", "there was one note last week");
     assert_eq!(plain(&output.rows[6]), "За всё время");
     assert_eq!(plain(&output.rows[7]), "4");
 }
@@ -365,7 +365,7 @@ fn the_progress_query_needs_no_notes_at_all() {
     let output = run(HOME_PROGRESS, Vec::new());
 
     assert_eq!(output.width, 4);
-    assert_eq!(output.total, 6, "шесть периодов");
+    assert_eq!(output.total, 6, "six periods");
     assert_eq!(plain(&output.rows[0]), "День");
     assert_eq!(plain(&output.rows[20]), "Жизнь");
 
@@ -378,9 +378,9 @@ fn the_progress_query_needs_no_notes_at_all() {
             _ => None,
         })
         .collect();
-    assert_eq!(shares.len(), 6, "в каждой строке своя полоса");
+    assert_eq!(shares.len(), 6, "each row has its own bar");
     assert!(shares.iter().all(|share| (0.0..=100.0).contains(share)));
-    assert!(shares[5] > 20.0 && shares[5] < 60.0, "жизнь прожита примерно на треть");
+    assert!(shares[5] > 20.0 && shares[5] < 60.0, "about a third of life has passed");
 }
 
 #[test]
@@ -403,7 +403,7 @@ fn a_query_from_once_is_answered_without_an_index() {
     );
     let output = service
         .run_dataview_query("", "", "TABLE WITHOUT ID 2 + 2 AS \"Сумма\" FROM once", 0)
-        .expect("запрос посчитан без открытого индекса");
+        .expect("query evaluated without an open index");
     assert_eq!(output.total, 1);
     assert_eq!(plain(&output.rows[0]), "4");
 }
@@ -449,7 +449,7 @@ fn the_short_stats_query_counts_the_same_as_the_long_one() {
     assert_eq!(plain(&output.rows[1]), "1");
     assert_eq!(plain(&output.rows[3]), "Неделя");
     assert_eq!(plain(&output.rows[4]), "3");
-    assert_eq!(plain(&output.rows[5]), "+2", "на прошлой неделе была одна заметка");
+    assert_eq!(plain(&output.rows[5]), "+2", "there was one note last week");
     assert_eq!(plain(&output.rows[6]), "За всё время");
     assert_eq!(plain(&output.rows[7]), "4");
     assert_eq!(plain(&output.rows[8]), "\u{2014}");
@@ -475,7 +475,7 @@ fn a_period_boundary_belongs_to_one_side_only() {
         rows,
     );
     assert_eq!(plain(&output.rows[0]), "1");
-    assert_eq!(plain(&output.rows[1]), "0", "конец отрезка в него не входит");
+    assert_eq!(plain(&output.rows[1]), "0", "the end of the span is not part of it");
 }
 
 fn with_tasks(relative: &str, tasks: &[(bool, &str)]) -> Row {
@@ -513,7 +513,7 @@ fn a_task_query_lists_checkboxes_not_notes() {
     let output = run("TASK", rows);
 
     assert_eq!(output.shape, "tasks");
-    assert_eq!(output.total, 2, "две задачи из одной заметки");
+    assert_eq!(output.total, 2, "two tasks from one note");
     assert_eq!(checkboxes(&output), vec![false, true]);
     assert_eq!(plain(&output.rows[0]), "[ ] написать");
     assert_eq!(targets(&output.rows[0]), vec!["Дела.md"]);
@@ -526,7 +526,7 @@ fn a_condition_filters_the_tasks_themselves() {
 
     assert_eq!(output.total, 1);
     assert_eq!(plain(&output.rows[0]), "[ ] написать");
-    assert!(targets(&output.rows[0]).is_empty(), "«WITHOUT ID» убирает ссылку на заметку");
+    assert!(targets(&output.rows[0]).is_empty(), "'WITHOUT ID' removes the link to the note");
 }
 
 #[test]
@@ -581,15 +581,15 @@ fn the_home_page_blocks_keep_their_own_pace() {
 
     let periods = run(HOME_PERIODS, Vec::new());
     assert_eq!(periods.refresh_seconds, Some(10));
-    assert_eq!(periods.total, 6, "шесть периодов");
+    assert_eq!(periods.total, 6, "six periods");
     assert_eq!(plain(&periods.rows[0]), "День");
 }
 
 #[test]
 fn a_forgotten_comma_between_columns_is_named_as_such() {
     let error = parse("TABLE WITHOUT ID dateformat(now, \"HH:mm\") AS \"Сейчас\" item.name")
-        .expect_err("запрос не разобран");
-    assert!(error.contains("запятая"), "{error}");
+        .expect_err("query not parsed");
+    assert!(error.contains("comma"), "{error}");
 }
 
 #[test]
@@ -606,21 +606,21 @@ FLATTEN list(
 
     assert_eq!(output.total, 2);
     assert_eq!(plain(&output.rows[0]), "До конца работы");
-    let share: f64 = plain(&output.rows[1]).parse().expect("процент — число");
-    assert!((0.0..=100.0).contains(&share), "доля дня в пределах ста процентов: {share}");
+    let share: f64 = plain(&output.rows[1]).parse().expect("percent is a number");
+    assert!((0.0..=100.0).contains(&share), "share of the day is within one hundred percent: {share}");
 }
 
 #[test]
 fn a_block_that_asks_the_clock_keeps_itself_fresh_without_every() {
     crate::search::note_date::take_now_used();
     run("TABLE WITHOUT ID 2 + 2 AS \"Сумма\" FROM once", Vec::new());
-    assert!(!crate::search::note_date::take_now_used(), "арифметика часов не трогает");
+    assert!(!crate::search::note_date::take_now_used(), "clock arithmetic does not touch the clock");
 
     run("TABLE WITHOUT ID percent(day) AS \"День\" FROM once", Vec::new());
-    assert!(crate::search::note_date::take_now_used(), "период спрашивает текущий момент");
+    assert!(crate::search::note_date::take_now_used(), "a period asks for the current moment");
 
     run("TABLE WITHOUT ID dateformat(now, \"HH:mm\") AS \"Часы\" FROM once", Vec::new());
-    assert!(crate::search::note_date::take_now_used(), "now спрашивает текущий момент");
+    assert!(crate::search::note_date::take_now_used(), "now asks for the current moment");
 }
 
 #[test]
@@ -633,9 +633,9 @@ fn every_sets_how_often_the_block_recounts_itself() {
 
 #[test]
 fn every_explains_a_wrong_interval_and_leaves_a_field_named_every_alone() {
-    assert!(parse("TABLE EVERY 0s").unwrap_err().contains("секунды"));
-    assert!(parse("TABLE EVERY 30 попугаев").unwrap_err().contains("промежуток"));
-    assert!(parse("TABLE EVERY 30s EVERY 1 minute").unwrap_err().contains("дважды"));
+    assert!(parse("TABLE EVERY 0s").unwrap_err().contains("second"));
+    assert!(parse("TABLE EVERY 30 попугаев").unwrap_err().contains("interval"));
+    assert!(parse("TABLE EVERY 30s EVERY 1 minute").unwrap_err().contains("twice"));
 
     let field = run(
         "TABLE WITHOUT ID every",

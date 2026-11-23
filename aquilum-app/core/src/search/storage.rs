@@ -123,7 +123,7 @@ mod tests {
         expected.sort();
         assert_eq!(listing(&base), expected);
         assert_eq!(listing(&base.join(&known)), ["documents.sqlite3".to_owned(), index_name()]);
-        assert!(listing(&base.join(&open)).contains(&index_name()), "открытый индекс не тронут");
+        assert!(listing(&base.join(&open)).contains(&index_name()), "the open index is untouched");
         service.close();
     }
 
@@ -137,6 +137,6 @@ mod tests {
 
         assert!(matches!(service.prepare(&workspace), Err(SearchError::Unavailable { .. })));
         assert!(matches!(service.open_guest(&workspace), Err(SearchError::Unavailable { .. })));
-        directory.close().expect("индекс закрыт, каталог удаляется целиком");
+        directory.close().expect("index closed, the directory is removed entirely");
     }
 }

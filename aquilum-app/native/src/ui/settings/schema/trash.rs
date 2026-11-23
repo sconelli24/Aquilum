@@ -7,7 +7,7 @@ pub(super) fn format_locale(value: f64, digits: usize) -> String {
     let text = format!("{value:.digits$}");
     let text = if digits > 0 { text.trim_end_matches('0').trim_end_matches('.').to_owned() } else { text };
     let (whole, fraction) = text.split_once('.').map_or((text.as_str(), None), |(w, f)| (w, Some(f)));
-    // Разделитель тысяч и десятичный знак.
+    // Thousands separator and decimal mark.
     let (thousands, decimal) = match i18n::language() {
         i18n::Language::Ru => ('\u{a0}', ','),
         i18n::Language::Es => ('.', ','),

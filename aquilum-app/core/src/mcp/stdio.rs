@@ -29,7 +29,7 @@ pub fn run_stdio_bridge(app_identifier: &str) -> i32 {
 
 fn forward(message: &str, app_identifier: &str) -> Option<String> {
     let Some(endpoint) = endpoint(app_identifier) else {
-        return transport_error(message, "не найдены настройки MCP");
+        return transport_error(message, "MCP settings not found");
     };
     let response = ureq::post(&format!("http://127.0.0.1:{}/mcp", endpoint.port))
         .set("Authorization", &format!("Bearer {}", endpoint.token))
@@ -43,11 +43,11 @@ fn forward(message: &str, app_identifier: &str) -> Option<String> {
             .ok()
             .filter(|body| !body.trim().is_empty()),
         Err(ureq::Error::Status(status, _)) => {
-            transport_error(message, &format!("сервер ответил {status}"))
+            transport_error(message, &format!("server replied {status}"))
         }
         Err(error) => transport_error(
             message,
-            &format!("приложение Aquilum не запущено или MCP выключен ({error})"),
+            &format!("the Aquilum app is not running or MCP is turned off ({error})"),
         ),
     }
 }

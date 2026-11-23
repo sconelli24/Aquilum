@@ -160,7 +160,7 @@ mod tests {
     #[ignore]
     fn plays_a_real_file() {
         let path = std::path::PathBuf::from(std::env::var("AQ_VIDEO").unwrap());
-        assert!(super::toggle(&path), "движок не открылся");
+        assert!(super::toggle(&path), "the engine did not open");
         assert!(super::state(&path).unwrap().playing);
         super::toggle(&path);
         assert!(!super::state(&path).unwrap().playing);
@@ -177,7 +177,7 @@ mod tests {
             }
         }
         let state = super::state(&path).unwrap();
-        eprintln!("кадров {frames}, позиция {:.2} из {:.2}, играет {}", state.position, state.duration, state.playing);
+        eprintln!("frames {frames}, position {:.2} of {:.2}, playing {}", state.position, state.duration, state.playing);
         assert!(frames > 0);
     }
 }

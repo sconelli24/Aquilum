@@ -94,12 +94,12 @@ impl Run {
                 delivered = true;
             }
             if !sent && !delivered && self.keyboard.outbox.is_empty() {
-                assert_eq!(self.keyboard.field, self.app.state().to_ime(), "клавиатура и приложение разошлись");
-                assert_eq!(self.session.base(), Some(0), "окно текста не подтверждено");
+                assert_eq!(self.keyboard.field, self.app.state().to_ime(), "keyboard and app diverged");
+                assert_eq!(self.session.base(), Some(0), "text window not confirmed");
                 return;
             }
         }
-        panic!("клавиатура и приложение не сошлись");
+        panic!("keyboard and app did not converge");
     }
 }
 
@@ -114,23 +114,23 @@ fn each_order(text: &str, keys: &[Key], check: impl Fn(&App, u64)) -> impl Itera
 #[test]
 fn opening_the_keyboard_never_changes_the_note() {
     let note = "- заметка\nвторая строка";
-    for (seed, run) in each_order(note, &[Key::Finish, Key::Finish, Key::Finish], |app, seed| assert_eq!(app.text(), note, "порядок {seed}")) {
-        assert_eq!(run.keyboard.field.text, note, "порядок {seed}");
+    for (seed, run) in each_order(note, &[Key::Finish, Key::Finish, Key::Finish], |app, seed| assert_eq!(app.text(), note, "order {seed}")) {
+        assert_eq!(run.keyboard.field.text, note, "order {seed}");
     }
 }
 
 #[test]
 fn typed_letters_land_once_in_any_order() {
     for (seed, run) in each_order("- a", &[Key::Finish, Key::Commit("x"), Key::Commit("\n"), Key::Commit("y")], |_, _| {}) {
-        assert_eq!(run.app.text(), "- ax\n- y", "порядок {seed}");
+        assert_eq!(run.app.text(), "- ax\n- y", "order {seed}");
     }
 }
 
 #[test]
 fn a_composed_word_lands_once_in_any_order() {
     let keys = [Key::Finish, Key::Compose("с"), Key::Compose("сл"), Key::Compose("сло"), Key::Commit("слово"), Key::Commit(" ")];
-    for (seed, run) in each_order("текст ", &keys, |app, seed| assert!(app.text().starts_with("текст "), "порядок {seed}: {}", app.text())) {
-        assert_eq!(run.app.text(), "текст слово ", "порядок {seed}");
+    for (seed, run) in each_order("текст ", &keys, |app, seed| assert!(app.text().starts_with("текст "), "order {seed}: {}", app.text())) {
+        assert_eq!(run.app.text(), "текст слово ", "order {seed}");
     }
 }
 
@@ -139,8 +139,8 @@ fn backspace_after_the_note_arrived_deletes_one_letter() {
     for seed in 1..=SEEDS {
         let mut run = Run::new("кот", seed);
         run.play(&[Key::Finish], |_| {});
-        run.play(&[Key::Backspace, Key::Commit("д")], |app| assert!(app.text().starts_with("ко"), "порядок {seed}: {}", app.text()));
-        assert_eq!(run.app.text(), "код", "порядок {seed}");
+        run.play(&[Key::Backspace, Key::Commit("д")], |app| assert!(app.text().starts_with("ко"), "order {seed}: {}", app.text()));
+        assert_eq!(run.app.text(), "код", "order {seed}");
     }
 }
 
@@ -150,8 +150,8 @@ fn letters_meant_for_another_field_never_land_in_the_note() {
         let mut run = Run::new("заметка", seed);
         run.keyboard.write("Заголовок", false);
         run.id = run.session.start();
-        run.play(&[Key::Commit(" новый"), Key::Join, Key::Finish, Key::Commit("!")], |app| assert!(!app.text().contains("Заг"), "порядок {seed}: {}", app.text()));
-        assert_eq!(run.app.text(), "заметка!", "порядок {seed}");
+        run.play(&[Key::Commit(" новый"), Key::Join, Key::Finish, Key::Commit("!")], |app| assert!(!app.text().contains("Заг"), "order {seed}: {}", app.text()));
+        assert_eq!(run.app.text(), "заметка!", "order {seed}");
     }
 }
 

@@ -26,8 +26,8 @@ fn tree_scroll_with_a_pinned_folder_matches_full_frames() {
         h.anim(std::time::Duration::from_millis(16));
         h.deliver();
         let report = frames.draw(&mut h);
-        assert_eq!(report.differ, 0, "шаг {i}: дерево с закреплённой папкой расходится с полной отрисовкой в {} пикселях", report.differ);
+        assert_eq!(report.differ, 0, "step {i}: tree with a pinned folder differs from the full render in {} pixels", report.differ);
         pinned += h.app.tree.pinned_names(&h.root).len();
     }
-    assert!(pinned >= 8, "папка не была закреплена при прокрутке");
+    assert!(pinned >= 8, "folder was not pinned while scrolling");
 }

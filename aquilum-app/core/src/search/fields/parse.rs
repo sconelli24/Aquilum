@@ -96,7 +96,7 @@ mod tests {
         note_fields(text)
             .into_iter()
             .find(|field| field.key == key)
-            .unwrap_or_else(|| panic!("нет поля «{key}»"))
+            .unwrap_or_else(|| panic!("no field '{key}'"))
     }
 
     #[test]
@@ -106,7 +106,7 @@ mod tests {
         assert_eq!(found[0].key, "created");
         assert_eq!(
             found[0].text, "31-08-2026 | (19:31)",
-            "двоеточие и вертикальная черта внутри значения не обрезают его"
+            "a colon and a vertical bar inside a value do not truncate it"
         );
         assert_eq!(found[3].text, "Иван Ефремов");
         assert_eq!(found[4].key, "Путь к файлу");
@@ -125,7 +125,7 @@ mod tests {
         assert_eq!(field(BOOK, "Путь к файлу").kind, FieldKind::Text);
         let note = "---\nrating: 4.5\npages: 0/0\n---\n";
         assert_eq!(field(note, "rating").kind, FieldKind::Number);
-        assert_eq!(field(note, "pages").kind, FieldKind::Text, "«0/0» — не число");
+        assert_eq!(field(note, "pages").kind, FieldKind::Text, "'0/0' is not a number");
     }
 
     #[test]
@@ -148,7 +148,7 @@ mod tests {
         let tags = field("---\ntags: []\n---\n", "tags");
         assert_eq!(tags.kind, FieldKind::List);
         assert!(tags.items.is_empty());
-        assert_eq!(tags.text, "", "пустой список не считается заполненным полем");
+        assert_eq!(tags.text, "", "an empty list does not count as a filled field");
     }
 
     #[test]
@@ -159,7 +159,7 @@ mod tests {
         assert_eq!(tags.items, vec!["fiction", "classic sci-fi"]);
         assert_eq!(
             field(note, "author").text, "Ефремов",
-            "ключ после списка читается как обычно"
+            "a key after a list is read as usual"
         );
     }
 
@@ -178,7 +178,7 @@ mod tests {
         assert_eq!(
             found.len(),
             2,
-            "внутри блочного значения ключей нет: {found:?}"
+            "there are no keys inside a block value: {found:?}"
         );
         assert_eq!(
             field(note, "description").text,

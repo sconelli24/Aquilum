@@ -1,4 +1,4 @@
-//! Кэширование и отрисовка масок групп.
+//! Caching and rendering of group masks.
 
 use aquilum_core::recent::Recent;
 use masonry::imaging::MaskMode;

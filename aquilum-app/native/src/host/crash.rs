@@ -23,7 +23,7 @@ pub(super) fn install_crash_log(file: std::path::PathBuf) {
         let backtrace = std::backtrace::Backtrace::force_capture();
         let thread = std::thread::current().name().unwrap_or("?").to_owned();
         let stamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S");
-        let entry = format!("[{stamp}] поток {thread}: {info}\n{backtrace}\n\n");
+        let entry = format!("[{stamp}] thread {thread}: {info}\n{backtrace}\n\n");
         append(&file, &entry);
 
         let copied = crate::clipboard::copy(entry.clone());
@@ -37,14 +37,14 @@ pub(super) fn install_crash_log(file: std::path::PathBuf) {
     }));
 }
 
-/// Заголовок и текст окна после падения. Строки здесь, а не в локалях: разбор JSON внутри обработчика паники
-/// мог бы паниковать сам.
+/// Title and text of the window shown after a crash. The strings live here rather than in the locales: parsing JSON inside the panic handler
+/// could itself panic.
 fn crash_dialog(language: crate::i18n::Language, copied: bool) -> (&'static str, String) {
     use crate::i18n::Language;
     let (title, happened, copied_note, restart) = match language {
-        Language::Ru => ("Упс, приложение упало!", "В приложении произошла непредвиденная ошибка.", "Отчёт об ошибке скопирован в буфер обмена.", "Перезапустить Aquilum?"),
-        Language::En => ("Oops, the app crashed!", "An unexpected error occurred in the app.", "The error report has been copied to the clipboard.", "Restart Aquilum?"),
-        Language::Es => ("¡Ups, la aplicación se cerró!", "Ocurrió un error inesperado en la aplicación.", "El informe del error se copió al portapapeles.", "¿Reiniciar Aquilum?"),
+        Language::Ru => ("Упс, приложение упало!", "В приложении произошла непредвиденная ошибка.", "Отчёт об ошибке скопирован в буфер обмена.", "Перезапустить Apus?"),
+        Language::En => ("Oops, the app crashed!", "An unexpected error occurred in the app.", "The error report has been copied to the clipboard.", "Restart Apus?"),
+        Language::Es => ("¡Ups, la aplicación se cerró!", "Ocurrió un error inesperado en la aplicación.", "El informe del error se copió al portapapeles.", "¿Reiniciar Apus?"),
     };
     let prompt = if copied { format!("{happened}\n{copied_note}\n\n{restart}") } else { format!("{happened}\n\n{restart}") };
     (title, prompt)
@@ -57,9 +57,9 @@ mod tests {
         use crate::i18n::Language;
         assert_eq!(
             super::crash_dialog(Language::Ru, true),
-            ("Упс, приложение упало!", "В приложении произошла непредвиденная ошибка.\nОтчёт об ошибке скопирован в буфер обмена.\n\nПерезапустить Aquilum?".to_owned())
+            ("Упс, приложение упало!", "В приложении произошла непредвиденная ошибка.\nОтчёт об ошибке скопирован в буфер обмена.\n\nПерезапустить Apus?".to_owned())
         );
-        assert_eq!(super::crash_dialog(Language::Es, false).1, "Ocurrió un error inesperado en la aplicación.\n\n¿Reiniciar Aquilum?");
+        assert_eq!(super::crash_dialog(Language::Es, false).1, "Ocurrió un error inesperado en la aplicación.\n\n¿Reiniciar Apus?");
     }
 
     #[test]
@@ -68,9 +68,9 @@ mod tests {
         let file = directory.path().join("crash.log");
         std::fs::write(&file, vec![b'x'; super::LOG_LIMIT as usize + 1]).unwrap();
 
-        super::append(&file, "новая запись\n");
-        super::append(&file, "ещё одна\n");
+        super::append(&file, "new entry\n");
+        super::append(&file, "another one\n");
 
-        assert_eq!(std::fs::read_to_string(&file).unwrap(), "новая запись\nещё одна\n");
+        assert_eq!(std::fs::read_to_string(&file).unwrap(), "new entry\nanother one\n");
     }
 }

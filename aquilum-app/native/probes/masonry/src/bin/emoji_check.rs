@@ -1,4 +1,4 @@
-//! Проверка без окна: остаются ли пиксели эмодзи в буфере, если следующий кадр рисуется без них.
+//! Windowless check: do emoji pixels stay in the buffer if the next frame is drawn without them.
 use std::sync::Arc;
 
 use imaging_vello_cpu::VelloCpuRenderer;
@@ -27,7 +27,7 @@ fn non_bg(buf: &[u8]) -> usize {
     buf.chunks_exact(4).filter(|p| (p[0], p[1], p[2]) != (0x1f, 0x1f, 0x22)).count()
 }
 
-/// Рамка «цветных» пикселей (краб оранжевый, текст серый).
+/// Bounding box of "colored" pixels (crab is orange, text is gray).
 fn color_bbox(buf: &[u8]) -> Option<(u32, u32, u32, u32)> {
     let mut b: Option<(u32, u32, u32, u32)> = None;
     for (i, p) in buf.chunks_exact(4).enumerate() {
@@ -66,7 +66,7 @@ fn main() {
             .with_props(masonry::core::PropertySet::new().with(masonry::properties::Padding::all(masonry::layout::Length::px(pad))));
         let mut root = RenderRoot::new(area.erased(), |_| {}, options);
         let buf = render_scaled(&mut root, scale);
-        println!("сдвиг {pad}, масштаб {scale}: эмодзи в {:?}", color_bbox(&buf));
+        println!("offset {pad}, scale {scale}: emoji at {:?}", color_bbox(&buf));
     }
 
     for text in ["🦀🦀🦀 emoji", "plain text"] {
@@ -88,6 +88,6 @@ fn main() {
         let reused = non_bg(&buf);
         let mut fresh = vec![0u8; (W * H * 4) as usize];
         render(&mut root, &mut renderer, &mut fresh);
-        println!("{text:?}: кадр 1 — {first} пикс. текста; кадр 2 в тот же буфер — {reused}; в чистый — {}", non_bg(&fresh));
+        println!("{text:?}: frame 1 - {first} text px; frame 2 into the same buffer - {reused}; into a clean one - {}", non_bg(&fresh));
     }
 }

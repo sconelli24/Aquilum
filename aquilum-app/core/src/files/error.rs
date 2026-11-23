@@ -43,8 +43,8 @@ impl std::fmt::Display for FileCommandError {
             Self::Io { message }
             | Self::InvalidUtf8 { message }
             | Self::Task { message } => formatter.write_str(message),
-            Self::Conflict { .. } => formatter.write_str("файл изменился на диске"),
-            Self::AlreadyExists { path } => write!(formatter, "уже существует: {path}"),
+            Self::Conflict { .. } => formatter.write_str("file changed on disk"),
+            Self::AlreadyExists { path } => write!(formatter, "already exists: {path}"),
         }
     }
 }

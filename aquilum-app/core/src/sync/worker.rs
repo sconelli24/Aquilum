@@ -47,7 +47,7 @@ impl Watch for Pass<'_> {
             state.running = Some(progress);
         }
         drop(state);
-        let mut shown = self.shown.lock().expect("время показа хода");
+        let mut shown = self.shown.lock().expect("progress display time");
         if progress.done == progress.total || shown.elapsed() >= SHOW_EVERY {
             *shown = Instant::now();
             self.core.emit(CoreEvent::SyncChanged);
@@ -89,8 +89,8 @@ fn wait(shared: &Shared) -> Option<Job> {
                 let (allowed, allow_deletions) = (state.memory.allowed.clone(), std::mem::take(&mut state.allow_deletions));
                 return Some(Job { root, scope, offset_seconds, allowed, allow_deletions, epoch: state.epoch });
             }
-            (Some(_), Some(due)) if due > now => state = shared.signal.wait_timeout(state, (due - now).min(RECHECK)).expect("ожидание синхронизации").0,
-            _ => state = shared.signal.wait(state).expect("ожидание синхронизации"),
+            (Some(_), Some(due)) if due > now => state = shared.signal.wait_timeout(state, (due - now).min(RECHECK)).expect("sync wait").0,
+            _ => state = shared.signal.wait(state).expect("sync wait"),
         }
     }
 }

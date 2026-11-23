@@ -133,7 +133,7 @@ mod tests {
         for (line, src) in [("![x](https://e.com/a.png?t=1 \"Подсказка\")", "https://e.com/a.png?t=1"), ("![x](<Files/image 6.png> 'Подсказка')", "Files/image 6.png")] {
             let e = parse(line);
             assert_eq!(e.src, src);
-            assert_eq!(format(&e), line.replacen("![x]", "![]", 1), "заголовок потерялся при пересборке строки");
+            assert_eq!(format(&e), line.replacen("![x]", "![]", 1), "title was lost when the line was rebuilt");
         }
     }
 

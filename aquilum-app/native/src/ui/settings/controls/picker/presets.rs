@@ -41,7 +41,7 @@ mod tests {
         theme::apply_setting("dark", true, "#1471eb");
         let dark: Vec<String> = colors().into_iter().map(hex).collect();
         theme::apply_setting(if before { "dark" } else { "light" }, before, "#1471eb");
-        assert_eq!(dark, list, "готовые цвета не должны зависеть от темы");
+        assert_eq!(dark, list, "preset colors must not depend on the theme");
         let mut unique = list.clone();
         unique.sort();
         unique.dedup();

@@ -49,11 +49,11 @@ pub fn register_fonts(root: &mut RenderRoot) {
 }
 
 pub fn set_ui_font(font: UiFont) {
-    *UI_FONT.write().expect("шрифт интерфейса") = Some(Arc::new(font));
+    *UI_FONT.write().expect("UI font") = Some(Arc::new(font));
 }
 
 pub fn ui_font_settings() -> Arc<UiFont> {
-    UI_FONT.read().expect("шрифт интерфейса").clone().unwrap_or_else(|| {
+    UI_FONT.read().expect("UI font").clone().unwrap_or_else(|| {
         Arc::new(UiFont {
             family: "Inter".to_owned(),
             size: size::FONT_SIZE_UI_BASE as f32,
@@ -63,11 +63,11 @@ pub fn ui_font_settings() -> Arc<UiFont> {
 }
 
 pub fn set_editor_font(font: EditorFont) {
-    *EDITOR_FONT.write().expect("шрифт редактора") = Some(Arc::new(font));
+    *EDITOR_FONT.write().expect("editor font") = Some(Arc::new(font));
 }
 
 pub fn editor_font_settings() -> Arc<EditorFont> {
-    EDITOR_FONT.read().expect("шрифт редактора").clone().unwrap_or_else(|| {
+    EDITOR_FONT.read().expect("editor font").clone().unwrap_or_else(|| {
         Arc::new(EditorFont {
             family: "iA Writer Mono".to_owned(),
             size: size::EDITOR_FONT_SIZE as f32,

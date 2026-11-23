@@ -11,13 +11,13 @@ fn editor_scroll_shifts_only_the_text_column() {
     let mut frames = fixed_frames(&mut h);
     let reports = scroll_frames(&mut h, &mut frames, 9);
     for (i, r) in reports.iter().enumerate() {
-        assert_eq!(r.differ, 0, "шаг {i}: прокрутка расходится с полной отрисовкой в {} пикселях", r.differ);
-        assert!(r.shown.iter().all(|a| f64::from(a.w) <= column.width() + 56.0), "шаг {i}: в окно выводится шире колонки текста: {:?}", r.shown);
+        assert_eq!(r.differ, 0, "step {i}: scroll differs from the full render in {} pixels", r.differ);
+        assert!(r.shown.iter().all(|a| f64::from(a.w) <= column.width() + 56.0), "step {i}: output to the window is wider than the text column: {:?}", r.shown);
     }
     let moved: Vec<_> = reports.iter().flat_map(|r| r.moved.iter()).collect();
-    assert!(moved.len() >= 6, "прокрутка не сдвигала пиксели: {moved:?}");
+    assert!(moved.len() >= 6, "scroll did not move pixels: {moved:?}");
     for m in moved {
-        assert!(f64::from(m.0) >= column.x0 - 16.0 && f64::from(m.0 + m.2) <= column.x1 + 40.0, "сдвиг {m:?} шире колонки текста {column:?}");
+        assert!(f64::from(m.0) >= column.x0 - 16.0 && f64::from(m.0 + m.2) <= column.x1 + 40.0, "shift {m:?} is wider than the text column {column:?}");
     }
 }
 
@@ -34,13 +34,13 @@ fn sorting_repaints_only_the_tree() {
     let mut frames = fixed_frames(&mut h);
     h.app.tree.set_sort(&mut h.root, crate::ui::file_tree::Sort::NameDesc);
     let report = frames.draw(&mut h);
-    assert_eq!(report.differ, 0, "сортировка расходится с полной отрисовкой в {} пикселях", report.differ);
-    assert!(report.raster > 0, "сортировка ничего не перерисовала");
+    assert_eq!(report.differ, 0, "sort differs from the full render in {} pixels", report.differ);
+    assert!(report.raster > 0, "sort repainted nothing");
     for &(x, y, w, hgt) in &report.rects {
         let (x0, y0, x1, y1) = (f64::from(x), f64::from(y), f64::from(x + w), f64::from(y + hgt));
-        assert!(x0 >= tree.x0.floor() && x1 <= tree.x1.ceil() && y0 >= tree.y0.floor() && y1 <= tree.y1.ceil(), "перерисовано вне дерева {tree:?}: {:?}", report.rects);
+        assert!(x0 >= tree.x0.floor() && x1 <= tree.x1.ceil() && y0 >= tree.y0.floor() && y1 <= tree.y1.ceil(), "repainted outside the tree {tree:?}: {:?}", report.rects);
     }
-    assert!(report.moved.is_empty(), "сортировка сдвигала пиксели: {:?}", report.moved);
+    assert!(report.moved.is_empty(), "sort moved pixels: {:?}", report.moved);
 }
 
 #[test]
@@ -52,11 +52,11 @@ fn table_row_resize_repaints_only_the_table_and_below() {
     let top = body.y0 + ids.body.get(&h.root).unwrap().inner().top_of(offset).unwrap() * FIXED.scale;
     let mut frames = fixed_frames(&mut h);
     let (reports, _) = drag_border(&mut h, &mut frames, 4);
-    assert_ne!(h.body_text(), table_body(2), "строка таблицы не изменила высоту");
+    assert_ne!(h.body_text(), table_body(2), "table row did not change height");
     for (i, r) in reports.iter().enumerate() {
-        assert_eq!(r.differ, 0, "шаг {i}: изменение высоты строки расходится с полной отрисовкой в {} пикселях", r.differ);
-        assert!(r.raster > 0, "шаг {i}: таблица не перерисована");
-        assert!(!r.above(top), "шаг {i}: перерисовано то, что выше таблицы (верх таблицы {top}): {:?}", r.rects);
+        assert_eq!(r.differ, 0, "step {i}: row height change differs from the full render in {} pixels", r.differ);
+        assert!(r.raster > 0, "step {i}: table not repainted");
+        assert!(!r.above(top), "step {i}: repainted content above the table (table top {top}): {:?}", r.rects);
     }
 }
 
@@ -69,18 +69,18 @@ fn caret_repaints_only_what_the_reveal_changes() {
     let point = line_point(&h, 0, FIXED.scale);
     click_at(&mut h, point, FIXED.scale);
     let plain = frames.draw(&mut h);
-    assert_eq!(plain.differ, 0, "каретка в обычной строке: расхождение с полной отрисовкой в {} пикселях", plain.differ);
-    assert!(plain.raster < 3000, "каретка в обычной строке перерисовала больше самой каретки: {:?}", plain.rects);
-    assert_eq!(plain.shown_area(), plain.raster, "в окно выводится больше перерисованного: {:?}", plain.shown);
+    assert_eq!(plain.differ, 0, "caret in a plain line: differs from the full render in {} pixels", plain.differ);
+    assert!(plain.raster < 3000, "caret in a plain line repainted more than the caret itself: {:?}", plain.rects);
+    assert_eq!(plain.shown_area(), plain.raster, "more is output to the window than was repainted: {:?}", plain.shown);
     let ids = h.app.note_ids.as_ref().unwrap();
     let editor = ids.body.get(&h.root).unwrap();
     let top = editor.inner().top_of(editor.inner().text().find("3. пункт").unwrap()).unwrap();
     click_at(&mut h, (column.x0 + 2.0 * FIXED.scale, column.y0 + (top + 10.0) * FIXED.scale), FIXED.scale);
     let marker = frames.draw(&mut h);
-    assert_eq!(marker.differ, 0, "каретка у номера пункта: расхождение с полной отрисовкой в {} пикселях", marker.differ);
-    assert!(marker.raster > 0, "номер пункта не перерисован");
+    assert_eq!(marker.differ, 0, "caret at the item number: differs from the full render in {} pixels", marker.differ);
+    assert!(marker.raster > 0, "item number not repainted");
     let widest = marker.rects.iter().map(|r| f64::from(r.2)).fold(0.0, f64::max);
-    assert!(widest < column.width() / 2.0, "каретка у номера пункта перерисовала всю строку: {:?}", marker.rects);
+    assert!(widest < column.width() / 2.0, "caret at the item number repainted the whole line: {:?}", marker.rects);
 }
 
 #[test]
@@ -98,13 +98,13 @@ fn settings_editor_scroll_shifts_pixels() {
     let mut frames = fixed_frames(&mut h);
     let content_id = match &h.app.popup {
         Some(Popup::Settings { dialog, .. }) => dialog.content.id(),
-        _ => panic!("настройки не открылись"),
+        _ => panic!("settings did not open"),
     };
     let content_rect = rect_of(&h, content_id, FIXED.scale);
     h.scroll((content_rect.center().x, content_rect.center().y), FIXED.scale, (0.0, -30.0));
     h.anim(std::time::Duration::from_millis(16));
     let report = frames.draw(&mut h);
-    assert!(!report.moved.is_empty(), "прокрутка настроек не сдвигает пиксели!");
+    assert!(!report.moved.is_empty(), "settings scroll does not move pixels!");
 }
 
 #[test]
@@ -122,11 +122,11 @@ fn phone_settings_editor_scroll_shifts_pixels() {
     let mut frames = Frames::new(&mut h, PHONE, true);
     let content_id = match &h.app.popup {
         Some(Popup::Settings { dialog, .. }) => dialog.content.id(),
-        _ => panic!("настройки не открылись"),
+        _ => panic!("settings did not open"),
     };
     let content_rect = rect_of(&h, content_id, PHONE.scale);
     h.scroll((content_rect.center().x, content_rect.center().y), PHONE.scale, (0.0, -30.0));
     h.anim(std::time::Duration::from_millis(16));
     let report = frames.draw(&mut h);
-    assert!(!report.moved.is_empty(), "прокрутка настроек на телефоне не сдвигает пиксели!");
+    assert!(!report.moved.is_empty(), "settings scroll on a phone does not move pixels!");
 }

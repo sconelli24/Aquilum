@@ -1,4 +1,4 @@
-//! Автозакрытие скобок и кавычек, обрамление выделения.
+//! Auto-closing of brackets and quotes, wrapping of the selection.
 
 use super::TextEditor;
 use aquilum_core::markdown::indent::Indent;

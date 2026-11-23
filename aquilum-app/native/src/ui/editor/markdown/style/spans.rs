@@ -31,7 +31,7 @@ fn picture(builder: &mut RangedBuilder<'_, BrushIndex>, source: &str, at: usize,
 pub(super) fn style_spans(builder: &mut RangedBuilder<'_, BrushIndex>, text: &str, content: usize, context: &Context, room: f64, heading: bool, decor: &mut Decor) {
     let (fonts, unresolved) = (context.fonts, context.unresolved);
     let spans = inline(&text[content..]);
-    // Цвет жирного и курсива — до остальных кистей: ссылки, метки и разметка внутри них важнее; в заголовке — цвет заголовка.
+    // Bold and italic color goes before the other brushes: links, marks and markup inside them take precedence; in a heading, the heading color applies.
     let typography = &fonts.typography;
     if !heading && (typography.strong || typography.emphasis) {
         for span in &spans {

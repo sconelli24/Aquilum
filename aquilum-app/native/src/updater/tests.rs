@@ -26,21 +26,21 @@ fn circuit_breaker_stops_loop_and_requires_manual_download() {
         Arc::new(move || woke.store(true, Ordering::SeqCst))
     };
 
-    // 1. Первый запуск: статус Idle
+    // 1. First launch: Idle status
     let u1 = Updater::new(data_dir.clone(), Arc::clone(&wake));
     assert_eq!(u1.status(), Status::Idle);
 
-    // 2. Симулируем попытку применения обновления (попытка 1)
+    // 2. Simulate an update attempt (attempt 1)
     u1.record_attempt("99.0.0", "https://github.com/Freaction/Aquilum/releases/download/v99.0.0/setup.exe");
 
-    // 3. Перезапуск всё ещё на старой версии (попытка 1 < MAX_ATTEMPTS)
+    // 3. Restart still on the old version (attempt 1 < MAX_ATTEMPTS)
     let u2 = Updater::new(data_dir.clone(), Arc::clone(&wake));
     assert_eq!(u2.status(), Status::Idle);
 
-    // 4. Вторая попытка применения обновления (попытка 2)
+    // 4. Second update attempt (attempt 2)
     u2.record_attempt("99.0.0", "https://github.com/Freaction/Aquilum/releases/download/v99.0.0/setup.exe");
 
-    // 5. Перезапуск снова на старой версии: срабатывает предохранитель цикла (Circuit Breaker)!
+    // 5. Restart on the old version again: the loop circuit breaker trips!
     let u3 = Updater::new(data_dir.clone(), Arc::clone(&wake));
     let status = u3.status();
     assert_eq!(
@@ -51,7 +51,7 @@ fn circuit_breaker_stops_loop_and_requires_manual_download() {
         }
     );
 
-    // 6. В статусе ManualRequired метод install() не запускает повторное скачивание и цикл перезапусков
+    // 6. In the ManualRequired status install() does not start another download or restart loop
     u3.install();
     assert_eq!(
         u3.status(),
@@ -62,7 +62,7 @@ fn circuit_breaker_stops_loop_and_requires_manual_download() {
     );
     assert_eq!(u3.take_ready(), None);
 
-    // 7. Когда версия совпала (обновление установилось), маркер очищается
+    // 7. When the version matches (the update was installed), the marker is cleared
     super::Attempt::record(&data_dir, env!("CARGO_PKG_VERSION"), "https://example.com");
     let u4 = Updater::new(data_dir.clone(), Arc::clone(&wake));
     assert_eq!(u4.status(), Status::Idle);
@@ -79,7 +79,7 @@ fn android_asks_and_unsupported_platforms_have_no_auto_update() {
     {
         assert!(!super::apply::supported());
         assert!(!super::available());
-        assert_eq!(super::apply::apply(&[], || {}), Err("платформа не поддерживается".into()));
+        assert_eq!(super::apply::apply(&[], || {}), Err(crate::i18n::t("native.updater.platformUnsupported")));
     }
 }
 
@@ -97,7 +97,7 @@ fn manual_required_settings_row_shows_download_button() {
         assert_eq!(buttons.len(), 1);
         assert_eq!(buttons[0].action, Action::OpenUrl("https://example.com/download".into()));
     } else {
-        panic!("ожидалась кнопка ручного скачивания");
+        panic!("expected a manual download button");
     }
 }
 

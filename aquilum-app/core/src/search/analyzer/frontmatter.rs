@@ -56,7 +56,7 @@ pub fn same_key(left: &str, right: &str) -> bool {
 pub fn set(head: &str, updates: &[(&str, Option<&str>)], same: impl Fn(&str, &str) -> bool) -> Result<Option<(Range<usize>, String)>, String> {
     let Some(found) = bounds(head) else {
         if head.lines().next().is_some_and(fence) {
-            return Err("Блок frontmatter открыт, но не закрыт разделителем «---» — исправьте заметку вручную".to_owned());
+            return Err("The frontmatter block is opened but not closed with a '---' delimiter - fix the note manually".to_owned());
         }
         let created: String = updates.iter().filter_map(|(key, value)| Some(format!("{key}: {}\n", (*value)?))).collect();
         return Ok((!created.is_empty()).then(|| (0..0, format!("---\n{created}---\n"))));

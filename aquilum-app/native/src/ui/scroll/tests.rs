@@ -10,7 +10,7 @@ use masonry::widgets::SizedBox;
 
 use super::ScrollArea;
 
-const TAG: WidgetTag<ScrollArea<SizedBox>> = WidgetTag::named("прокрутка");
+const TAG: WidgetTag<ScrollArea<SizedBox>> = WidgetTag::named("scroll");
 use crate::test_dir::{MOUSE, pointer_at};
 
 fn root() -> RenderRoot {
@@ -29,7 +29,7 @@ fn root() -> RenderRoot {
 }
 
 fn offset(root: &RenderRoot) -> f64 {
-    root.get_widget_with_tag(TAG).expect("прокрутка").inner().offset
+    root.get_widget_with_tag(TAG).expect("scroll").inner().offset
 }
 
 fn scroll(root: &mut RenderRoot, delta: ScrollDelta) {
@@ -53,7 +53,7 @@ fn touchpad_at_top_never_pushes_page_down() {
         trace.push(offset(&root));
         frames(&mut root, 3, &mut trace);
     }
-    assert!(trace.iter().all(|&o| o == 0.0), "смещение у верхнего края: {trace:?}");
+    assert!(trace.iter().all(|&o| o == 0.0), "offset at the top edge: {trace:?}");
 }
 
 #[test]
@@ -72,8 +72,8 @@ fn reversing_direction_does_not_overshoot() {
     frames(&mut root, 40, &mut trace);
     assert_eq!(offset(&root), 0.0);
     let after: Vec<f64> = trace.iter().copied().skip(10).collect();
-    assert!(after.iter().all(|&o| o <= deepest), "после разворота страницу унесло ниже: {after:?}");
-    assert!(after.windows(2).all(|w| w[1] <= w[0]), "движение вверх с рывками назад: {after:?}");
+    assert!(after.iter().all(|&o| o <= deepest), "after reversing, the page was carried lower: {after:?}");
+    assert!(after.windows(2).all(|w| w[1] <= w[0]), "upward movement with backward jerks: {after:?}");
 }
 
 #[test]
@@ -83,7 +83,7 @@ fn wheel_glide_lands_exactly_and_stays_in_bounds() {
     scroll(&mut root, ScrollDelta::LineDelta(0.0, -3.0));
     frames(&mut root, 40, &mut trace);
     assert_eq!(offset(&root), 3.0 * crate::ui::keymap::gesture::WHEEL_LINE);
-    assert!(trace.windows(2).all(|w| w[1] >= w[0]), "доведение колесом пошло назад: {trace:?}");
+    assert!(trace.windows(2).all(|w| w[1] >= w[0]), "wheel settling went backward: {trace:?}");
     scroll(&mut root, ScrollDelta::PixelDelta(PhysicalPosition::new(0.0, 100_000.0)));
     assert_eq!(offset(&root), 0.0);
     scroll(&mut root, ScrollDelta::PixelDelta(PhysicalPosition::new(0.0, -100_000.0)));
@@ -100,8 +100,8 @@ fn continuous_wheel_moves_every_frame_without_jolts() {
         frames(&mut root, 8, &mut trace);
     }
     let steps: Vec<f64> = trace.windows(2).map(|w| w[1] - w[0]).skip(16).collect();
-    assert!(steps.iter().all(|&s| s > 0.0), "кадр без движения при непрерывном вращении: {steps:?}");
-    assert!(steps.windows(2).all(|w| w[1] / w[0] < 2.0 && w[0] / w[1] < 2.0), "скачок скорости между кадрами: {steps:?}");
+    assert!(steps.iter().all(|&s| s > 0.0), "a frame without movement during continuous rotation: {steps:?}");
+    assert!(steps.windows(2).all(|w| w[1] / w[0] < 2.0 && w[0] / w[1] < 2.0), "speed jump between frames: {steps:?}");
 }
 
 #[test]

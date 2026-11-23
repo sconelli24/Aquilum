@@ -52,7 +52,7 @@ fn images_are_selected_resized_and_deleted() {
     assert_eq!(text(&root), "текст");
     let mut root = unfocused(editor_with_images("> ![](a.png)\nтекст"), 600, 400);
     drag(&mut root, (447.0, 188.0), (497.0, 188.0));
-    assert!(text(&root).starts_with("> ![") && text(&root) != "> ![](a.png)\nтекст", "ресайз в цитате сохраняет «> »: {}", text(&root));
+    assert!(text(&root).starts_with("> ![") && text(&root) != "> ![](a.png)\nтекст", "resize in a quote keeps '> ': {}", text(&root));
 }
 
 #[test]
@@ -61,10 +61,10 @@ fn caret_moves_and_selects_inside_image_source() {
     let id = super::support::editor_id(&root);
     root.edit_widget(id, |mut w| TextEditor::select_byte_range(&mut w.downcast(), "текст\n".len() + 2, "текст\n".len() + 2));
     let _ = root.redraw();
-    assert!(!source_shown(&root), "каретка в строке картинки раскрыла исходник без кнопки кода");
+    assert!(!source_shown(&root), "caret in the image line revealed the source without the code button");
     typing(&mut root, "x");
     named(&mut root, NamedKey::Backspace);
-    assert!(source_shown(&root), "правка в строке картинки не показала исходник");
+    assert!(source_shown(&root), "edit in the image line did not show the source");
     let start = caret(&root);
     if let Ok(out) = std::env::var("AQ_OUT") {
         let (layers, _) = root.redraw();
@@ -74,17 +74,17 @@ fn caret_moves_and_selects_inside_image_source() {
     }
     named(&mut root, NamedKey::ArrowRight);
     named(&mut root, NamedKey::ArrowRight);
-    assert_eq!(caret(&root), start + 2, "стрелка не двигает каретку внутри ссылки на картинку: {}", text(&root));
+    assert_eq!(caret(&root), start + 2, "arrow does not move the caret inside an image link: {}", text(&root));
     press(&mut root, Key::Named(NamedKey::ArrowRight), Modifiers::SHIFT);
     press(&mut root, Key::Named(NamedKey::ArrowRight), Modifiers::SHIFT);
-    assert_eq!(selected(&root), "a.", "не выделяется внутри ссылки на картинку");
+    assert_eq!(selected(&root), "a.", "selection does not work inside an image link");
     named(&mut root, NamedKey::Home);
-    assert_eq!(caret(&root), "текст\n".len(), "Home не ведёт в начало строки картинки");
+    assert_eq!(caret(&root), "текст\n".len(), "Home does not go to the start of the image line");
     click(&mut root, 45.0, 244.0);
     let at = caret(&root);
-    assert!(at > "текст\n![](".len() && at < "текст\n![](a.png)".len(), "щелчок в исходник не ставит каретку: {at}");
+    assert!(at > "текст\n![](".len() && at < "текст\n![](a.png)".len(), "click in the source does not place the caret: {at}");
     drag(&mut root, (22.0, 244.0), (60.0, 244.0));
-    assert!(selected(&root).contains("a.p"), "мышью не выделяется исходник картинки: {:?}", selected(&root));
+    assert!(selected(&root).contains("a.p"), "image source cannot be selected with the mouse: {:?}", selected(&root));
 }
 
 fn laid(text: &str, caret: Option<usize>) -> crate::ui::editor::document::Document {
@@ -113,12 +113,12 @@ fn an_image_inside_a_line_is_drawn_in_place_of_its_source() {
         let doc = laid(text, None);
         assert_eq!((pictures(doc.paragraph(0).decor()), widths(&doc)), (1, vec![width]), "{text}");
         let inside = text.find("png").or_else(|| text.find("picture"));
-        assert_eq!(pictures(laid(text, inside).paragraph(0).decor()), 0, "под кареткой нет исходника: {text}");
+        assert_eq!(pictures(laid(text, inside).paragraph(0).decor()), 0, "no source under the caret: {text}");
     }
     let table = laid("| a | b |\n|---|---|\n| ![x](a.png) | t |", None);
     let cells = table.paragraphs().find_map(|p| p.embed).map(|e| e.view.decors().map(pictures).sum::<usize>());
-    assert_eq!(cells, Some(1), "картинка в ячейке таблицы");
-    assert!(laid("> ![](a.png)", None).paragraph(0).embed.is_some_and(|embed| embed.x > 0.0), "картинка в цитате встаёт правее полосы");
+    assert_eq!(cells, Some(1), "image in a table cell");
+    assert!(laid("> ![](a.png)", None).paragraph(0).embed.is_some_and(|embed| embed.x > 0.0), "an image in a quote is placed to the right of the bar");
     assert_eq!(pictures(laid("![[Заметка]] и ![[clip.mp4]]", None).paragraph(0).decor()), 0);
 }
 
@@ -130,7 +130,7 @@ fn a_linked_image_shows_the_picture_and_its_source_only_under_the_caret() {
         let id = super::support::editor_id(&root);
         root.edit_widget(id, |mut w| TextEditor::select_byte_range(&mut w.downcast(), caret, caret));
         let _ = root.redraw();
-        assert_eq!(root.get_widget_with_tag(TAG).unwrap().inner().inline_boxes(2), boxes, "каретка на {caret}");
+        assert_eq!(root.get_widget_with_tag(TAG).unwrap().inner().inline_boxes(2), boxes, "caret at {caret}");
     }
 }
 
@@ -163,5 +163,5 @@ fn an_image_that_finishes_loading_replaces_its_source_in_the_line() {
     later.0.store(true, std::sync::atomic::Ordering::Relaxed);
     root.edit_widget(id, |mut w| TextEditor::refresh_embeds(&mut w.downcast()));
     let _ = root.redraw();
-    assert_eq!(boxes(&root), 1, "догрузившаяся картинка не заменила исходник");
+    assert_eq!(boxes(&root), 1, "the late-loaded image did not replace the source");
 }

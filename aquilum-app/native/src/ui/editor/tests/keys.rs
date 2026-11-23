@@ -11,7 +11,7 @@ fn ctrl_e_wraps_the_word_under_the_caret_or_the_selection_in_backticks() {
     command_key(&mut root, "e");
     assert_eq!(text(&root), "вызов `функции` здесь");
     command_key(&mut root, "e");
-    assert_eq!(text(&root), "вызов функции здесь", "повторное Ctrl+E снимает код");
+    assert_eq!(text(&root), "вызов функции здесь", "pressing Ctrl+E again removes the code");
     command_key(&mut root, "a");
     command_key(&mut root, "e");
     assert_eq!(text(&root), "`вызов функции здесь`");
@@ -35,12 +35,12 @@ fn shortcuts_toggle_bold_italic_and_strike() {
     assert_eq!(text(&root), "**~~слово~~**");
     named(&mut root, NamedKey::End);
     command_key(&mut root, "b");
-    assert_eq!(text(&root), "**~~слово~~**", "каретка вне разметки и без выделения ничего не меняет");
+    assert_eq!(text(&root), "**~~слово~~**", "a caret outside markup and without selection changes nothing");
     for _ in 0..5 {
         named(&mut root, NamedKey::ArrowLeft);
     }
     command_key(&mut root, "b");
-    assert_eq!(text(&root), "~~слово~~", "каретка внутри жирного снимает его");
+    assert_eq!(text(&root), "~~слово~~", "a caret inside bold removes it");
 }
 
 #[test]
@@ -61,5 +61,5 @@ fn three_backticks_open_a_fence_in_its_quote_or_list_and_enter_stays_inside() {
     named(&mut root, NamedKey::End);
     super::support::typing(&mut root, "``");
     super::support::typing(&mut root, "`");
-    assert!(!text(&root).ends_with("``````"), "после буквы ограждение не открывается: {}", text(&root));
+    assert!(!text(&root).ends_with("``````"), "a fence is not opened after a letter: {}", text(&root));
 }

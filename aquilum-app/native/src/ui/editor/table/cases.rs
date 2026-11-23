@@ -12,7 +12,7 @@ fn typed(source: &str, cell: (usize, usize), caret: usize, text: &str) -> Table 
     session.active = Some(cell);
     session.caret = caret;
     session.anchor = caret;
-    let Outcome::Write(model) = session.insert(&view, text) else { panic!("правка не записана") };
+    let Outcome::Write(model) = session.insert(&view, text) else { panic!("edit was not written") };
     model
 }
 
@@ -161,7 +161,7 @@ fn words_with_spaces_can_be_typed_one_key_at_a_time() {
     for key in " hello  world".chars() {
         let lines: Vec<&str> = text.split('\n').collect();
         let view = blank_view(&parse_with(&lines, Some((0, 0))).unwrap());
-        let Outcome::Write(model) = session.insert(&view, &key.to_string()) else { panic!("правка не записана") };
+        let Outcome::Write(model) = session.insert(&view, &key.to_string()) else { panic!("edit was not written") };
         text = model.serialize();
     }
     assert_eq!(table(&text).value(0, 0), "a hello  world");
@@ -176,7 +176,7 @@ fn a_cell_deletes_by_character_and_by_word_in_both_directions() {
         let mut session = Session::new(0);
         session.active = Some((0, 0));
         (session.caret, session.anchor) = (caret, caret);
-        let Outcome::Write(model) = session.delete(&view, forward, word) else { panic!("правка не записана") };
+        let Outcome::Write(model) = session.delete(&view, forward, word) else { panic!("edit was not written") };
         model.value(0, 0).to_owned()
     };
     assert_eq!(deleted(false, false, 13), "раз дв");

@@ -78,9 +78,9 @@ pub(super) fn large_report() -> String {
     }
     let mut rows: Vec<_> = groups.into_iter().collect();
     rows.sort_by_key(|(_, (size, _))| std::cmp::Reverse(*size));
-    let mut text = String::from("  крупные живые выделения Rust (от порога AQ_PROBE_LARGE_KB, по умолчанию 256 КБ):\n");
+    let mut text = String::from("  large live Rust allocations (above the AQ_PROBE_LARGE_KB threshold, 256 KB by default):\n");
     for (key, (size, count)) in rows.into_iter().take(24) {
-        text.push_str(&format!("    {:>7.1} МБ ×{count}  {key}\n", mb(size)));
+        text.push_str(&format!("    {:>7.1} MB ×{count}  {key}\n", mb(size)));
     }
     INSIDE.with(|i| i.set(false));
     text

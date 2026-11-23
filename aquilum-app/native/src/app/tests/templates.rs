@@ -10,7 +10,7 @@ fn rect(h: &Harness, id: WidgetId) -> Rect {
 }
 
 fn fill_templates(h: &Harness, names: &[&str]) {
-    let dir = h.app.templates_dir().expect("папка шаблонов");
+    let dir = h.app.templates_dir().expect("templates folder");
     for name in names {
         let path = dir.join(name);
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -21,14 +21,14 @@ fn fill_templates(h: &Harness, names: &[&str]) {
 fn state_cards(h: &Harness) -> Vec<WidgetId> {
     match &h.app.popup {
         Some(Popup::Templates(state)) => state.cards.clone(),
-        _ => panic!("окно шаблонов не открыто"),
+        _ => panic!("templates window not open"),
     }
 }
 
 fn field_top(h: &Harness) -> f64 {
     match &h.app.popup {
         Some(Popup::Templates(state)) => rect(h, state.field.id()).y0,
-        _ => panic!("окно шаблонов не открыто"),
+        _ => panic!("templates window not open"),
     }
 }
 
@@ -40,19 +40,19 @@ fn the_templates_window_is_a_compact_list_that_stays_where_the_search_window_sta
     h.settle();
     let search_top = match &h.app.popup {
         Some(Popup::Search(state)) => rect(&h, state.field_id()).y0,
-        _ => panic!("поиск не открыт"),
+        _ => panic!("search not open"),
     };
     h.escape();
     h.app.open_templates(&mut h.root);
     h.settle();
-    assert_eq!(field_top(&h), search_top, "окно шаблонов начинается не там, где окно поиска");
+    assert_eq!(field_top(&h), search_top, "templates window does not start where the search window does");
     let cards = state_cards(&h);
     assert_eq!(cards.len(), 3);
     for &card in &cards {
-        assert_eq!(rect(&h, card).height(), CardKind::Template.height(), "строка шаблона не сжата до {}", size::SIZE_44);
+        assert_eq!(rect(&h, card).height(), CardKind::Template.height(), "template row is not compressed to {}", size::SIZE_44);
     }
     let last = rect(&h, *cards.last().unwrap());
-    assert!(last.y1 < f64::from(H) * 0.5, "окно с тремя шаблонами растянуто на всю высоту: {last:?}");
+    assert!(last.y1 < f64::from(H) * 0.5, "window with three templates is stretched to full height: {last:?}");
     if let Ok(out) = std::env::var("AQ_OUT") {
         std::fs::write(std::path::Path::new(&out).join("templates.png"), h.frame(W as u16, H as u16, 1.0).png()).unwrap();
     }
@@ -67,20 +67,20 @@ fn typing_filters_the_list_and_a_click_outside_closes_the_window() {
     h.type_text("пла");
     h.settle();
     let cards = state_cards(&h);
-    assert_eq!(cards.len(), 1, "фильтр по «пла» оставил не один шаблон");
+    assert_eq!(cards.len(), 1, "filter by \"пла\" did not leave exactly one template");
     if let Ok(out) = std::env::var("AQ_OUT") {
         std::fs::write(std::path::Path::new(&out).join("templates-filter.png"), h.frame(W as u16, H as u16, 1.0).png()).unwrap();
     }
     h.type_text("zzz");
     h.settle();
-    assert!(state_cards(&h).is_empty(), "список не опустел при ненайденном запросе");
+    assert!(state_cards(&h).is_empty(), "list did not empty on a query with no matches");
     let layer = match &h.app.popup {
         Some(Popup::Templates(state)) => state.layer,
         _ => unreachable!(),
     };
     let cancel = masonry::core::ErasedAction::from(Box::new(DialogAnswer::Cancel));
     h.app.on_action(&mut h.root, layer, cancel);
-    assert!(h.app.popup.is_none(), "щелчок вне окна не закрыл шаблоны");
+    assert!(h.app.popup.is_none(), "click outside the window did not close templates");
 }
 
 #[test]
@@ -89,8 +89,8 @@ fn without_templates_the_window_offers_to_create_the_starter_folder() {
     h.app.open_templates(&mut h.root);
     h.settle();
     let button = match &h.app.popup {
-        Some(Popup::Templates(state)) => state.create_button.expect("кнопка создания папки с шаблонами"),
-        _ => panic!("окно шаблонов не открыто"),
+        Some(Popup::Templates(state)) => state.create_button.expect("create templates folder button"),
+        _ => panic!("templates window not open"),
     };
     if let Ok(out) = std::env::var("AQ_OUT") {
         std::fs::write(std::path::Path::new(&out).join("templates-empty.png"), h.frame(W as u16, H as u16, 1.0).png()).unwrap();
@@ -98,7 +98,7 @@ fn without_templates_the_window_offers_to_create_the_starter_folder() {
     let center = rect(&h, button).center();
     h.click(center.x, center.y);
     h.settle();
-    assert!(!state_cards(&h).is_empty(), "после создания папки список шаблонов пуст");
+    assert!(!state_cards(&h).is_empty(), "template list is empty after creating the folder");
 }
 
 #[test]
@@ -112,7 +112,7 @@ fn enter_inserts_the_chosen_template_into_the_open_note() {
     h.settle();
     h.type_text("книга");
     let outcome = h.app.templates_key(&mut h.root, &Key::Named(NamedKey::Enter), Modifiers::empty());
-    assert!(outcome.is_some() && h.app.popup.is_none(), "Enter не выбрал шаблон");
+    assert!(outcome.is_some() && h.app.popup.is_none(), "Enter did not select a template");
     h.deliver();
     assert!(h.app.text.to_string().contains("Заготовка Книга.md"), "{}", h.app.text.to_string());
 }

@@ -1,7 +1,7 @@
-//! Связь окна с ядром `aquilum-core`: каталог данных, база знаний и события ядра.
+//! The window's link to the `aquilum-core` core: data directory, vault and core events.
 //!
-//! События приходят из потоков ядра: `EventSink` кладёт их в канал и будит цикл winit,
-//! хост вычитывает канал целиком в `proxy_wake_up` (пробуждения склеиваются).
+//! Events arrive from the core's threads: `EventSink` puts them on a channel and wakes the winit loop,
+//! the host drains the whole channel in `proxy_wake_up` (wake-ups coalesce).
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -9,20 +9,20 @@ use std::sync::mpsc::{Receiver, channel};
 
 use aquilum_core::{Core, CoreEvent, EventSink};
 
-pub const APP_ID: &str = "com.dmitriy.aquilum-app";
+pub const APP_ID: &str = "com.sconelli.apus";
 
 pub struct Workspace {
     pub core: Arc<Core>,
     pub data_dir: PathBuf,
-    /// Корень базы знаний; `None` — база не выбрана.
+    /// Vault root; `None` - no vault selected.
     pub root: Option<PathBuf>,
     pub wake: Arc<dyn Fn() + Send + Sync>,
     events: Receiver<CoreEvent>,
 }
 
 impl Workspace {
-    /// Открывает ядро в `data_dir` (по умолчанию — каталог нативной сборки) и выбирает базу:
-    /// `vault`, иначе последнюю открытую в этом каталоге данных.
+    /// Opens the core in `data_dir` (by default the native build's directory) and selects a vault:
+    /// `vault`, otherwise the last one opened in this data directory.
     pub fn open(data_dir: Option<&Path>, vault: Option<&Path>, wake: impl Fn() + Send + Sync + 'static) -> Result<Self, String> {
         let data_dir = data_dir_or_default(data_dir)?;
         std::fs::create_dir_all(&data_dir).map_err(|e| format!("{}: {e}", data_dir.display()))?;
@@ -36,7 +36,7 @@ impl Workspace {
         let wake: Arc<dyn Fn() + Send + Sync> = Arc::new(wake);
         let waker = Arc::clone(&wake);
         let sink: Arc<dyn EventSink> = Arc::new(move |event: CoreEvent| {
-            // Окно закрыто — событие некому показывать.
+            // The window is closed - nobody to show the event to.
             if sender.send(event).is_ok() {
                 waker();
             }
@@ -55,7 +55,7 @@ impl Workspace {
         Ok(Workspace { core, data_dir, root, wake, events })
     }
 
-    /// Все накопившиеся события ядра.
+    /// All accumulated core events.
     pub fn drain_events(&self) -> Vec<CoreEvent> {
         self.events.try_iter().collect()
     }
@@ -64,12 +64,12 @@ impl Workspace {
 pub fn data_dir_or_default(data_dir: Option<&Path>) -> Result<PathBuf, String> {
     match data_dir {
         Some(dir) => Ok(dir.to_path_buf()),
-        None => Ok(platform_data_dir().ok_or("не найден каталог данных пользователя")?.join(APP_ID)),
+        None => Ok(platform_data_dir().ok_or_else(|| crate::i18n::t("native.workspace.noUserDataDir"))?.join(APP_ID)),
     }
 }
 
-/// Тот же корень, что `app_data_dir` у Tauri: %APPDATA%, ~/Library/Application Support,
-/// $XDG_DATA_HOME или ~/.local/share.
+/// The same root as Tauri's `app_data_dir`: %APPDATA%, ~/Library/Application Support,
+/// $XDG_DATA_HOME or ~/.local/share.
 fn platform_data_dir() -> Option<PathBuf> {
     if cfg!(target_os = "windows") {
         std::env::var_os("APPDATA").map(PathBuf::from)

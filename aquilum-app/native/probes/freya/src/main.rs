@@ -1,30 +1,30 @@
-//! Прототип на Freya 0.5 для сравнения с окном на vello_cpu (`aquilum-native`): тот же макет —
-//! боковая панель, вкладки, колонка текста с прокруткой.
+//! Freya 0.5 prototype for comparison with the vello_cpu window (`aquilum-native`): same layout:
+//! sidebar, tabs, a scrolling text column.
 //!
-//! Рендерер выбирается переменной `FREYA_RENDERER`: `software`, `opengl` (по умолчанию на Windows)
-//! или `vulkan`.
+//! The renderer is chosen by the `FREYA_RENDERER` variable: `software`, `opengl` (default on Windows)
+//! or `vulkan`.
 //!
-//!   freya-probe.exe [--size ШxВ] [--file заметка.md] [--static]
+//!   freya-probe.exe [--size WxH] [--file note.md] [--static]
 //!
-//! По умолчанию текст — редактируемый многострочный `Input`; `--static` — статичный абзац (шаг 1).
+//! By default the text is an editable multi-line `Input`; `--static` makes it a static paragraph (step 1).
 //!
-//! `--size` — логические пиксели (Freya сама умножает на масштаб): 1646x981 при 175% = 2881x1717.
+//! `--size` is in logical pixels (Freya multiplies by the scale itself): 1646x981 at 175% = 2881x1717.
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use freya::prelude::*;
 
 const TREE: &[&str] = &[
-    "Входящие",
-    "Проекты",
+    "Inbox",
+    "Projects",
     "    Aquilum.md",
-    "    Уход от Tauri.md",
-    "    Документ в Rust.md",
-    "Книги",
-    "Ежедневник",
+    "    Moving off Tauri.md",
+    "    Document in Rust.md",
+    "Books",
+    "Daily notes",
     "    2026-10-07.md",
     "    2026-10-08.md",
-    "Шаблоны",
+    "Templates",
     "README.md",
 ];
 
@@ -40,7 +40,7 @@ const HEADING: (u8, u8, u8) = (0xf2, 0xf2, 0xf5);
 
 struct Probe {
     text: String,
-    /// Редактируемый многострочный `Input` вместо статичного абзаца (шаг 2: заглушка редактора).
+    /// Editable multi-line `Input` instead of a static paragraph (step 2: editor stub).
     editable: bool,
 }
 
@@ -79,7 +79,7 @@ impl App for Probe {
                     .padding((0., 16.))
                     .main_align(Alignment::Center)
                     .background(BACKGROUND)
-                    .child(label().text("Уход от Tauri.md").font_size(13.).color(TEXT)),
+                    .child(label().text("Moving off Tauri.md").font_size(13.).color(TEXT)),
             );
 
         let spans = self.text.split_inclusive('\n').map(|line| {
@@ -129,16 +129,16 @@ fn main() {
             editable = false;
             continue;
         }
-        let value = args.next().unwrap_or_else(|| panic!("{flag}: нет значения"));
+        let value = args.next().unwrap_or_else(|| panic!("{flag}: missing value"));
         match flag.as_str() {
             "--size" => {
-                let (w, h) = value.split_once('x').expect("--size: нужно ШxВ");
-                size = (w.parse().expect("--size: ширина"), h.parse().expect("--size: высота"));
+                let (w, h) = value.split_once('x').expect("--size: expected WxH");
+                size = (w.parse().expect("--size: width"), h.parse().expect("--size: height"));
             }
-            "--file" => text = std::fs::read_to_string(&value).expect("--file: не читается"),
-            // Аргументы скрипта замера, которые относятся только к aquilum-native.
+            "--file" => text = std::fs::read_to_string(&value).expect("--file: cannot read"),
+            // Measurement-script arguments that apply only to aquilum-native.
             "--threads" | "--bench-frames" | "--metrics" => {}
-            other => panic!("неизвестный аргумент {other}"),
+            other => panic!("unknown argument {other}"),
         }
     }
     launch(

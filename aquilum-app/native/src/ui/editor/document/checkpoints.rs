@@ -30,7 +30,7 @@ impl Checkpoints {
         let until = self.wanted;
         (self.rx, self.edits, self.until) = (Some(rx), Vec::new(), until);
         std::thread::spawn(move || {
-            let _zone = aq_trace::zone("фон: контрольные точки разбора");
+            let _zone = aq_trace::zone("background: parse checkpoints");
             scan(rope, from, state, until, tx);
         });
     }

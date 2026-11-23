@@ -54,8 +54,8 @@ fn accept(listener: &TcpListener) -> Option<TcpStream> {
 fn answer(listener: &TcpListener, reply: Reply) -> Option<(String, Vec<u8>)> {
     let stream = accept(listener)?;
     let mut connection = Connection::new(&stream).unwrap();
-    let Ok(head) = connection.read_head() else { panic!("запрос не разобран") };
-    let Ok(body) = connection.read_body(&head, 1 << 16) else { panic!("тело запроса не прочитано") };
+    let Ok(head) = connection.read_head() else { panic!("request not parsed") };
+    let Ok(body) = connection.read_body(&head, 1 << 16) else { panic!("request body not read") };
     assert_eq!(head.header("Authorization"), Some("Bearer token"));
     match reply {
         Reply::Json(json) => connection.send(&Response::json(json.to_owned()), false).unwrap(),
@@ -72,7 +72,7 @@ fn api(url: &'static str, directory: &Path) -> Api {
 fn untouched(served: JoinHandle<Served>) -> usize {
     let (requests, listener) = served.join().unwrap();
     listener.set_nonblocking(true).unwrap();
-    assert!(listener.accept().is_err(), "лишний повтор");
+    assert!(listener.accept().is_err(), "extra retry");
     requests.len()
 }
 
@@ -85,7 +85,7 @@ fn passing_failures_are_repeated_and_retry_after_is_kept() {
     let page: Value = api(url, directory.path()).rpc("files/list_folder", &json!({ "path": "" })).unwrap();
 
     assert_eq!(page["cursor"], "страница");
-    assert!(started.elapsed() >= Duration::from_secs(1), "Retry-After не выдержан: {:?}", started.elapsed());
+    assert!(started.elapsed() >= Duration::from_secs(1), "Retry-After was not honored: {:?}", started.elapsed());
     assert_eq!(untouched(server), 4);
 }
 

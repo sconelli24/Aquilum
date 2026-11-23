@@ -87,7 +87,7 @@ fn dispatch(
                 .map_err(|error| (INVALID_PARAMS, error.to_string()))?;
             Ok(tool_result(call(&request.name, &request.arguments)))
         }
-        _ => Err((METHOD_NOT_FOUND, format!("Неизвестный метод: {method}"))),
+        _ => Err((METHOD_NOT_FOUND, format!("Unknown method: {method}"))),
     }
 }
 
@@ -118,7 +118,7 @@ mod tests {
     use super::*;
 
     fn no_tools(_name: &str, _arguments: &Value) -> Result<Value, String> {
-        Err("не должно вызываться".to_owned())
+        Err("must not be called".to_owned())
     }
 
     fn handle(body: &str) -> Option<Value> {
@@ -151,7 +151,7 @@ mod tests {
 
     #[test]
     fn reports_broken_json_without_panicking() {
-        let response = handle("{ не json").unwrap();
+        let response = handle("{ not json").unwrap();
         assert_eq!(response["error"]["code"], -32700);
     }
 
@@ -170,7 +170,7 @@ mod tests {
 
     #[test]
     fn returns_tool_failure_as_result_with_error_flag() {
-        let failing = |_name: &str, _arguments: &Value| Err("Заметка не найдена".to_owned());
+        let failing = |_name: &str, _arguments: &Value| Err("Note not found".to_owned());
         let raw = handle_message(
             r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"read_note","arguments":{}}}"#,
             &failing,
@@ -178,7 +178,7 @@ mod tests {
         .unwrap();
         let response: Value = serde_json::from_str(&raw).unwrap();
         assert_eq!(response["result"]["isError"], true);
-        assert_eq!(response["result"]["content"][0]["text"], "Заметка не найдена");
+        assert_eq!(response["result"]["content"][0]["text"], "Note not found");
         assert!(response["error"].is_null());
     }
 

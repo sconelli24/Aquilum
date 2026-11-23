@@ -1,5 +1,5 @@
-//! Хост `RenderRoot`: окно winit 0.31, перевод событий в ui-events, сигналы Masonry, отрисовка
-//! через `imaging_vello_cpu` в буфер softbuffer.
+//! `RenderRoot` host: winit 0.31 window, event translation to ui-events, Masonry signals, rendering
+//! through `imaging_vello_cpu` into a softbuffer buffer.
 
 use std::cell::RefCell;
 use std::num::NonZeroU32;
@@ -31,7 +31,7 @@ use winit::window::{
 
 use crate::Args;
 
-/// Шаг анимационных тиков (~60 Гц). Тик дешёвый: рисуется только то, что изменилось.
+/// Animation tick step (~60 Hz). A tick is cheap: only what changed is drawn.
 const ANIM_INTERVAL: Duration = Duration::from_millis(16);
 
 const PRIMARY_MOUSE: PointerInfo = PointerInfo {
@@ -51,13 +51,13 @@ struct Host {
     modifiers: Modifiers,
     pointer: PointerState,
     ime_enabled: bool,
-    /// Последняя отправленная в IME область каретки: Masonry шлёт ImeMoved после каждого прохода.
+    /// Last caret area sent to the IME: Masonry sends ImeMoved after every pass.
     ime_area: Option<(LogicalPosition<f64>, LogicalSize<f64>)>,
     clipboard: Option<arboard::Clipboard>,
-    /// Время прошлого анимационного тика, пока анимация продолжается.
+    /// Time of the previous animation tick while the animation continues.
     last_anim: Option<Instant>,
-    /// Когда сделать следующий анимационный тик. Тики идут по таймеру и сами не рисуют:
-    /// кадр растеризуется, только если после тика Masonry попросил перерисовку.
+    /// When to do the next animation tick. Ticks run on a timer and do not draw by themselves:
+    /// a frame is rasterized only if Masonry requested a redraw after the tick.
     next_anim: Option<Instant>,
     frames: u64,
     anim_ticks: u64,
@@ -86,13 +86,13 @@ pub fn run(args: Args) {
         first_frame_ms: 0.0,
         frame_ms_total: 0.0,
     };
-    let event_loop = EventLoop::new().expect("цикл событий");
-    event_loop.run_app(host).expect("цикл событий завершился с ошибкой");
+    let event_loop = EventLoop::new().expect("event loop");
+    event_loop.run_app(host).expect("event loop exited with an error");
 }
 
 impl Host {
     fn window(&self) -> &dyn Window {
-        &**self.surface.as_ref().expect("окно создано").window()
+        &**self.surface.as_ref().expect("window created").window()
     }
 
     fn time_ns(&self) -> u64 {
@@ -157,7 +157,7 @@ impl Host {
     fn handle_signals(&mut self, event_loop: &dyn ActiveEventLoop) {
         let signals = std::mem::take(&mut *self.signals.borrow_mut());
         for signal in signals {
-            let window = self.surface.as_ref().expect("окно создано").window();
+            let window = self.surface.as_ref().expect("window created").window();
             match signal {
                 RenderRootSignal::RequestRedraw => window.request_redraw(),
                 RenderRootSignal::RequestAnimFrame => {
@@ -167,14 +167,14 @@ impl Host {
                 }
                 RenderRootSignal::StartIme => {
                     if !self.ime_enabled {
-                        // winit 0.31 отклоняет запрос, если возможность заявлена без начального
-                        // значения; настоящую позицию каретки Masonry пришлёт сигналом ImeMoved.
+                        // winit 0.31 rejects the request if the capability is declared without an initial
+                        // value; Masonry will send the real caret position with an ImeMoved signal.
                         let data = ImeRequestData::default().with_cursor_area(
                             Position::Logical((0.0, 0.0).into()),
                             Size::Logical((1.0, 1.0).into()),
                         );
                         let request = ImeEnableRequest::new(ImeCapabilities::new().with_cursor_area(), data)
-                            .expect("запрос IME: возможности и данные согласованы");
+                            .expect("IME request: capabilities and data are consistent");
                         self.ime_enabled = window.request_ime_update(ImeRequest::Enable(request)).is_ok();
                     }
                 }
@@ -201,13 +201,13 @@ impl Host {
                 RenderRootSignal::TakeFocus => window.focus_window(),
                 RenderRootSignal::Exit => event_loop.exit(),
                 RenderRootSignal::NewLayer(_, root, pos) => {
-                    self.root.as_mut().expect("корень есть").add_layer(root, pos)
+                    self.root.as_mut().expect("root exists").add_layer(root, pos)
                 }
-                RenderRootSignal::RemoveLayer(id) => self.root.as_mut().expect("корень есть").remove_layer(id),
+                RenderRootSignal::RemoveLayer(id) => self.root.as_mut().expect("root exists").remove_layer(id),
                 RenderRootSignal::RepositionLayer(id, pos) => {
-                    self.root.as_mut().expect("корень есть").reposition_layer(id, pos)
+                    self.root.as_mut().expect("root exists").reposition_layer(id, pos)
                 }
-                // Действия виджетов, перетаскивание окна, меню окна и т. п. пробе не нужны.
+                // Widget actions, window dragging, window menus, etc. are not needed by the probe.
                 _ => {}
             }
         }
@@ -220,7 +220,7 @@ impl Host {
         let (Some(w), Some(h)) = (NonZeroU32::new(size.width), NonZeroU32::new(size.height)) else {
             return;
         };
-        surface.resize(w, h).expect("softbuffer: размер");
+        surface.resize(w, h).expect("softbuffer: size");
 
         let (layers, _access_update) = root.redraw();
         let overlays: Vec<Layer<'_>> = layers
@@ -247,10 +247,10 @@ impl Host {
             bytes_per_row: size.width as usize * 4,
             format: ImageBufferFormat::Rgba8Unorm,
         };
-        self.renderer.render_source_into(&mut frame, target).expect("vello_cpu: отрисовка");
+        self.renderer.render_source_into(&mut frame, target).expect("vello_cpu: render");
 
         surface.window().pre_present_notify();
-        let mut buffer = surface.buffer_mut().expect("softbuffer: буфер");
+        let mut buffer = surface.buffer_mut().expect("softbuffer: buffer");
         for (dst, px) in buffer.iter_mut().zip(self.rgba.chunks_exact(4)) {
             *dst = (px[0] as u32) << 16 | (px[1] as u32) << 8 | px[2] as u32;
         }
@@ -266,7 +266,7 @@ impl Host {
         }
     }
 
-    /// Анимационный тик: проходы обновления Masonry без растеризации.
+    /// Animation tick: Masonry update passes without rasterization.
     fn anim_tick(&mut self, event_loop: &dyn ActiveEventLoop) {
         let Some(root) = &mut self.root else { return };
         let now = Instant::now();
@@ -298,7 +298,7 @@ impl ApplicationHandler for Host {
         let attributes = WindowAttributes::default()
             .with_title("Aquilum (Masonry probe)")
             .with_surface_size(self.args.size);
-        let window = event_loop.create_window(attributes).expect("окно");
+        let window = event_loop.create_window(attributes).expect("window");
         let options = RenderRootOptions {
             default_properties: Arc::new(default_property_set()),
             use_system_fonts: true,
@@ -313,8 +313,8 @@ impl ApplicationHandler for Host {
             move |signal| signals.borrow_mut().push(signal),
             options,
         );
-        let context = Context::new(event_loop.owned_display_handle()).expect("softbuffer: контекст");
-        self.surface = Some(Surface::new(&context, window).expect("softbuffer: поверхность"));
+        let context = Context::new(event_loop.owned_display_handle()).expect("softbuffer: context");
+        self.surface = Some(Surface::new(&context, window).expect("softbuffer: surface"));
         let mut root = root;
         if self.args.focus {
             let editor = root.get_widget_with_tag(crate::EDITOR_TAG).map(|w| w.id());
@@ -338,7 +338,7 @@ impl ApplicationHandler for Host {
 
     fn window_event(&mut self, event_loop: &dyn ActiveEventLoop, _: WindowId, event: WindowEvent) {
         if self.args.trace {
-            eprintln!("{:>8.1} мс  {event:?}", self.started.elapsed().as_secs_f64() * 1000.0);
+            eprintln!("{:>8.1} ms  {event:?}", self.started.elapsed().as_secs_f64() * 1000.0);
         }
         match event {
             WindowEvent::CloseRequested => {
@@ -408,7 +408,7 @@ impl ApplicationHandler for Host {
                         self.pointer.buttons.remove(b);
                     }
                 }
-                // Двойной щелчок (count) проба не считает: всегда 1.
+                // The probe does not count double clicks (count): always 1.
                 self.pointer.count = 1;
                 let state = self.pointer_state();
                 let event = PointerButtonEvent { pointer: PRIMARY_MOUSE, button, state };

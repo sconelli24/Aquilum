@@ -116,7 +116,7 @@ mod tests {
 
     #[test]
     fn a_watcher_error_asks_for_a_rescan_instead_of_being_dropped() {
-        let batch = classify(Err(notify::Error::generic("очередь событий переполнена")), Path::new("")).unwrap();
+        let batch = classify(Err(notify::Error::generic("event queue overflowed")), Path::new("")).unwrap();
         assert_eq!(batch.scope, WatchScope::Rescan);
     }
 

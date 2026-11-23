@@ -81,7 +81,7 @@ impl HistoryService {
 
     pub fn revert(&self, roots: Roots<'_>, note: &Path, id: &str, current: Box<dyn Content>) -> io::Result<Reverted> {
         let mut state = self.lock();
-        let missing = || io::Error::new(io::ErrorKind::NotFound, format!("нет версии {id} или версии перед ней"));
+        let missing = || io::Error::new(io::ErrorKind::NotFound, format!("no version {id} or version before it"));
         let located = locate(&mut state, roots, note).ok_or_else(missing)?;
         let versions = store::versions(&located.dir);
         let index = versions.iter().position(|version| version.id == id).filter(|&index| index > 0).ok_or_else(missing)?;

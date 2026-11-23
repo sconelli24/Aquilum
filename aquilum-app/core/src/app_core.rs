@@ -61,7 +61,7 @@ pub struct Core {
     pub history: HistoryService,
     pub wikixiv: WikixivService,
     pub watcher: WorkspaceWatcher,
-    /// The note open in the UI, reported by the host; MCP tools use it for «эта заметка».
+    /// The note open in the UI, reported by the host; MCP tools use it for "this note".
     pub active_note: ActiveNote,
     pub mcp: McpServer,
     pub sync: SyncService,

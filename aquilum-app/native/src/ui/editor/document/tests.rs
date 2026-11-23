@@ -60,7 +60,7 @@ fn blank_line_turns_indented_text_into_code_and_back() {
         let at = text.find(from).unwrap();
         doc.replace(at..at + from.len(), to);
         text.replace_range(at..at + from.len(), to);
-        assert_eq!(blocks(&doc), markdown::classify(text.split('\n')), "после правки «{from:?}» → «{to:?}»");
+        assert_eq!(blocks(&doc), markdown::classify(text.split('\n')), "after edit {from:?} -> {to:?}");
     }
 }
 
@@ -87,11 +87,11 @@ fn partial_classification_matches_a_full_pass() {
     let mut text = base.to_owned();
     let mut doc = markdown(&text);
     for (from, to) in edits {
-        let at = text.find(from).unwrap_or_else(|| panic!("нет «{from}» в тексте"));
+        let at = text.find(from).unwrap_or_else(|| panic!("no '{from}' in the text"));
         doc.replace(at..at + from.len(), to);
         text.replace_range(at..at + from.len(), to);
         assert_eq!(doc.whole(), text);
-        assert_eq!(blocks(&doc), markdown::classify(text.split('\n')), "после правки «{from}» → «{to}»");
+        assert_eq!(blocks(&doc), markdown::classify(text.split('\n')), "after edit '{from}' -> '{to}'");
     }
 }
 
@@ -105,10 +105,10 @@ fn frontmatter_lines_are_metadata_and_follow_the_block_boundary() {
     assert!(matches!(kinds[5], Block::Heading { .. }));
     assert!(matches!(kinds[6], Block::Item(_)));
     doc.replace(0..0, "x");
-    assert!(leaves(&doc).iter().all(|b| *b != Block::Meta), "без открывающей черты блока метаданных нет");
+    assert!(leaves(&doc).iter().all(|b| *b != Block::Meta), "no metadata block without the opening rule");
     doc.replace(0..1, "");
     assert!(framed(&leaves(&doc)));
     let closing = doc.whole().rfind("\n---").unwrap();
     doc.replace(closing + 1..closing + 4, "--");
-    assert!(leaves(&doc).iter().all(|b| *b != Block::Meta), "без закрывающей черты блока метаданных нет");
+    assert!(leaves(&doc).iter().all(|b| *b != Block::Meta), "no metadata block without the closing rule");
 }

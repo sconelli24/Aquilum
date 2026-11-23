@@ -37,9 +37,9 @@ impl Renderer {
         let rgba: Vec<u8> = pixels.iter().flat_map(|p| [(p >> 16) as u8, (p >> 8) as u8, *p as u8, 255]).collect();
         let mut out = Vec::new();
         image::RgbaImage::from_raw(u32::from(*w), u32::from(*h), rgba)
-            .expect("кадр")
+            .expect("frame")
             .write_to(&mut std::io::Cursor::new(&mut out), image::ImageFormat::Png)
-            .expect("кадр кодируется в PNG");
+            .expect("frame encodes to PNG");
         out
     }
 }

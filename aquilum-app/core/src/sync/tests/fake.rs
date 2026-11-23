@@ -109,7 +109,7 @@ impl FakeRemote {
 
     fn online(&self) -> RemoteResult<std::sync::MutexGuard<'_, State>> {
         let state = self.state.lock().unwrap();
-        if state.offline { Err(RemoteError::Offline("нет сети".into())) } else { Ok(state) }
+        if state.offline { Err(RemoteError::Offline("no network".into())) } else { Ok(state) }
     }
 }
 
@@ -143,7 +143,7 @@ impl Remote for FakeRemote {
         if std::mem::take(&mut state.expired) {
             return Ok(None);
         }
-        let from: usize = cursor.parse().map_err(|_| RemoteError::Failed("курсор".into()))?;
+        let from: usize = cursor.parse().map_err(|_| RemoteError::Failed("cursor".into()))?;
         let touched: BTreeSet<&String> = state.log[from..].iter().collect();
         let changed = touched.iter().filter_map(|path| state.files.get(*path).cloned()).collect();
         let removed = touched.iter().filter(|path| !state.files.contains_key(**path)).map(|path| (*path).clone()).collect();
@@ -166,7 +166,7 @@ impl Remote for FakeRemote {
             let bytes = read_bytes(content, 0..content.byte_len())?;
             let mut state = self.state.lock().unwrap();
             if state.refuse_uploads {
-                return Err(RemoteError::Failed("облако недоступно".into()));
+                return Err(RemoteError::Failed("cloud unavailable".into()));
             }
             let current = state.files.get(path).map(|file| file.rev.as_str());
             if current != replaces.map(|file| file.rev.as_str()) {

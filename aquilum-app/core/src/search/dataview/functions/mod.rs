@@ -71,7 +71,7 @@ pub fn call(name: &str, arguments: Vec<Value>) -> Result<Value, String> {
         "previous" => Ok(span::previous(first(&arguments)).unwrap_or(Value::Null)),
         "delta" => Ok(periods::delta(&arguments)),
 
-        other => Err(format!("Нет функции «{other}»: есть {}", available())),
+        other => Err(format!("No function '{other}': available functions are {}", available())),
     }
 }
 
@@ -111,7 +111,7 @@ mod tests {
     }
 
     fn run(name: &str, arguments: Vec<Value>) -> Value {
-        call(name, arguments).expect("функция посчиталась")
+        call(name, arguments).expect("function evaluated")
     }
 
     #[test]
@@ -153,7 +153,7 @@ mod tests {
         assert_eq!(
             run("default", vec![Value::Number(0.0), text("нет")]),
             Value::Number(0.0),
-            "ноль — это значение, а не пустота"
+            "zero is a value, not emptiness"
         );
         assert_eq!(
             run("default", vec![Value::Bool(false), text("нет")]),
@@ -213,7 +213,7 @@ mod tests {
 
     #[test]
     fn an_unknown_function_names_the_ones_that_exist() {
-        let error = call("dataviewjs", Vec::new()).expect_err("такой функции нет");
+        let error = call("dataviewjs", Vec::new()).expect_err("no such function");
         assert!(error.contains("dataviewjs"));
         assert!(error.contains("link"));
     }

@@ -14,14 +14,14 @@ use crate::ui::editor::TextAction;
 const STRESS: &str = "Полный тест Markdown";
 
 fn core_query(core: &aquilum_core::Core, workspace: &str, query: &str) {
-    for pass in ["холодный", "повтор"] {
+    for pass in ["cold", "repeat"] {
         let before = heap();
         let (response, ms, peak) = measured(|| core.search.search(workspace, &Request::new(query)).unwrap());
         let held = mb(heap().saturating_sub(before));
         let (results, terms) = (&response.results, &response.query_terms);
         let stress = results.iter().position(|r| r.title == STRESS).map(|i| (i, results[i].match_count));
         let top: Vec<String> = results.iter().take(3).map(|r| format!("{} ({})", r.title, r.match_count)).collect();
-        eprintln!("ядро «{query}» {pass}: {ms:.1} мс, пик +{peak:.0} МБ, осталось +{held:.0} МБ; результатов {}, термины {terms:?}, огромная заметка (место, совпадений) {stress:?}, первые {}", results.len(), top.join("; "));
+        eprintln!("core "{query}" {pass}: {ms:.1} ms, peak +{peak:.0} MB, retained +{held:.0} MB; results {}, terms {terms:?}, huge note (position, matches) {stress:?}, first {}", results.len(), top.join("; "));
     }
 }
 
@@ -33,7 +33,7 @@ fn breakdown(note: &Path, query: &str) {
     let (heading, heading_ms, heading_peak) = measured(|| aquilum_core::search::headings::heading_at(&body, first));
     let find = Matcher::new(query, IGNORE_CASE);
     let (found, find_ms, find_peak) = measured(|| find.find_all(&body).len());
-    eprintln!("тело огромной заметки «{query}»: все совпадения Ctrl+O {all_ms:.0} мс, пик +{all_peak:.0} МБ, {}; первое {first_ms:.2} мс (байт {first}); heading_at {heading_ms:.2} мс, пик +{heading_peak:.0} МБ, {heading:?}; Ctrl+F по всему тексту {find_ms:.0} мс, пик +{find_peak:.0} МБ, {found}", matches.len());
+    eprintln!("huge note body "{query}": all matches Ctrl+O {all_ms:.0} ms, peak +{all_peak:.0} MB, {}; first {first_ms:.2} ms (byte {first}); heading_at {heading_ms:.2} ms, peak +{heading_peak:.0} MB, {heading:?}; Ctrl+F over full text {find_ms:.0} ms, peak +{find_peak:.0} MB, {found}", matches.len());
 }
 
 fn index_size(core: &aquilum_core::Core, workspace: &str) {
@@ -47,7 +47,7 @@ fn index_size(core: &aquilum_core::Core, workspace: &str) {
             store += bytes;
         }
     }
-    eprintln!("индекс {}: {:.1} МБ, из них хранилище .store {:.2} МБ", index.display(), total as f64 / 1048576.0, store as f64 / 1048576.0);
+    eprintln!("index {}: {:.1} MB, of which .store storage {:.2} MB", index.display(), total as f64 / 1048576.0, store as f64 / 1048576.0);
 }
 
 fn store(core: &aquilum_core::Core, workspace: &str) {
@@ -60,11 +60,11 @@ fn store(core: &aquilum_core::Core, workspace: &str) {
                 let (bytes, ms, peak) = measured(|| store.get_document_bytes(doc).unwrap().len());
                 (docs, total) = (docs + 1, total + ms);
                 if ms > 20.0 {
-                    slow.push(format!("сегмент {ord} документ {doc}: {ms:.0} мс, {:.0} КБ, пик +{peak:.0} МБ", bytes as f64 / 1024.0));
+                    slow.push(format!("segment {ord} document {doc}: {ms:.0} ms, {:.0} KB, peak +{peak:.0} MB", bytes as f64 / 1024.0));
                 }
             }
         }
-        eprintln!("хранилище без кэша: {docs} документов, всего {total:.0} мс; дольше 20 мс: {}", slow.join("; "));
+        eprintln!("storage without cache: {docs} documents, total {total:.0} ms; over 20 ms: {}", slow.join("; "));
         Ok(())
     };
     core.search.with_index(workspace, read).unwrap();
@@ -86,7 +86,7 @@ fn wait_found(b: &mut Bench, n: usize) -> Vec<f64> {
 }
 
 fn type_query(b: &mut Bench, query: &str) {
-    let Some(Popup::Search(state)) = &b.h.app.popup else { panic!("поиск не открыт") };
+    let Some(Popup::Search(state)) = &b.h.app.popup else { panic!("search not open") };
     let field = state.field_id();
     b.h.send(field, TextAction::Changed(query.into()));
 }
@@ -104,13 +104,13 @@ fn ui_query(b: &mut Bench, query: &str) {
     let ((), render) = clock(|| b.h.app.on_search_results(&mut b.h.root));
     let ((scene, raster), shown) = clock(|| frame(b));
     let cards = if let Some(Popup::Search(state)) = &b.h.app.popup { state.result_count() } else { 0 };
-    eprintln!("окно «{query}»: ввод {typed:.1} мс + кадр {typed_frame:.1} мс; ответ через {arrived:.0} мс; карточки {render:.1} мс; кадр {shown:.1} мс (сцена {scene:.1}, растр {raster:.1}); карточек {cards}");
+    eprintln!("window "{query}": input {typed:.1} ms + frame {typed_frame:.1} ms; response after {arrived:.0} ms; cards {render:.1} ms; frame {shown:.1} ms (scene {scene:.1}, raster {raster:.1}); cards {cards}");
 }
 
 fn timed_frames(b: &mut Bench, n: usize, mut step: impl FnMut(&mut Bench, usize)) -> String {
     let times: Vec<f64> = (0..n).map(|i| clock(|| (step(b, i), frame(b))).1).collect();
     let [p50, max] = percentiles(&times, [0.5, 1.0]);
-    format!("p50 {p50:.2} мс, максимум {max:.2}")
+    format!("p50 {p50:.2} ms, max {max:.2}")
 }
 
 fn list_frames(b: &mut Bench) {
@@ -119,11 +119,11 @@ fn list_frames(b: &mut Bench) {
     });
     let at = (f64::from(b.w) / 2.0, f64::from(b.hh) / 2.0);
     let wheel = timed_frames(b, 40, |b, i| b.h.scroll(at, b.scale, (0.0, if i < 20 { -60.0 } else { 60.0 })));
-    eprintln!("список: стрелка вниз {keys}; колесо {wheel}");
+    eprintln!("list: arrow down {keys}; wheel {wheel}");
 }
 
 fn wait_current(b: &mut Bench) -> (usize, f64) {
-    let Some(Popup::Search(state)) = &b.h.app.popup else { panic!("поиск не открыт") };
+    let Some(Popup::Search(state)) = &b.h.app.popup else { panic!("search not open") };
     let (current, t, mut answers) = (state.generation(), Instant::now(), 0);
     while t.elapsed() < Duration::from_secs(300) {
         match b.h.app.search_rx.try_recv() {
@@ -135,7 +135,7 @@ fn wait_current(b: &mut Bench) -> (usize, f64) {
             Err(_) => std::thread::sleep(Duration::from_micros(200)),
         }
     }
-    panic!("нет ответа на последний запрос");
+    panic!("no response to the last query");
 }
 
 fn rapid(b: &mut Bench, word: &str, pause: u64) {
@@ -150,7 +150,7 @@ fn rapid(b: &mut Bench, word: &str, pause: u64) {
     });
     b.h.app.on_search_results(&mut b.h.root);
     let (cpu, held) = (crate::memory_probe::cpu_ms() - cpu, mb(heap().saturating_sub(before)));
-    eprintln!("набор «{word}», {} букв, {pause} мс между буквами: ответов {answers}, последний через {last:.0} мс после набора; всего {ms:.0} мс, процессор {cpu:.0} мс, пик +{peak:.0} МБ, осталось +{held:.0} МБ", prefixes.len());
+    eprintln!("typing "{word}", {} letters, {pause} ms between letters: responses {answers}, last after {last:.0} ms after typing; total {ms:.0} ms, CPU {cpu:.0} ms, peak +{peak:.0} MB, retained +{held:.0} MB", prefixes.len());
 }
 
 #[test]
@@ -165,8 +165,8 @@ fn search_big_vault() {
     let core = Arc::clone(&b.h.app.workspace.core);
     let workspace = vault.path().to_string_lossy().into_owned();
     let (built, ms) = clock(|| wait_index(&core, &workspace));
-    assert!(built, "индекс не готов");
-    eprintln!("индекс готов за {ms:.0} мс");
+    assert!(built, "index not ready");
+    eprintln!("index ready in {ms:.0} ms");
     index_size(&core, &workspace);
     if std::env::var_os("AQ_STORE").is_some() {
         store(&core, &workspace);

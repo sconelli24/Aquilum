@@ -122,7 +122,7 @@ impl ReaderView {
             let resolved = self.quotes.iter().filter_map(|(cfi, label)| self.session.resolve(cfi).map(|(a, b)| (a, b, cfi.clone(), label.clone()))).collect();
             self.marks = Some((section, resolved));
         }
-        &self.marks.as_ref().expect("метки посчитаны выше").1
+        &self.marks.as_ref().expect("marks are computed above").1
     }
 
     pub(super) fn quote_shapes(&mut self) -> Vec<(Vec<Rect>, String, String)> {

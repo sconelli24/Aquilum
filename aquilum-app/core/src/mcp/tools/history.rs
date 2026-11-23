@@ -16,46 +16,46 @@ pub fn definitions() -> Vec<Value> {
     vec![
         tool(
             "note_history",
-            "Версии заметки из её истории, от новых к старым. id — для read_version, restore_version и name_version; atMs — время в миллисекундах Unix; source — кто правил: me — пользователь, agent — агент (каждый вызов агента — отдельная версия), external — правка снаружи, links — ссылки после переименования другой заметки, start — исходный текст, restore и revert — восстановление версии и отмена её изменений (fromMs — время той версии); name — название версии.",
+            "Versions of a note from its history, newest first. id is for read_version, restore_version and name_version; atMs is the Unix time in milliseconds; source is who made the edit: me is the user, agent is the agent (each agent call is a separate version), external is an edit from outside, links is links updated after another note was renamed, start is the initial text, restore and revert are restoring a version and undoing its changes (fromMs is the time of that version); name is the version name.",
             json!({
-                "note": { "type": "string", "description": "Путь или название заметки" },
-                "offset": { "type": "integer", "description": "Сколько версий пропустить, чтобы получить следующую страницу" },
-                "limit": { "type": "integer", "description": "Сколько версий вернуть, по умолчанию 50, максимум 200" },
+                "note": { "type": "string", "description": "Note path or title" },
+                "offset": { "type": "integer", "description": "How many versions to skip to get the next page" },
+                "limit": { "type": "integer", "description": "How many versions to return, default 50, maximum 200" },
                 "workspace": workspace_property(),
             }),
             &["note"],
         ),
         tool(
             "read_version",
-            "Текст одной версии заметки по id из note_history. Длинный текст отдаётся частями: смотрите поля truncated и nextOffset.",
+            "Text of one note version by id from note_history. Long text is returned in parts: see the truncated and nextOffset fields.",
             json!({
-                "note": { "type": "string", "description": "Путь или название заметки" },
-                "version": { "type": "string", "description": "id версии из note_history" },
-                "offset": { "type": "integer", "description": "С какого символа читать" },
-                "limit": { "type": "integer", "description": "Сколько символов вернуть, по умолчанию 8000" },
+                "note": { "type": "string", "description": "Note path or title" },
+                "version": { "type": "string", "description": "Version id from note_history" },
+                "offset": { "type": "integer", "description": "Character offset to start reading from" },
+                "limit": { "type": "integer", "description": "How many characters to return, default 8000" },
                 "workspace": workspace_property(),
             }),
             &["note", "version"],
         ),
         tool(
             "restore_version",
-            "Восстановить версию заметки: её текст становится текущим. Текст до восстановления сам остаётся в истории, поэтому восстановление обратимо. Вызывайте по просьбе пользователя.",
+            "Restore a note version: its text becomes the current text. The text from before the restore stays in history, so restoring is reversible. Call only at the user's request.",
             json!({
-                "note": { "type": "string", "description": "Путь или название заметки" },
-                "version": { "type": "string", "description": "id версии из note_history" },
+                "note": { "type": "string", "description": "Note path or title" },
+                "version": { "type": "string", "description": "Version id from note_history" },
                 "versionName": version_name_property(),
-                "open": { "type": "boolean", "description": "Открыть заметку вкладкой в приложении, по умолчанию да; в другой базе вкладка не открывается" },
+                "open": { "type": "boolean", "description": "Open the note in a tab in the app, default true; no tab is opened for another workspace" },
                 "workspace": workspace_property(),
             }),
             &["note", "version"],
         ),
         tool(
             "name_version",
-            "Назвать версию заметки, переименовать её или снять название пустым name. Без version называется последняя версия заметки. Названные версии не удаляются по сроку хранения истории.",
+            "Name a note version, rename it, or remove the name with an empty name. Without version, the latest version of the note is named. Named versions are not deleted when the history retention period expires.",
             json!({
-                "note": { "type": "string", "description": "Путь или название заметки" },
-                "version": { "type": "string", "description": "id версии из note_history; без него — последняя версия заметки" },
-                "name": { "type": "string", "description": "Название; пустая строка снимает его" },
+                "note": { "type": "string", "description": "Note path or title" },
+                "version": { "type": "string", "description": "Version id from note_history; without it, the latest version of the note" },
+                "name": { "type": "string", "description": "Name; an empty string removes it" },
                 "workspace": workspace_property(),
             }),
             &["note", "name"],
@@ -74,7 +74,7 @@ pub fn call(core: &Core, name: &str, arguments: &Value) -> Option<Result<Value, 
 }
 
 fn missing_version(id: &str) -> String {
-    format!("У заметки нет версии {id}: возьмите id из note_history")
+    format!("The note has no version {id}: take an id from note_history")
 }
 
 fn note_history(core: &Core, arguments: &Value) -> Result<Value, String> {
@@ -121,7 +121,7 @@ fn name_version(core: &Core, arguments: &Value) -> Result<Value, String> {
     let named = gate::name_version(core, &note, version.as_deref(), &name)
         .ok_or_else(|| match &version {
             Some(id) => missing_version(id),
-            None => "У заметки ещё нет версий: называть нечего".to_owned(),
+            None => "The note has no versions yet: nothing to name".to_owned(),
         })?;
     Ok(json!({ "path": vault.relative(&note), "version": named, "name": name.trim() }))
 }

@@ -65,6 +65,7 @@ impl CanvasView {
         }
         this.ctx.request_layout();
         this.ctx.request_paint_only();
+        this.ctx.request_post_paint();
     }
 
     /// Text typed into a card, mirrored so later edits of the board carry it.
@@ -77,12 +78,14 @@ impl CanvasView {
     pub fn flash(this: &mut WidgetMut<'_, Self>, message: String) {
         this.widget.flash = Some(message);
         this.ctx.request_paint_only();
+        this.ctx.request_post_paint();
     }
 
     pub fn set_notice(this: &mut WidgetMut<'_, Self>, notice: Option<String>) {
         this.widget.readonly = notice.is_some();
         this.widget.notice = notice;
         this.ctx.request_paint_only();
+        this.ctx.request_post_paint();
     }
 
     /// Drops cards whose node is gone and adds new ones.
@@ -110,6 +113,7 @@ impl CanvasView {
         if this.widget.editing.take().is_some() {
             this.ctx.request_layout();
             this.ctx.request_paint_only();
+            this.ctx.request_post_paint();
         }
     }
 
@@ -174,6 +178,7 @@ impl CanvasView {
     fn changed(this: &mut WidgetMut<'_, Self>) -> Canvas {
         this.ctx.request_layout();
         this.ctx.request_paint_only();
+        this.ctx.request_post_paint();
         this.widget.canvas.clone()
     }
 

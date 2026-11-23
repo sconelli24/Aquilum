@@ -18,21 +18,21 @@ struct Explanation {
 fn explanation(cause: ConflictCause) -> Explanation {
     match cause {
         ConflictCause::Diverged => Explanation {
-            title: "файл и документ изменились одновременно",
-            why: "И файл на диске, и открытый в редакторе документ изменились после последней сверки. \
-                  Свести их без потери было нельзя, поэтому в заметке осталась версия с диска, \
-                  а версия из редактора сохранена здесь.",
+            title: "file and document changed at the same time",
+            why: "Both the file on disk and the document open in the editor changed after the last sync check. \
+                  They could not be merged without loss, so the note kept the version from disk \
+                  and the editor version is saved here.",
         },
         ConflictCause::Displaced => Explanation {
-            title: "строки не поместились при слиянии",
-            why: "В заметку приехала внешняя правка, и её сведение с тем, что набиралось в редакторе, \
-                  вытеснило строки ниже. Остальной текст заметки цел.",
+            title: "lines did not fit during the merge",
+            why: "An external edit arrived in the note, and merging it with what was being typed in the editor \
+                  displaced the lines below. The rest of the note text is intact.",
         },
         ConflictCause::Reverted => Explanation {
-            title: "изменения версии отменены поверх более поздних правок",
-            why: "Отмена изменений одной версии из истории задела строки, которые правились позже. \
-                  В заметке эти места вернулись к виду до той версии, а более поздний текст этих строк \
-                  сохранён здесь.",
+            title: "version changes reverted over later edits",
+            why: "Reverting the changes of one version from the history touched lines that were edited later. \
+                  In the note those places went back to how they were before that version, and the later text \
+                  of those lines is saved here.",
         },
     }
 }
@@ -71,7 +71,7 @@ fn one_line(value: &str) -> String {
 }
 
 pub fn copy_stem(stem: &str, moment: &LocalMinute, device: &str) -> String {
-    format!("{stem} (конфликт {} {} {device})", moment.date, moment.time.replace(':', "-"))
+    format!("{stem} (conflict {} {} {device})", moment.date, moment.time.replace(':', "-"))
 }
 
 pub fn copy_content<'a>(
@@ -87,22 +87,22 @@ pub fn copy_content<'a>(
     let stamp = format!("{} {}", moment.date, moment.time);
     let mut lines = vec![
         "---".to_owned(),
-        format!("конфликт: {stamp}"),
-        format!("заметка: {}", quoted(stem)),
-        format!("причина: {}", quoted(explanation.title)),
+        format!("conflict: {stamp}"),
+        format!("note: {}", quoted(stem)),
+        format!("reason: {}", quoted(explanation.title)),
         "---".to_owned(),
         String::new(),
-        format!("> Это конфликтная копия. Текст ниже не попал в заметку «{stem}» — он сохранён здесь, чтобы не пропасть."),
+        format!("> This is a conflict copy. The text below did not make it into the note \"{stem}\"; it is saved here so it is not lost."),
         ">".to_owned(),
-        format!("> **Почему.** {}", explanation.why),
+        format!("> **Why.** {}", explanation.why),
         ">".to_owned(),
-        format!("> **Когда.** {stamp}"),
-        format!("> **Заметка.** `{note_path}`"),
+        format!("> **When.** {stamp}"),
+        format!("> **Note.** `{note_path}`"),
     ];
     if let Some(hash) = &report.synced_hash {
-        lines.push(format!("> **Отпечаток последней сверки.** `{}`", one_line(hash)));
+        lines.push(format!("> **Last sync fingerprint.** `{}`", one_line(hash)));
     }
-    lines.extend([String::new(), "## Текст, который не попал в заметку".to_owned(), String::new()]);
+    lines.extend([String::new(), "## Text that did not make it into the note".to_owned(), String::new()]);
     let head = lines.join("\n");
     let ends = read_bytes(body, len - 1..len).ok()? == b"\n";
     let (head_len, tail) = (head.len(), if ends { "" } else { "\n" });

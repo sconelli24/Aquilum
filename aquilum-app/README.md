@@ -1,33 +1,33 @@
 # Aquilum
 
-Нативное приложение: Rust, Masonry, winit и vello_cpu, без WebView. Код окна — `native/`, общее ядро (файлы, поиск, история, MCP) — `core/`.
+Native app: Rust, Masonry, winit and vello_cpu, with no WebView. Window code is in `native/`, the shared core (files, search, history, MCP) is in `core/`.
 
-## Разработка
+## Development
 
 ```powershell
 native\run.bat
 ```
 
-Собирает release и запускает окно. Если окно уже открыто, оно закрывается штатно, с сохранением, и запускается новая сборка.
+Builds release and launches the window. If the window is already open, it is closed normally, with saving, and the new build is launched.
 
-Пересборка на лету при правке кода: `native\scripts\watch.ps1`.
+Rebuild on the fly while editing code: `native\scripts\watch.ps1`.
 
-## Проверка
+## Checks
 
 ```powershell
 cargo test -p aquilum-native
 cargo test -p aquilum-core
 ```
 
-## Релиз
+## Release
 
-Пакеты собирает workflow `Release` в публичном репозитории (запуск руками). Сборка с фичей `installed` (автообновление, автозапуск), упаковка:
-- [cargo-packager](https://github.com/crabnebula-dev/cargo-packager) по `[package.metadata.packager]` в `native/Cargo.toml`: установщик NSIS, `.app` и DMG, AppImage;
-- [nfpm](https://nfpm.goreleaser.com) по `native/packaging/nfpm.yaml`: `.deb` и `.rpm` с явным списком зависимостей.
+Packages are built by the `Release` workflow in the public repository (started manually). The build uses the `installed` feature (auto-update, autostart); packaging:
+- [cargo-packager](https://github.com/crabnebula-dev/cargo-packager) using `[package.metadata.packager]` in `native/Cargo.toml`: NSIS installer, `.app` and DMG, AppImage;
+- [nfpm](https://nfpm.goreleaser.com) using `native/packaging/nfpm.yaml`: `.deb` and `.rpm` with an explicit dependency list.
 
-Установщик ставится туда же, куда ставилась версия на Tauri, с тем же ключом удаления в реестре, и обновляет её; имена пакетов deb и rpm (`aquilum`) прежние. Подпись — тот же ключ minisign, `latest.json` в прежнем формате. Перед выгрузкой каждый пакет ставится и запускается на чистой машине.
+The installer installs to the same place as the Tauri version, with the same uninstall registry key, and updates it; the deb and rpm package names (`aquilum`) are unchanged. Signing uses the same minisign key, and `latest.json` keeps its old format. Before upload, each package is installed and launched on a clean machine.
 
-Локально установщик Windows без подписи:
+Windows installer locally, unsigned:
 
 ```powershell
 cargo install cargo-packager --version 0.11.8 --locked
@@ -36,8 +36,8 @@ copy ..\.artifacts\cargo-native\release\aquilum-native.exe ..\.artifacts\cargo-n
 cargo packager -p aquilum-native --release --formats nsis --out-dir ..\.artifacts\packages
 ```
 
-Версия приложения указана в `core/Cargo.toml` и `native/Cargo.toml` (одинаковая в обоих).
+The app version is set in `core/Cargo.toml` and `native/Cargo.toml` (the same in both).
 
-Кэш сборки: `../.artifacts/cargo-native/`.
+Build cache: `../.artifacts/cargo-native/`.
 
-Прежняя версия на Tauri лежит в `../tauri-version/` и нужна только для сверки возможностей.
+The previous Tauri version is in `../tauri-version/` and is needed only to compare features.

@@ -16,7 +16,7 @@ fn sign_in(h: &Harness) {
 fn state(h: &Harness) -> &crate::app::workspaces::WorkspacesState {
     match &h.app.popup {
         Some(Popup::Workspaces(state)) => state,
-        _ => panic!("окно баз не открыто"),
+        _ => panic!("vaults window not open"),
     }
 }
 
@@ -26,7 +26,7 @@ fn texts(widget: WidgetRef<'_, dyn Widget>) -> Vec<String> {
 }
 
 fn cloud_texts(h: &Harness) -> Vec<String> {
-    let slot = state(h).dialog.cloud.expect("раздел «В облаке» не показан");
+    let slot = state(h).dialog.cloud.expect("In the cloud section not shown");
     texts(h.root.get_widget(slot.id()).unwrap())
 }
 
@@ -59,7 +59,7 @@ fn a_vault_from_the_cloud_is_created_opened_and_synced() {
         h.app.on_core_events(&mut h.root);
         cloud_texts(&h).iter().any(|text| text.starts_with(&failed))
     });
-    assert!(shown, "ошибка списка не показана: {:?}", cloud_texts(&h));
+    assert!(shown, "list error not shown: {:?}", cloud_texts(&h));
 
     let listed = state(&h).cloud_listed().unwrap();
     listed.send(Ok(vec!["Aquilum".into(), "neuroNET".into(), "Работа".into()])).unwrap();
@@ -80,5 +80,5 @@ fn a_vault_from_the_cloud_is_created_opened_and_synced() {
     let sync = h.app.workspace.core.ui_state.workspace(&target).unwrap().sync;
     assert_eq!(sync, SyncSettings { enabled: true, ..SyncSettings::default() });
     let core = std::sync::Arc::clone(&h.app.workspace.core);
-    assert!(wait_until(500, 10, || matches!(core.sync.status(), SyncStatus::Failed(_))), "проход для новой базы не запущен: {:?}", core.sync.status());
+    assert!(wait_until(500, 10, || matches!(core.sync.status(), SyncStatus::Failed(_))), "sync pass for the new vault not started: {:?}", core.sync.status());
 }

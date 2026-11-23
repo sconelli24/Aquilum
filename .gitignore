@@ -37,16 +37,16 @@ coverage/
 .tauri/
 .env
 
-# Сборка плагина Obsidian, лежит локально как справочный материал
+# Obsidian plugin build, kept locally as reference material
 /dataview/
 
-# История заметок Aquilum: локальная, в git не идёт
+# Aquilum note history: local, not tracked by git
 .aquilum/
 
-# Рабочая копия публичного репозитория релизов
+# Working copy of the public releases repository
 /release-repo-update/
 
-# Корзина приложения в базе знаний (служебная папка Aquilum)
+# App trash inside the vault (Aquilum service folder)
 .trash/
 
 __pycache__/

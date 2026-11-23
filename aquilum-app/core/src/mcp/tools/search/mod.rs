@@ -13,73 +13,73 @@ pub fn definitions() -> Vec<Value> {
     vec![
         tool(
             "search_notes",
-            "Полнотекстовый поиск по базе знаний со стеммингом и опечатками (одна от 5 букв, две от 9, первая буква точно). Порядок: сначала заметки, где нашлось больше слов запроса, затем без опечаток, затем со словами в названии, с названием, равным запросу, со словами в заголовках, и по BM25. Частичные совпадения тоже возвращаются — смотрите matchedTerms. Синтаксис: \"точная фраза\" — слова рядом (обязательно), -слово и -\"фраза\" — исключить заметки, #слово — только в заголовках разделов (обязательно); последнее слово ищется и как начало слова. У результата есть heading — раздел с совпадением, matches — число совпадений, backlinks — сколько заметок ссылаются. hasMore — осталось ли что-то за пределами выдачи. frontmatter в индекс не входит, по его полям ищет find_notes.",
+            "Full-text search over the workspace with stemming and typo tolerance (one typo from 5 letters, two from 9, the first letter must be exact). Ranking: first notes that match more query words, then those without typos, then with words in the title, with a title equal to the query, with words in headings, and by BM25. Partial matches are also returned: see matchedTerms. Syntax: \"exact phrase\" means words adjacent (required), -word and -\"phrase\" exclude notes, #word means only in section headings (required); the last word is also matched as a word prefix. Each result has heading (the section with the match), matches (number of matches) and backlinks (how many notes link to it). hasMore tells whether anything is left beyond the returned results. frontmatter is not part of the index; use find_notes for its fields.",
             json!({
-                "query": { "type": "string", "description": "Поисковый запрос: слова, \"фраза\", -исключение, #заголовок" },
-                "folder": { "type": "string", "description": "Искать только в этой папке, пусто — вся база" },
-                "limit": { "type": "integer", "description": "Сколько заметок вернуть, по умолчанию 10" },
+                "query": { "type": "string", "description": "Search query: words, \"phrase\", -exclusion, #heading" },
+                "folder": { "type": "string", "description": "Search only in this folder; empty means the whole workspace" },
+                "limit": { "type": "integer", "description": "How many notes to return, default 10" },
                 "workspace": workspace_property(),
             }),
             &["query"],
         ),
         tool(
             "dataview_syntax",
-            "Язык блоков ```dataview: формы запроса, части, поля и функции — с примерами. Вызовите без аргументов, чтобы получить справку, или передайте query, чтобы проверить запрос перед вставкой в заметку.",
+            "The ```dataview block language: query forms, clauses, fields and functions, with examples. Call without arguments to get the reference, or pass query to validate a query before inserting it into a note.",
             json!({
-                "query": { "type": "string", "description": "Текст запроса для проверки; пусто — вернуть справку" },
+                "query": { "type": "string", "description": "Query text to validate; empty returns the reference" },
             }),
             &[],
         ),
         tool(
             "related_notes",
-            "Похожие заметки по тексту (BM25F): что писать рядом, что дублируется, что развить.",
+            "Notes similar by text (BM25F): what to write next to it, what is duplicated, what to expand.",
             json!({
-                "note": { "type": "string", "description": "Путь или название заметки" },
-                "limit": { "type": "integer", "description": "Сколько заметок вернуть, по умолчанию 10" },
+                "note": { "type": "string", "description": "Note path or title" },
+                "limit": { "type": "integer", "description": "How many notes to return, default 10" },
                 "workspace": workspace_property(),
             }),
             &["note"],
         ),
         tool(
             "linked_notes",
-            "Связанные заметки по графу ссылок [[...]] (Adamic-Adar): общие соседи, а не общий текст.",
+            "Related notes by the [[...]] link graph (Adamic-Adar): shared neighbors, not shared text.",
             json!({
-                "note": { "type": "string", "description": "Путь или название заметки" },
-                "limit": { "type": "integer", "description": "Сколько заметок вернуть, по умолчанию 10" },
+                "note": { "type": "string", "description": "Note path or title" },
+                "limit": { "type": "integer", "description": "How many notes to return, default 10" },
                 "workspace": workspace_property(),
             }),
             &["note"],
         ),
         tool(
             "backlinks",
-            "Заметки, которые ссылаются на указанную: по одной строке на заметку, mentions — сколько раз ссылка встречается, heading и context — раздел и строка первого упоминания.",
+            "Notes that link to the given one: one row per note, mentions is how many times the link occurs, heading and context are the section and line of the first mention.",
             json!({
-                "note": { "type": "string", "description": "Путь или название заметки" },
+                "note": { "type": "string", "description": "Note path or title" },
                 "workspace": workspace_property(),
             }),
             &["note"],
         ),
         tool(
             "outgoing_links",
-            "Ссылки [[...]] из указанной заметки, включая ещё не созданные, по одной строке на цель; mentions — сколько раз она упомянута.",
+            "[[...]] links from the given note, including not-yet-created targets, one row per target; mentions is how many times it is mentioned.",
             json!({
-                "note": { "type": "string", "description": "Путь или название заметки" },
+                "note": { "type": "string", "description": "Note path or title" },
                 "workspace": workspace_property(),
             }),
             &["note"],
         ),
         tool(
             "wiki_sources",
-            "Статьи Wikipedia по теме заметки.",
+            "Wikipedia articles on the topic of the note.",
             json!({
-                "note": { "type": "string", "description": "Путь или название заметки" },
+                "note": { "type": "string", "description": "Note path or title" },
                 "workspace": workspace_property(),
             }),
             &["note"],
         ),
         tool(
             "get_index_status",
-            "Состояние поискового индекса: готов ли он и сколько заметок проиндексировано.",
+            "Search index status: whether it is ready and how many notes are indexed.",
             json!({
                 "workspace": workspace_property(),
             }),

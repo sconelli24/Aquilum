@@ -33,8 +33,8 @@ fn at_second_line_start(body: &str) -> RenderRoot {
     press(&mut root, Key::Named(NamedKey::Home), command());
     named(&mut root, NamedKey::ArrowDown);
     named(&mut root, NamedKey::Home);
-    let caret = root.get_widget_with_tag(TAG).expect("редактор").inner().caret_offset();
-    assert!(caret > 0 && caret < body.len(), "каретка не на второй строке: {caret}");
+    let caret = root.get_widget_with_tag(TAG).expect("editor").inner().caret_offset();
+    assert!(caret > 0 && caret < body.len(), "caret is not on the second line: {caret}");
     root
 }
 
@@ -64,7 +64,7 @@ fn edit_relayouts_only_its_paragraph() {
     typing(&mut root, "abcdefghij");
     let per_key = started.elapsed() / 10;
     assert!(text(&root).ends_with("abcdefghij"));
-    assert!(per_key < std::time::Duration::from_millis(5), "нажатие в большом документе: {per_key:?}");
+    assert!(per_key < std::time::Duration::from_millis(5), "keypress in a large document: {per_key:?}");
 }
 
 #[test]

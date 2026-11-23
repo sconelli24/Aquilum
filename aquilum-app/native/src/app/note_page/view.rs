@@ -39,12 +39,12 @@ impl App {
         let units = self.view.map(|(anchor, px)| (self.units_of(anchor), px));
         let (Some(session), Some(note), Some((units, px))) = (self.session.as_mut(), self.note.as_ref(), units) else { return };
         if let Some(document) = session.document(&self.workspace.core, &note.path) {
-            let _zone = aq_trace::zone("место в заметке: запись");
+            let _zone = aq_trace::zone("note position: save");
             session.save_view(&self.workspace.core, document, units as i64, px);
         }
     }
 
-    /// Прокручивает заметку так, чтобы место `byte` текста (без метаданных) оказалось посередине.
+    /// Scrolls the note so that the `byte` position of the text (without metadata) ends up in the middle.
     pub(crate) fn reveal(&mut self, root: &mut RenderRoot, byte: usize) {
         self.scroll_note_to(root, byte, |height| -height / 2.0);
     }

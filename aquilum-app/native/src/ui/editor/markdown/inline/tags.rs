@@ -38,7 +38,7 @@ mod tests {
     #[test]
     fn a_tag_is_letters_digits_and_three_joiners_after_whitespace() {
         assert_eq!(tags("#тег #tag #вложенный/тег #tag-with-dash #tag_with_underscore"), ["#тег", "#tag", "#вложенный/тег", "#tag-with-dash", "#tag_with_underscore"]);
-        assert_eq!(tags("#2026 #2026a #1/2"), ["#2026", "#2026a", "#1/2"], "тег из цифр тоже тег");
+        assert_eq!(tags("#2026 #2026a #1/2"), ["#2026", "#2026a", "#1/2"], "a tag made of digits is still a tag");
         assert_eq!(tags("#проект/задача/подзадача"), ["#проект/задача/подзадача"]);
         assert_eq!(tags("Конец #тег. И #тег, и #тег!"), ["#тег", "#тег", "#тег"]);
         assert_eq!(tags("# пробел, C# или http://example.com/#anchor, a#no #"), Vec::<&str>::new());

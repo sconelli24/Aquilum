@@ -22,13 +22,13 @@ fn folders_come_first_then_notes_then_service_files() {
 
     assert!(device.sync_until(&remote, 1).stopped);
     let folders = (0..FOLDERS).filter(|index| device.root.join(format!("Папка {index}")).is_dir()).count();
-    assert_eq!(folders, FOLDERS, "все папки из облака появляются до первой заметки");
+    assert_eq!(folders, FOLDERS, "all folders from the cloud appear before the first note");
     assert!(device.files().len() < FOLDERS * 2);
 
     assert!(device.sync(&remote).failed.is_empty());
     let downloads = remote.downloads();
     let first_service = downloads.iter().position(|path| service(path)).unwrap();
-    assert!(downloads[first_service..].iter().all(|path| service(path)), "служебные файлы — после всех заметок: {downloads:?}");
+    assert!(downloads[first_service..].iter().all(|path| service(path)), "service files come after all notes: {downloads:?}");
     assert_eq!(downloads.len() - first_service, FOLDERS * 2 + 1);
 }
 
@@ -75,6 +75,6 @@ fn the_tree_hears_about_every_arrived_folder_and_note_at_once() {
     let announced = device.announced.lock().unwrap().clone();
     for path in ["Папка", "Папка/Вложенная", "Папка/Вложенная/Заметка.md"] {
         let full = crate::sync::scan::absolute(&device.root, path).to_string_lossy().into_owned();
-        assert!(announced.contains(&full), "{path} не объявлен: {announced:?}");
+        assert!(announced.contains(&full), "{path} was not announced: {announced:?}");
     }
 }

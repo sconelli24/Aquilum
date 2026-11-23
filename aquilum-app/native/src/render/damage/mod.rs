@@ -160,7 +160,7 @@ impl Tracker {
         for draw in added {
             let pair = draw.solid.filter(|_| calm).and_then(|solid| Some((solid, solid.closest(&solids)?)));
             match pair {
-                Some((solid, at)) => rects.extend(solid.changed(solids.swap_remove(at).solid.expect("заливка с ключом"))),
+                Some((solid, at)) => rects.extend(solid.changed(solids.swap_remove(at).solid.expect("fill with a key"))),
                 None => rects.push(draw.rect),
             }
         }

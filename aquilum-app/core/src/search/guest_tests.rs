@@ -48,7 +48,7 @@ impl Fixture {
     fn wait_scanned(&self, workspace: &str) {
         let deadline = Instant::now() + Duration::from_secs(20);
         while self.service.status(Some(workspace)).updating {
-            assert!(Instant::now() < deadline, "индекс {workspace} не догнал диск");
+            assert!(Instant::now() < deadline, "index {workspace} did not catch up with the disk");
             std::thread::sleep(Duration::from_millis(10));
         }
     }
@@ -66,7 +66,7 @@ impl Fixture {
             .unwrap()
             .as_ref()
             .map(|guest| guest.index.generation)
-            .expect("гостевой индекс открыт")
+            .expect("guest index opened")
     }
 }
 
@@ -84,7 +84,7 @@ fn a_guest_opens_beside_the_active_index_without_touching_it() {
     assert!(same(&fixture.service.active_root().unwrap(), &home));
     assert!(fixture.finds(&home, "домашняя"));
     assert!(fixture.finds(&other, "чужая"));
-    assert!(!fixture.finds(&home, "чужая"), "базы не смешиваются");
+    assert!(!fixture.finds(&home, "чужая"), "vaults are not mixed");
     assert!(
         !fixture
             .announced
@@ -92,7 +92,7 @@ fn a_guest_opens_beside_the_active_index_without_touching_it() {
             .unwrap()
             .iter()
             .any(|announced| same(Path::new(announced), &other)),
-        "интерфейс не слышит индекс гостя"
+        "the UI does not hear the guest index"
     );
 }
 
@@ -116,7 +116,7 @@ fn a_third_workspace_replaces_the_second() {
     fixture.wait_scanned(&third);
 
     assert!(fixture.finds(&third, "третья"));
-    assert!(!fixture.finds(&second, "вторая"), "вторая база закрыта");
+    assert!(!fixture.finds(&second, "вторая"), "the second vault is closed");
 }
 
 #[test]
@@ -130,7 +130,7 @@ fn switching_to_the_guest_reuses_its_index() {
 
     let status = fixture.service.prepare(&other).unwrap();
 
-    assert_eq!(status.generation, generation, "индекс не открыт заново");
+    assert_eq!(status.generation, generation, "the index was not reopened");
     assert!(fixture.service.guest.read().unwrap().is_none());
     assert!(same(&fixture.service.active_root().unwrap(), &other));
     fixture.wait_scanned(&other);
@@ -163,7 +163,7 @@ fn a_write_reaches_the_guest_index() {
 
     let deadline = Instant::now() + Duration::from_secs(20);
     while !fixture.finds(&other, "продолжение") {
-        assert!(Instant::now() < deadline, "правка не дошла до гостевого индекса");
+        assert!(Instant::now() < deadline, "the edit did not reach the guest index");
         std::thread::sleep(Duration::from_millis(20));
     }
 }

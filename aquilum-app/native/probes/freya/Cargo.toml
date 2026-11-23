@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 publish = false
 
-# Отдельный workspace: Skia не должна попадать в Cargo.lock основного приложения.
+# Separate workspace: Skia must not end up in the main app's Cargo.lock.
 [workspace]
 
 [dependencies]

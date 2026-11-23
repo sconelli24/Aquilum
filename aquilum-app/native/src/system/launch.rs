@@ -92,8 +92,8 @@ mod tests {
         assert_eq!(changed("LD_LIBRARY_PATH"), Some(Some("/opt/lib")));
         assert_eq!(changed("PATH"), Some(Some("/usr/local/bin:/usr/bin")));
         assert_eq!(changed("PYTHONHOME"), Some(None));
-        assert_eq!(changed("QT_PLUGIN_PATH"), Some(None), "пустой хвост — не текущая папка");
+        assert_eq!(changed("QT_PLUGIN_PATH"), Some(None), "an empty tail is not the current folder");
         assert_eq!(changed("APPDIR"), Some(None));
-        assert_eq!(changes.len(), 5, "остальное окружение не трогается: {changes:?}");
+        assert_eq!(changes.len(), 5, "the rest of the environment is untouched: {changes:?}");
     }
 }

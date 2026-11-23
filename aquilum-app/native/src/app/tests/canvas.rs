@@ -49,7 +49,7 @@ fn a_canvas_is_listed_opened_and_its_cards_render_real_content() {
     let mut h = Harness::new();
     let (path, canvas) = open_board(&mut h);
     assert!(h.app.tree.names().iter().any(|name| name == "Board.canvas"), "canvas missing from the tree");
-    assert_eq!(h.app.title(), "Board — Aquilum");
+    assert_eq!(h.app.title(), "Board — Apus");
     assert!(h.app.canvas_shown());
     let shown = h.app.canvas_board(&h.root).unwrap();
     assert_eq!(shown.nodes.len(), 2);

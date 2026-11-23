@@ -21,9 +21,9 @@ fn calc_values_and_colors() {
 fn every_pattern_parses() {
     let patterns = parse_patterns(crate::cover::CSS);
     for id in crate::cover::PATTERN_IDS {
-        let pattern = patterns.get(*id).unwrap_or_else(|| panic!("узор {id} не разобран"));
+        let pattern = patterns.get(*id).unwrap_or_else(|| panic!("pattern {id} was not parsed"));
         if !matches!(*id, "city" | "dreams" | "tunnel") {
-            assert!(!pattern.base.layers.is_empty(), "у узора {id} нет слоёв");
+            assert!(!pattern.base.layers.is_empty(), "pattern {id} has no layers");
         }
     }
     let cubes = &patterns["cubes"].base.layers;

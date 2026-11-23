@@ -14,10 +14,10 @@ fn open() -> (Session, tempfile::TempDir) {
 }
 
 fn assert_only_screen(session: &Session) {
-    assert!(!session.needs_layout(), "на экране абзац без раскладки");
+    assert!(!session.needs_layout(), "a paragraph on screen has no layout");
     let shown = session.on_screen();
     assert!(!shown.is_empty());
-    assert!(session.layouts.iter().all(|(item, _)| shown.contains(item)), "держится раскладка абзаца вне экрана");
+    assert!(session.layouts.iter().all(|(item, _)| shown.contains(item)), "a layout is kept for an off-screen paragraph");
 }
 
 #[test]
@@ -51,7 +51,7 @@ fn a_new_font_size_keeps_the_reading_place() {
         session.ensure(VIEW, &settings(size, false), &mut fcx, &mut lcx);
         assert_only_screen(&session);
         let (first, last) = (session.start().unwrap().0, session.end().unwrap().0);
-        assert!(first <= block && block <= last, "после смены шрифта страница {first}..{last} без абзаца {block}");
+        assert!(first <= block && block <= last, "after a font change page {first}..{last} lacks paragraph {block}");
     }
 }
 
@@ -63,7 +63,7 @@ fn a_selection_over_both_columns_and_beyond_the_screen_makes_a_whole_quote() {
     let shown = session.on_screen();
     let (from, to) = (Spot { block: shown[1], byte: 0 }, Spot { block: *shown.last().unwrap(), byte: 10 });
     let rects = session.rects(from, to);
-    assert!(rects.iter().any(|r| r.x0 < VIEW.width / 2.0) && rects.iter().any(|r| r.x0 > VIEW.width / 2.0), "выделение не в обеих колонках");
+    assert!(rects.iter().any(|r| r.x0 < VIEW.width / 2.0) && rects.iter().any(|r| r.x0 > VIEW.width / 2.0), "the selection is not in both columns");
     let far = Spot { block: 300, byte: "Абзац номер".len() };
     let text = session.text(from, far);
     assert!(text.starts_with("Абзац номер 1.") && text.ends_with("Абзац номер"), "{}", &text[text.len() - 40..]);

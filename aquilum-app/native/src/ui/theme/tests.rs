@@ -20,7 +20,7 @@ fn bundled_fonts_answer_to_the_names_styles_ask_for() {
     }
     for wanted in ["Inter", "Inter Cyrillic", "iA Writer Mono", "iA Writer Quattro"] {
         for italic in [false, true] {
-            assert!(names.iter().any(|(name, i)| name == wanted && *i == italic), "нет {wanted} (курсив: {italic}), есть {names:?}");
+            assert!(names.iter().any(|(name, i)| name == wanted && *i == italic), "missing {wanted} (italic: {italic}), found {names:?}");
         }
     }
 }
@@ -53,9 +53,9 @@ fn symbols_and_emoji_find_a_font() {
                 for item in line.items() {
                     if let PositionedLayoutItem::GlyphRun(run) = item {
                         let font = run.run().font();
-                        assert!(run.glyphs().all(|g| g.id != 0), "{text}: пустые глифы в стеке {family:?}");
+                        assert!(run.glyphs().all(|g| g.id != 0), "{text}: empty glyphs in the stack {family:?}");
                         if text.starts_with('😀') {
-                            assert!(has_table(font.data.data(), font.index, b"COLR"), "эмодзи взяты из чёрно-белого шрифта");
+                            assert!(has_table(font.data.data(), font.index, b"COLR"), "emoji were taken from a monochrome font");
                         }
                     }
                 }
@@ -90,16 +90,16 @@ fn graph_backdrop_is_the_note_background_in_both_themes() {
     for dark in [true, false] {
         super::apply_setting(if dark { "dark" } else { "light" }, dark, "#1471eb");
         let theme = super::current();
-        assert_eq!(theme.graph_backdrop, theme.editor_bg, "фон графа не совпадает с фоном заметки (тёмная тема: {dark})");
+        assert_eq!(theme.graph_backdrop, theme.editor_bg, "the graph background does not match the note background (dark theme: {dark})");
     }
     super::apply_setting(if before { "dark" } else { "light" }, before, "#1471eb");
 }
 
 #[test]
 fn a_system_family_is_asked_for_by_its_own_name_with_a_fallback() {
-    let masonry::parley::FontFamily::Source(stack) = super::editor_font("Georgia") else { panic!("ожидался список имён") };
+    let masonry::parley::FontFamily::Source(stack) = super::editor_font("Georgia") else { panic!("a list of names was expected") };
     assert!(stack.starts_with("\"Georgia\", \"iA Writer Quattro\""), "{stack}");
-    let masonry::parley::FontFamily::Source(mono) = super::editor_font("iA Writer Mono") else { panic!("ожидался список имён") };
+    let masonry::parley::FontFamily::Source(mono) = super::editor_font("iA Writer Mono") else { panic!("a list of names was expected") };
     assert!(mono.contains("monospace"));
 }
 
@@ -116,7 +116,7 @@ fn rgba(color: Color) -> [u8; 4] {
 }
 
 fn builtin(id: &str) -> (usize, &'static tokens::Builtin) {
-    tokens::THEMES.iter().enumerate().find(|(_, b)| b.id == id).unwrap_or_else(|| panic!("нет темы {id}"))
+    tokens::THEMES.iter().enumerate().find(|(_, b)| b.id == id).unwrap_or_else(|| panic!("no theme {id}"))
 }
 
 #[test]
@@ -129,7 +129,7 @@ fn builtin_themes_start_with_aquilum_and_have_unique_ids() {
     let light = tokens::LIGHT;
     assert!((light.editor_heading_1_scale - 24.0 / 14.0).abs() < 1e-6);
     assert_eq!((light.editor_heading_3_scale, light.editor_heading_3_weight), (1.0, 700.0));
-    assert_eq!(rgba(light.editor_heading_4_color), rgba(light.editor_text), "у темы Aquilum заголовки цвета текста");
+    assert_eq!(rgba(light.editor_heading_4_color), rgba(light.editor_text), "in the Aquilum theme headings use the text color");
 }
 
 #[test]
@@ -142,7 +142,7 @@ fn catppuccin_takes_its_palette_and_anuppuccin_heading_colors() {
     assert_eq!(headings.map(rgba), [[0xf3, 0x8b, 0xa8, 0xff], [0xfa, 0xb3, 0x87, 0xff], [0xa6, 0xe3, 0xa1, 0xff], [0x94, 0xe2, 0xd5, 0xff]]);
     assert_eq!((rgba(mocha.editor_strong_color), rgba(mocha.editor_em_color)), ([0xf3, 0x8b, 0xa8, 0xff], [0xa6, 0xe3, 0xa1, 0xff]));
     assert_eq!([mocha.editor_heading_1_scale, mocha.editor_heading_4_scale], [1.8, 1.27]);
-    assert_eq!(rgba(mocha.text_primary)[..3], [0xcd, 0xd6, 0xf4], "текст — Text палитры");
+    assert_eq!(rgba(mocha.text_primary)[..3], [0xcd, 0xd6, 0xf4], "text is the palette's Text");
     let latte = builtin("catppuccin-latte").1.theme;
     assert_eq!(rgba(latte.editor_bg), [0xef, 0xf1, 0xf5, 0xff]);
     assert_eq!(rgba(latte.bg_accent), [0x1e, 0x66, 0xf5, 0xff]);
@@ -179,14 +179,14 @@ fn an_edited_color_reaches_the_tokens_built_from_it() {
     let mut theme = mocha.theme;
     tokens::derive(index, &mut theme, &set);
     assert_eq!(rgba(theme.editor_bg), [0, 0, 0, 255]);
-    assert_eq!(rgba(theme.tab_bg_active), [0, 0, 0, 255], "активная вкладка — цвета заметки");
+    assert_eq!(rgba(theme.tab_bg_active), [0, 0, 0, 255], "the active tab uses the note colors");
     assert_eq!(rgba(theme.graph_backdrop), [0, 0, 0, 255]);
-    assert_eq!(rgba(theme.editor_text), [255, 0, 0, 230], "текст редактора — 90 % текста");
-    assert_eq!(rgba(theme.editor_heading_1_color), rgba(mocha.theme.editor_heading_1_color), "свой цвет заголовка остаётся");
+    assert_eq!(rgba(theme.editor_text), [255, 0, 0, 230], "editor text is 90% of the text color");
+    assert_eq!(rgba(theme.editor_heading_1_color), rgba(mocha.theme.editor_heading_1_color), "a custom heading color is kept");
     let (light, aquilum) = builtin("light");
     let mut theme = aquilum.theme;
     tokens::derive(light, &mut theme, &set);
-    assert_eq!(rgba(theme.editor_heading_2_color), rgba(theme.editor_text), "у Aquilum заголовок идёт за текстом");
+    assert_eq!(rgba(theme.editor_heading_2_color), rgba(theme.editor_text), "in Aquilum the heading follows the text");
 }
 
 #[test]
@@ -210,7 +210,7 @@ fn the_mode_picks_the_chosen_theme_and_its_edits() {
     assert_eq!(super::input_hex("editor-bg").as_deref(), Some("#eff1f5"));
     super::set_choice(super::Choice { light: "catppuccin-mocha".into(), ..super::Choice::default() });
     super::apply_setting("light", false, "#1471eb");
-    assert_eq!(super::active().id, "light", "тёмная тема не ставится в светлый режим");
+    assert_eq!(super::active().id, "light", "a dark theme is not applied in light mode");
     super::set_choice(super::Choice::default());
     super::apply_setting(if before { "dark" } else { "light" }, before, "#1471eb");
 }

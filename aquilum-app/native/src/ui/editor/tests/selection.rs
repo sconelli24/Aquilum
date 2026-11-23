@@ -44,10 +44,10 @@ fn double_tap_selects_word_everywhere() {
             tap(&mut root, *x, 10.0, 2, 0.0);
             selected(&root) == word
         });
-        let Some(x) = x else { panic!("{source:?}: слово не выделяется двойным щелчком") };
+        let Some(x) = x else { panic!("{source:?}: word is not selected by double click") };
         tap(&mut root, x, 10.0, 1, 0.0);
         tap(&mut root, x, 10.0, 2, 3.0);
-        assert_eq!(selected(&root), word, "{source:?}: после касания с дрожанием");
+        assert_eq!(selected(&root), word, "{source:?}: after a jittery touch");
     }
 }
 
@@ -89,13 +89,13 @@ fn selection_is_painted_over_code_backgrounds() {
         let (plain, selected) = (frame(text, false), frame(text, true));
         let backdrop = plain.iter().filter(|p| is_backdrop(p)).count();
         let covered = plain.iter().zip(&selected).filter(|(p, s)| is_backdrop(p) && p != s).count();
-        assert!(backdrop > 100 && covered > 100, "{text:?}: выделение под подложкой (подложка {backdrop}, под выделением {covered})");
+        assert!(backdrop > 100 && covered > 100, "{text:?}: selection is under the backdrop (backdrop {backdrop}, under selection {covered})");
     }
     crate::ui::theme::apply_setting(if before { "dark" } else { "light" }, before, "#1471eb");
 }
 
 #[test]
 fn matches_of_the_selection_light_up_only_when_switched_on() {
-    assert!(!Smart::default().matches, "подсветка совпадений включена по умолчанию");
-    assert_ne!(picture("кот и ещё кот", true), picture("кот и ещё кот", false), "переключатель ничего не меняет");
+    assert!(!Smart::default().matches, "match highlighting is enabled by default");
+    assert_ne!(picture("кот и ещё кот", true), picture("кот и ещё кот", false), "the toggle changes nothing");
 }

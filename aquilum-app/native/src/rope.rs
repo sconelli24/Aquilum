@@ -115,7 +115,7 @@ mod tests {
                 blocks.push(block.to_owned());
                 true
             });
-            assert!(blocks.len() > 1, "текст идёт кусками, а не одной строкой");
+            assert!(blocks.len() > 1, "the text comes in chunks, not as a single line");
             assert_eq!(blocks.join("\n"), text);
         }
     }

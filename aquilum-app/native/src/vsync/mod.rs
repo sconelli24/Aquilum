@@ -83,13 +83,13 @@ impl Vsync {
                         std::thread::park();
                     }
                     let stamp = pacer.tick();
-                    aq_trace::mark("такт экрана");
+                    aq_trace::mark("screen tick");
                     w.store(false, Ordering::Release);
                     f.store(stamp.saturating_duration_since(base).as_nanos() as u64 + 1, Ordering::Release);
                     wake();
                 }
             })
-            .expect("поток vsync")
+            .expect("vsync thread")
             .thread()
             .clone();
         Vsync { wanted, fired, base, thread }

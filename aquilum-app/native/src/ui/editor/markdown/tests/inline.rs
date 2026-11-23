@@ -30,7 +30,7 @@ fn bare_urls_autolinks_and_legacy_quotes_are_links_like_tauri() {
     assert!(links.contains(&("www.site.ru", "https://www.site.ru", Kind::Link)), "{links:?}");
     assert!(links.contains(&("https://x.org", "https://x.org", Kind::Link)), "{links:?}");
     assert!(links.contains(&("→", "quantum-reader:cfi=c", Kind::Reader)), "{links:?}");
-    assert!(!links.iter().any(|(_, target, _)| target.contains("code.io")), "ссылка внутри кода: {links:?}");
+    assert!(!links.iter().any(|(_, target, _)| target.contains("code.io")), "link inside code: {links:?}");
 }
 
 #[test]

@@ -11,7 +11,7 @@ const EDGE_REFERENCE: f64 = 20_000.0;
 
 impl GraphView {
     pub(super) fn scene(&mut self) -> Option<(ImageBrush, f64)> {
-        let _zone = aq_trace::zone("граф: сцена");
+        let _zone = aq_trace::zone("graph: scene");
         let graph = self.graph.clone()?;
         let tm = theme::current();
         let sf = self.scale_factor;
@@ -24,7 +24,7 @@ impl GraphView {
         let (half_w, half_h) = (self.size.width / 2.0, self.size.height / 2.0);
         {
             use rayon::prelude::*;
-            let _zone = aq_trace::zone("граф: экран");
+            let _zone = aq_trace::zone("graph: screen");
             self.screen.resize(graph.len(), [0.0; 2]);
             self.screen.par_iter_mut().zip(self.positions.par_iter()).for_each(|(out, &[x, y])| {
                 let (dx, dy) = camera.to_offset(f64::from(x) * s, f64::from(y) * s);
@@ -89,7 +89,7 @@ impl GraphView {
                 alpha: alpha as f32,
             });
         }
-        let _zone = aq_trace::zone("граф: растр");
+        let _zone = aq_trace::zone("graph: raster");
         let mut surfaces = std::mem::take(&mut self.surfaces);
         let image = surfaces.frame(width as u16, height as u16, |pixels| raster::bands(width, height, pixels, rgb(tm.graph_backdrop), |band| frame.draw(band, &stamps)));
         drop(stamps);

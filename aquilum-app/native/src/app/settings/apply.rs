@@ -137,7 +137,7 @@ impl App {
         }
     }
 
-    /// Меняет настройки и говорит, что перестроить.
+    /// Changes the settings and reports what needs rebuilding.
     pub(in crate::app) fn change_config(&mut self, change: impl FnOnce(&mut AppConfig)) -> Effect {
         let core = &self.workspace.core;
         let before = core.settings.get_config();

@@ -31,12 +31,12 @@ fn page_search_marks_table_cells_and_counter_fits() {
     h.settle();
     let counter = h.app.find.as_ref().unwrap().counter.id();
     let width = h.root.get_widget(counter).unwrap().ctx().bounding_box().width();
-    assert!(width > 15.0, "счётчик сжат до многоточия: {width}");
+    assert!(width > 15.0, "counter squeezed to an ellipsis: {width}");
     let r = h.frame(W as u16, H as u16, 1.0);
     let pink = r.frame_pixels().iter().filter(|&&p| {
         let (red, green, blue) = (((p >> 16) & 0xff) as i32, ((p >> 8) & 0xff) as i32, (p & 0xff) as i32);
         red > green + 30 && red > blue
     }).count();
     dump("find-table.png", &r);
-    assert!(pink > 200, "совпадения в таблице не подсвечены: {pink}");
+    assert!(pink > 200, "matches in the table are not highlighted: {pink}");
 }

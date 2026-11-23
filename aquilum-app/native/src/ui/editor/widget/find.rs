@@ -36,7 +36,7 @@ impl TextEditor {
             let (tx, rx) = channel();
             let (rope, wake) = (self.doc.rope(), self.wake.clone());
             std::thread::spawn(move || {
-                let _zone = aq_trace::zone("фон: поиск по заметке");
+                let _zone = aq_trace::zone("background: search in note");
                 if tx.send(find_in(&rope, &matcher, &cancel)).is_ok()
                     && let Some(wake) = wake
                 {

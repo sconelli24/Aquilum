@@ -23,7 +23,7 @@ pub struct Output {
 impl Output {
     pub fn new(_display: OwnedDisplayHandle, window: Rc<dyn Window>) -> Result<Self, String> {
         let Ok(RawWindowHandle::Win32(handle)) = window.window_handle().map(|h| h.as_raw()) else {
-            return Err("окно без HWND".into());
+            return Err("window has no HWND".into());
         };
         let hwnd = HWND(handle.hwnd.get() as *mut std::ffi::c_void);
         let size = window.surface_size();
@@ -55,9 +55,9 @@ impl Output {
         if capacity == self.capacity {
             return Ok(());
         }
-        let _zone = aq_trace::zone("размер цепочки");
-        unsafe { gpu.chain.ResizeBuffers(0, capacity.0, capacity.1, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG(0)) }.map_err(|e| format!("размер цепочки: {e}"))?;
-        gpu.canvas = texture(&gpu.device, capacity.0, capacity.1).map_err(|e| format!("холст: {e}"))?;
+        let _zone = aq_trace::zone("swap chain resize");
+        unsafe { gpu.chain.ResizeBuffers(0, capacity.0, capacity.1, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG(0)) }.map_err(|e| format!("swap chain resize: {e}"))?;
+        gpu.canvas = texture(&gpu.device, capacity.0, capacity.1).map_err(|e| format!("canvas: {e}"))?;
         self.capacity = capacity;
         self.clear();
         Ok(())
@@ -86,7 +86,7 @@ impl Output {
     }
 
     pub fn present(&mut self, dirty: &[Area]) {
-        let _zone = aq_trace::zone("вывод");
+        let _zone = aq_trace::zone("output");
         let Some(gpu) = &mut self.gpu else { return };
         let age = if self.fresh { 0 } else { BUFFERS as usize };
         let (areas, missing) = self.history.frame(dirty, age);
@@ -110,8 +110,8 @@ impl Output {
         if aq_trace::enabled() {
             let mut stats = windows::Win32::Graphics::Dxgi::DXGI_FRAME_STATISTICS::default();
             if unsafe { gpu.chain.GetFrameStatistics(&mut stats) }.is_ok() {
-                aq_trace::counter("показ: кадр", f64::from(stats.PresentCount));
-                aq_trace::counter("показ: такт", f64::from(stats.PresentRefreshCount));
+                aq_trace::counter("present: frame", f64::from(stats.PresentCount));
+                aq_trace::counter("present: refresh", f64::from(stats.PresentRefreshCount));
             }
         }
         match result {

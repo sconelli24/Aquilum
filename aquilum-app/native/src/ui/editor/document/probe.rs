@@ -23,7 +23,7 @@ impl Document {
         let pixels: usize = views.iter().filter_map(|v| match v { View::Media(m) => m.image.as_ref(), _ => None }).filter(|i| seen.insert(i.image.data.id())).map(|i| i.image.data.len()).sum();
         let columns = self.lines.bytes() + self.blocks.bytes() + self.heights.bytes();
         format!(
-            "редактор: текст {:.1} МБ · строк {} (столбцы {:.1} МБ) · сверстано {} · строк вёрстки {} · кластеров {} · вставок: таблиц {tables}, картинок {media}, рисунков {drawings} · картинок в памяти {} шт. {:.1} МБ · отметок оформления {decor}",
+            "editor: text {:.1} MB · lines {} (columns {:.1} MB) · laid out {} · layout lines {} · clusters {} · embeds: tables {tables}, images {media}, drawings {drawings} · images in memory {} pcs {:.1} MB · style marks {decor}",
             mb(self.text.len()),
             self.lines.count(),
             mb(columns),

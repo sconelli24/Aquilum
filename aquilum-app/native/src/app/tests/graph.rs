@@ -7,13 +7,13 @@ fn graph_tab_loads_opens_notes_and_unloads() {
     std::fs::write(vault.join("b.md"), "[[a]] [[c]]").unwrap();
     std::fs::write(vault.join("c.md"), "[[a]]").unwrap();
     h.app.tree.paths_changed(&mut h.root, &[vault.join("b.md"), vault.join("c.md")]);
-    let button = h.app.chrome.as_ref().unwrap().graph_button.expect("кнопка графа");
+    let button = h.app.chrome.as_ref().unwrap().graph_button.expect("graph button");
     let rect = h.root.get_widget(button).unwrap().ctx().bounding_box();
     h.click(rect.center().x, rect.center().y);
-    assert!(h.app.tabs.active().graph, "вкладка графа не открылась");
-    assert!(h.wait_for(|h| h.app.graph_loaded() == Some(3)), "граф не загрузился: {:?}", h.app.graph_loaded());
+    assert!(h.app.tabs.active().graph, "graph tab did not open");
+    assert!(h.wait_for(|h| h.app.graph_loaded() == Some(3)), "graph did not load: {:?}", h.app.graph_loaded());
     h.click(rect.center().x, rect.center().y);
-    assert_eq!(h.app.tabs.tabs().iter().filter(|t| t.graph).count(), 1, "второй граф");
+    assert_eq!(h.app.tabs.tabs().iter().filter(|t| t.graph).count(), 1, "second graph");
     let view = h.app.graph_view().unwrap();
     let area = h.root.get_widget(view).unwrap().ctx().bounding_box();
     let mut opened = false;
@@ -27,19 +27,19 @@ fn graph_tab_loads_opens_notes_and_unloads() {
             }
         }
     }
-    assert!(opened, "под курсором не нашлось ни одного узла");
-    assert!(!h.app.tabs.active().graph && h.app.tabs.active().path.is_some(), "щелчок по узлу не открыл заметку");
-    assert!(h.app.tabs.has_graph() && h.app.graph_released(), "граф остался в памяти на соседней вкладке");
+    assert!(opened, "no node found under the cursor");
+    assert!(!h.app.tabs.active().graph && h.app.tabs.active().path.is_some(), "click on a node did not open the note");
+    assert!(h.app.tabs.has_graph() && h.app.graph_released(), "graph stayed in memory on an adjacent tab");
     let graph = h.app.tabs.tabs().iter().find(|t| t.graph).unwrap().id;
     assert!(h.app.tabs.select(graph));
     h.app.show_active(&mut h.root);
-    assert!(h.wait_for(|h| h.app.graph_loaded() == Some(3)), "граф не загрузился заново");
+    assert!(h.wait_for(|h| h.app.graph_loaded() == Some(3)), "graph did not reload");
     let note = h.app.tabs.tabs().iter().find(|t| !t.graph).unwrap().id;
     assert!(h.app.tabs.select(note));
     h.app.show_active(&mut h.root);
     h.app.tabs.close(graph);
     h.app.show_active(&mut h.root);
-    assert!(h.app.graph_released(), "граф остался в памяти после закрытия вкладки");
+    assert!(h.app.graph_released(), "graph stayed in memory after closing the tab");
 }
 
 #[test]
@@ -54,18 +54,18 @@ fn a_graph_left_for_a_note_is_unloaded_and_drawn_again_on_return() {
     h.wait_for(|h| h.app.graph_loaded() == Some(3));
     let graph = h.app.tabs.active_id();
     let retained = |h: &Harness| {
-        let view = h.app.graph_view().expect("виджет графа");
+        let view = h.app.graph_view().expect("graph widget");
         h.root.get_widget(view).unwrap().downcast::<crate::ui::graph::GraphView>().unwrap().inner().retained()
     };
     for _ in 0..20 {
         h.settle();
     }
     let (sprites, frames) = retained(&h);
-    assert!(sprites > 0 && frames > 0, "граф не нарисован: подписей {sprites}, кадров {frames}");
+    assert!(sprites > 0 && frames > 0, "graph not drawn: labels {sprites}, frames {frames}");
     assert!(h.app.tabs.select(note));
     h.app.show_active(&mut h.root);
     h.settle();
-    assert!(h.app.graph_view().is_none() && h.app.graph_released(), "спрятанный граф остался в памяти");
+    assert!(h.app.graph_view().is_none() && h.app.graph_released(), "hidden graph stayed in memory");
     assert!(h.app.tabs.select(graph));
     h.app.show_active(&mut h.root);
     for _ in 0..300 {
@@ -77,7 +77,7 @@ fn a_graph_left_for_a_note_is_unloaded_and_drawn_again_on_return() {
         std::thread::sleep(std::time::Duration::from_millis(20));
     }
     let (sprites, frames) = retained(&h);
-    assert!(sprites > 0 && frames > 0, "после возврата граф не нарисован: подписей {sprites}, кадров {frames}");
+    assert!(sprites > 0 && frames > 0, "graph not drawn after returning: labels {sprites}, frames {frames}");
 }
 
 #[test]
@@ -97,7 +97,7 @@ fn graph_snapshot() {
         }
         std::thread::sleep(std::time::Duration::from_millis(50));
     }
-    eprintln!("узлов: {:?}", h.app.graph_loaded());
+    eprintln!("nodes: {:?}", h.app.graph_loaded());
     let size = h.root.size();
     let shot = |h: &mut Harness, name: &str| {
         for _ in 0..40 {
@@ -108,7 +108,7 @@ fn graph_snapshot() {
         let built = started.elapsed();
         let mut r = crate::render::Renderer::new(4);
         r.render(&layers, size.width as u16, size.height as u16, scale, theme::background()).unwrap();
-        eprintln!("{name}: сцена {built:?}, всего {:?}", started.elapsed());
+        eprintln!("{name}: scene {built:?}, total {:?}", started.elapsed());
         std::fs::write(out.join(format!("{name}.png")), r.png()).unwrap();
     };
     shot(&mut h, "graph-fit");
@@ -137,7 +137,7 @@ fn a_quick_return_to_the_graph_still_loads_it() {
         std::thread::sleep(std::time::Duration::from_millis(20));
         h.app.graph_loaded().is_some()
     });
-    assert!(loaded, "граф остался в загрузке после быстрого возврата");
+    assert!(loaded, "graph stayed in loading state after a quick return");
 }
 
 #[test]
@@ -149,8 +149,8 @@ fn the_graph_tab_is_copied_into_the_frame_past_the_rasterizer() {
     std::fs::write(vault.join("c.md"), "[[a]]").unwrap();
     h.app.tree.paths_changed(&mut h.root, &[vault.join("b.md"), vault.join("c.md")]);
     h.app.open_graph(&mut h.root);
-    assert!(h.wait_for(|h| h.app.graph_loaded() == Some(3)), "граф не загрузился");
+    assert!(h.wait_for(|h| h.app.graph_loaded() == Some(3)), "graph did not load");
     let (layers, _) = h.root.redraw();
     let renderer = render_full(&layers, (f64::from(W) * scale) as u16, (f64::from(H) * scale) as u16, scale);
-    assert!(renderer.blitted, "картинка графа не копируется напрямую");
+    assert!(renderer.blitted, "graph image is not blitted directly");
 }

@@ -11,7 +11,7 @@ pub struct Halt<'a, T> {
 
 impl<T> Halt<'_, T> {
     fn check(&self) -> io::Result<()> {
-        if self.watch.stopped() { Err(io::Error::other("синхронизация остановлена")) } else { Ok(()) }
+        if self.watch.stopped() { Err(io::Error::other("sync stopped")) } else { Ok(()) }
     }
 }
 

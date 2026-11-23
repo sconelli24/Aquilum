@@ -46,7 +46,7 @@ fn calendar_day(language: Language, at: &impl Datelike, with_year: bool) -> Stri
 fn day_and_time(language: Language, at: &(impl Datelike + Timelike)) -> String {
     let joint = match language {
         Language::Ru => " в ",
-        // «a la una», но «a las dos» и дальше.
+        // "a la una", but "a las dos" and onwards.
         Language::Es if at.hour() == 1 => " a la ",
         Language::Es => " a las ",
         Language::En => " at ",

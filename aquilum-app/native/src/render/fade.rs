@@ -70,11 +70,11 @@ impl Renderer {
             }
             return Ok(None);
         };
-        let _zone = aq_trace::zone("появление слоя");
+        let _zone = aq_trace::zone("layer fade-in");
         let window = Area { x: 0, y: 0, w: u32::from(width), h: u32::from(height) };
         let Some(area) = covering(layer.transform_rect_bbox(fade.bounds).scale_from_origin(scale)).intersect(window) else { return Ok(None) };
         if self.faded.as_ref().is_none_or(|c| c.id != id || c.area != area) {
-            let _zone = aq_trace::zone("появление слоя: растр");
+            let _zone = aq_trace::zone("layer fade-in: raster");
             let (x, y, w, h) = (area.x as u16, area.y as u16, area.w as u16, area.h as u16);
             self.painter.begin(x, y, w, h);
             replay_transformed(scene, &mut self.painter, Affine::scale(scale) * layer);
@@ -97,7 +97,7 @@ impl Renderer {
         canvas.with_target(&mut |mut target| {
             stamps.save(&mut target, window);
             let Target { pixels, width, height } = target;
-            let pixmap = PixmapMut::new(width, height, bytemuck::cast_slice_mut(&mut *pixels)).expect("холст вывода");
+            let pixmap = PixmapMut::new(width, height, bytemuck::cast_slice_mut(&mut *pixels)).expect("output canvas");
             let settings = RasterizerSettings { target_init: TargetInit::SrcOver, pixel_format: crate::render::PIXEL_FORMAT, offset: (0, 0) };
             painter.ctx.render_with(pixmap, &mut painter.resources, settings);
         });

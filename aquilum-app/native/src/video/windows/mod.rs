@@ -41,7 +41,7 @@ impl Engine {
         let (commands, receiver) = channel();
         let (ready, opened) = channel();
         let worker = Arc::clone(&shared);
-        std::thread::Builder::new().name("видео".into()).spawn(move || worker::run(&path, &receiver, &worker, &ready)).ok()?;
+        std::thread::Builder::new().name("video".into()).spawn(move || worker::run(&path, &receiver, &worker, &ready)).ok()?;
         opened.recv().ok()?.then_some(Engine { shared, commands, playing: false, muted: false })
     }
 

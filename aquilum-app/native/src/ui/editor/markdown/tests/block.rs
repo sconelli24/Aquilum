@@ -25,9 +25,9 @@ fn indented_code_outside_lists() {
     assert!(matches!(b[2], Block::Code { first: true, last: false, fence: false, lang: None, .. }));
     assert!(matches!(b[3], Block::Code { first: false, last: false, .. }));
     assert!(matches!(b[4], Block::Code { first: false, last: true, .. }));
-    assert_eq!(b[7], Block::Text, "отступ внутри абзаца стал кодом");
-    assert!(!matches!(b[9], Block::Code { .. }), "пункт списка с отступом стал кодом");
-    assert!(!matches!(b[12], Block::Code { .. }), "продолжение пункта стало кодом");
+    assert_eq!(b[7], Block::Text, "indent inside a paragraph became code");
+    assert!(!matches!(b[9], Block::Code { .. }), "indented list item became code");
+    assert!(!matches!(b[12], Block::Code { .. }), "item continuation became code");
 }
 
 #[test]
@@ -42,9 +42,9 @@ fn nested_quote_markers_are_one_prefix() {
 #[test]
 fn list_items_inside_quotes_keep_their_marker_and_box_after_the_quote_prefix() {
     let b = blocks("> - [x] задача\n> > 1. пункт\n> текст");
-    let task = b[0].item().expect("пункт в цитате");
+    let task = b[0].item().expect("item in a quote");
     assert_eq!((task.marker(), task.task()), (2..4, Some((4..7, true))));
-    let ordered = b[1].item().expect("пункт во вложенной цитате");
+    let ordered = b[1].item().expect("item in a nested quote");
     assert!(ordered.ordered && ordered.marker() == (4..7));
     assert_eq!(b[2].item(), None);
 }
@@ -87,8 +87,8 @@ fn media_lines_follow_tauri_rules() {
 ![](f(1).png)");
     assert_eq!(b[0], Block::Image);
     assert_eq!(b[1], Block::Image);
-    assert_ne!(b[2], Block::Image, "вики-вставка без расширения медиа — не картинка");
-    assert_ne!(b[3], Block::Image, "две картинки в строке — не блок картинки");
+    assert_ne!(b[2], Block::Image, "wiki embed without a media extension is not an image");
+    assert_ne!(b[3], Block::Image, "two images in a line are not an image block");
     assert_eq!(b[4], Block::Image);
     assert_ne!(b[5], Block::Image);
     assert_ne!(b[6], Block::Image);
@@ -104,7 +104,7 @@ fn setext_headings_and_their_underline() {
     assert_eq!(b[6], Block::Heading { level: 2, marker: 0 });
     assert_eq!(b[7], Block::Underline);
     assert!(matches!(b[8], Block::Item(_)));
-    assert_eq!(b[9], Block::Rule, "линия после пункта списка остаётся линией");
+    assert_eq!(b[9], Block::Rule, "a rule after a list item stays a rule");
 }
 
 #[test]

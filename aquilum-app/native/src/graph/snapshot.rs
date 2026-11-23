@@ -34,6 +34,6 @@ pub(super) fn decode(bytes: &[u8]) -> Option<(Vec<[f32; 2]>, Vec<f32>, Vec<f32>,
 
 pub fn load(core: &aquilum_core::Core, workspace: &Path) -> Result<Graph, String> {
     let (bytes, paths) = core.search.render_graph(&workspace.to_string_lossy()).map_err(|e| format!("{e}"))?;
-    let (positions, created, modified, degrees, edges, _) = decode(&bytes).ok_or_else(|| "снимок графа повреждён".to_owned())?;
+    let (positions, created, modified, degrees, edges, _) = decode(&bytes).ok_or_else(|| crate::i18n::t("native.graph.snapshotCorrupt"))?;
     Ok(Graph::new(positions, created, modified, degrees, edges, paths))
 }

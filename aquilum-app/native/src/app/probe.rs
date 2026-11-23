@@ -52,7 +52,7 @@ impl App {
                 }
             }
             Step::Evict(name) => {
-                let embeds = name.contains("вставок");
+                let embeds = name.contains("вставок") || name.contains("embeds");
                 if let Some(ids) = &self.note_ids {
                     ids.body.edit(root, |mut body| crate::ui::editor::TextEditor::probe_evict(&mut body, embeds));
                 }
@@ -63,6 +63,6 @@ impl App {
 
     pub fn probe_stats(&self, root: &RenderRoot) -> String {
         let editor = self.note_ids.as_ref().and_then(|ids| root.get_widget(ids.body.id())).and_then(|w| w.downcast::<crate::ui::editor::TextEditor>().map(|e| e.inner().probe_stats()));
-        format!("вкладок {} · текст заметки {:.1} МБ · {}\n", self.tabs.tabs().len(), crate::stats::mb(self.text.byte_len()),editor.unwrap_or_default())
+        format!("tabs {} · note text {:.1} MB · {}\n", self.tabs.tabs().len(), crate::stats::mb(self.text.byte_len()),editor.unwrap_or_default())
     }
 }

@@ -127,8 +127,8 @@ mod tests {
 
     #[test]
     fn wide_controls_move_under_the_text_on_a_narrow_row() {
-        assert!(arrange(320.0, 36.0) && arrange(320.0, 32.0) && arrange(320.0, 90.0), "переключатель, значок и короткая кнопка справа");
-        assert!(!arrange(320.0, size::INPUT_WIDTH), "поле ввода под текстом");
-        assert!(arrange(640.0, size::INPUT_WIDTH), "на широкой строке поле справа");
+        assert!(arrange(320.0, 36.0) && arrange(320.0, 32.0) && arrange(320.0, 90.0), "a toggle, an icon and a short button go on the right");
+        assert!(!arrange(320.0, size::INPUT_WIDTH), "the input field goes under the text");
+        assert!(arrange(640.0, size::INPUT_WIDTH), "on a wide row the field goes on the right");
     }
 }

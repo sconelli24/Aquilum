@@ -131,16 +131,16 @@ mod tests {
         assert_eq!([g, b], [0, 0]);
         let hint = rgb(red, over(153, card))[0];
         let body = rgb(red, over(230, card))[0];
-        assert!(contrast(hint, card_red) >= 3.0, "подсказка на карточке: {:.2}", contrast(hint, card_red));
-        assert!(contrast(body, card_red) >= 4.5, "текст на карточке: {:.2}", contrast(body, card_red));
-        assert!(rgb(red, over(31, [9, 11, 17]))[0] > rgb(red, [9, 11, 17])[0], "граница видна на фоне окна");
+        assert!(contrast(hint, card_red) >= 3.0, "hint on the card: {:.2}", contrast(hint, card_red));
+        assert!(contrast(body, card_red) >= 4.5, "text on the card: {:.2}", contrast(body, card_red));
+        assert!(rgb(red, over(31, [9, 11, 17]))[0] > rgb(red, [9, 11, 17])[0], "the border is visible against the window background");
     }
 
     #[test]
     fn the_warm_filter_keeps_red_and_cuts_blue_more_than_green() {
         let [r, g, b] = rgb(&FILTERS[1], [255, 255, 255]);
         assert_eq!(r, 255);
-        assert!(b < g && g < 255, "белый становится тёплым: {r} {g} {b}");
+        assert!(b < g && g < 255, "white becomes warm: {r} {g} {b}");
         assert_eq!(rgb(&FILTERS[1], [0, 0, 0]), [0, 0, 0]);
     }
 
@@ -148,7 +148,7 @@ mod tests {
     fn canvas_order_and_translucent_pixels_are_filtered_the_same_way() {
         let white = 0xff00_0000 | 255 << 16 | 255 << 8 | 255;
         let bgra = FILTERS[1].opaque(white, 16);
-        assert_eq!([bgra >> 16 & 0xff, bgra & 0xff], [255, 137], "в порядке BGRA красный остаётся красным");
+        assert_eq!([bgra >> 16 & 0xff, bgra & 0xff], [255, 137], "in BGRA order red stays red");
         let half_white = 128 << 24 | 128 << 16 | 128 << 8 | 128;
         let pixel = FILTERS[1].pixel(half_white, 0);
         assert_eq!(pixel >> 24, 128);

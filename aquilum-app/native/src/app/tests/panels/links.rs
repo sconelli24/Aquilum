@@ -7,7 +7,7 @@ impl Harness {
             self.app.on_core_events(&mut self.root);
             self.app.listing.as_ref().is_some_and(|l| l.generation == self.app.panel_generation)
         });
-        assert!(ready, "панель не получила ответ");
+        assert!(ready, "panel got no response");
         self.app.listing.clone().unwrap()
     }
 }
@@ -63,15 +63,15 @@ fn history_panel_opens_version_and_reverts_it() {
     }
     let history_button = h.app.chrome.as_ref().unwrap().panel_parts.modes.last().unwrap().0.id();
     h.send(history_button, Pressed);
-    let rows = h.app.history_body.as_ref().expect("список версий").rows.clone();
-    assert!(rows.len() >= 2, "строк версий: {}", rows.len());
+    let rows = h.app.history_body.as_ref().expect("version list").rows.clone();
+    assert!(rows.len() >= 2, "version rows: {}", rows.len());
 
     let versions = h.app.history.as_ref().unwrap().versions.clone();
-    let agent = versions.iter().position(|v| v.source == Source::Agent).expect("версия агента");
+    let agent = versions.iter().position(|v| v.source == Source::Agent).expect("agent version");
     let row = rows.iter().find(|(_, index)| *index == agent).unwrap().0;
     h.send(row, ItemAction::Open { new_tab: false });
-    let view = h.app.version_view.as_ref().expect("версия открыта");
-    let revert = view.revert.expect("у версии есть предыдущая");
+    let view = h.app.version_view.as_ref().expect("version open");
+    let revert = view.revert.expect("version has a previous one");
 
     h.send(revert, Pressed);
     assert_eq!(std::fs::read_to_string(&note).unwrap(), "один\nдва\n");

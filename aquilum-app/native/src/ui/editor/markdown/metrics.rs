@@ -28,13 +28,13 @@ pub struct Fonts {
     pub typography: Typography,
 }
 
-/// Оформление текста из темы, от которого зависит раскладка.
+/// Text styling from the theme that the layout depends on.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Typography {
-    /// Размер заголовка уровня `i + 1` — доля размера текста.
+    /// Size of the level `i + 1` heading, as a fraction of the text size.
     pub scale: [f32; 6],
     pub weight: [f32; 6],
-    /// Жирный и курсив красятся своим цветом.
+    /// Bold and italic are painted in their own color.
     pub strong: bool,
     pub emphasis: bool,
 }

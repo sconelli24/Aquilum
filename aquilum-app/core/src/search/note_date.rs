@@ -170,11 +170,11 @@ mod tests {
     #[test]
     fn a_time_zone_shifts_the_civil_day_but_not_the_moment() {
         let offset = 7 * 3600;
-        let midnight = super::parse_at("2026-09-20", offset).expect("дата");
+        let midnight = super::parse_at("2026-09-20", offset).expect("date");
         let expected = (super::days_from_civil(2026, 9, 19) * 86_400 + 17 * 3600) * 1_000_000_000;
         assert_eq!(midnight, expected);
 
-        let evening = super::parse_at("2026-09-20 22:35", offset).expect("дата со временем");
+        let evening = super::parse_at("2026-09-20 22:35", offset).expect("date with time");
         let (year, month, day, inside) = super::to_civil_at(evening, offset);
         assert_eq!((year, month, day), (2026, 9, 20));
         assert_eq!(inside, 22 * 3600 + 35 * 60);

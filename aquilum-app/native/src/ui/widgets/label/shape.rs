@@ -55,7 +55,7 @@ impl Label {
             fit(&mut layout, width, centered);
             self.cached = Some((key, layout));
         }
-        let (at, layout) = self.cached.as_mut().expect("раскладка построена выше");
+        let (at, layout) = self.cached.as_mut().expect("layout is built above");
         if *at != key {
             fit(layout, width, centered);
             *at = key;

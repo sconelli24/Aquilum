@@ -1,4 +1,4 @@
-//! Кадр живого слоя: кэш «под» меткой + узор + кэш «над» меткой, без сцены Masonry.
+//! A live-layer frame: the cache "under" the marker + the pattern + the cache "over" the marker, without a Masonry scene.
 
 mod split;
 
@@ -107,7 +107,7 @@ impl Renderer {
     }
 
     pub(super) fn composite(&mut self, layers: &VisualLayerPlan, canvas: &mut dyn Canvas, seconds: f64) -> Result<Option<Area>, PaintError> {
-        let _zone = aq_trace::zone("живой слой");
+        let _zone = aq_trace::zone("live layer");
         let due = self.due(seconds);
         let Some(frame) = due.first().and_then(|_| self.frame(layers)) else { return Ok(None) };
         let mut bounds: Option<Area> = None;
@@ -115,7 +115,7 @@ impl Renderer {
             let cache = match self.caches.remove(&layer.id).filter(|c| c.area == layer.area) {
                 Some(cache) => cache,
                 None => {
-                    let _zone = aq_trace::zone("живой слой: кэши");
+                    let _zone = aq_trace::zone("live layer: caches");
                     let below = self.part(&frame, layer.id, layer.area, Part::Below, seconds)?;
                     let above = self.part(&frame, layer.id, layer.area, Part::Above, seconds)?;
                     let spans = spans(&above, usize::from(layer.area.2));
@@ -124,7 +124,7 @@ impl Renderer {
             };
             let (x, y, w, h) = layer.area;
             let rect = Rect::new(f64::from(x), f64::from(y), f64::from(x) + f64::from(w), f64::from(y) + f64::from(h));
-            let _zone = aq_trace::zone("живой слой: холст");
+            let _zone = aq_trace::zone("live layer: canvas");
             canvas.with_target(&mut |Target { pixels, width, .. }| {
                 let stride = usize::from(width);
                 let (x, y, w) = (usize::from(x), usize::from(y), usize::from(w));
@@ -133,7 +133,7 @@ impl Renderer {
                     line[..w].copy_from_slice(below);
                 }
                 {
-                    let _zone = aq_trace::zone("живой слой: узор");
+                    let _zone = aq_trace::zone("live layer: pattern");
                     live::draw(layer.transform, layer.shape, motion, rect, seconds, MotionPixels { data: &mut *region, stride, canvas: true });
                 }
                 for (line, (above, &(from, to))) in region.chunks_mut(stride).zip(cache.above.chunks_exact(w).zip(&cache.spans)) {

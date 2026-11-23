@@ -42,5 +42,5 @@ fn highlight_is_painted_softly() {
     let plain = render("слово", "plain.png");
     let marked = render("==слово==", "highlight.png");
     let changed = plain.iter().zip(&marked).filter(|(a, b)| a != b).count();
-    assert!(changed > 0, "подсветка ==…== не нарисована");
+    assert!(changed > 0, "==...== highlight is not drawn");
 }

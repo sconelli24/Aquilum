@@ -46,7 +46,7 @@ impl Host {
         if self.window.is_none() {
             return;
         }
-        let _zone = aq_trace::zone("пробуждение");
+        let _zone = aq_trace::zone("wake-up");
         #[cfg(target_os = "android")]
         self.ime_inbox();
         let mut retitle = false;
@@ -79,7 +79,7 @@ impl Host {
     }
 
     fn on_idle(&mut self, event_loop: &dyn ActiveEventLoop) {
-        let _zone = aq_trace::zone("конец пачки событий");
+        let _zone = aq_trace::zone("end of event batch");
         let now = Instant::now();
         let minimized = self.window.as_ref().is_some_and(|w| w.is_minimized() == Some(true));
         if minimized != self.minimized {

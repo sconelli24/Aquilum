@@ -11,7 +11,7 @@ use masonry::core::WidgetId;
 pub(super) fn state(h: &Harness) -> &WorkspacesState {
     match &h.app.popup {
         Some(Popup::Workspaces(state)) => state,
-        _ => panic!("окно баз не открыто"),
+        _ => panic!("vaults window not open"),
     }
 }
 
@@ -23,7 +23,7 @@ pub(super) fn open_dialog(h: &mut Harness) {
 pub(super) fn rows(h: &Harness) -> Vec<(WidgetId, PathBuf, uuid::Uuid)> {
     let state = state(h);
     let rows: Vec<_> = state.rows.ids.iter().zip(&state.vaults).map(|(row, vault)| (*row, PathBuf::from(&vault.path), vault.id)).collect();
-    assert!(rows.iter().all(|(id, _, _)| h.root.has_widget(*id)), "строки баз не показаны в окне");
+    assert!(rows.iter().all(|(id, _, _)| h.root.has_widget(*id)), "vault rows not shown in the window");
     rows
 }
 
@@ -32,13 +32,13 @@ pub(super) fn rename_field(h: &Harness) -> Option<WidgetId> {
 }
 
 pub(super) fn row(h: &Harness, path: &Path) -> WidgetId {
-    rows(h).into_iter().find(|(_, listed, _)| same_path(listed, path)).unwrap_or_else(|| panic!("нет строки {}", path.display())).0
+    rows(h).into_iter().find(|(_, listed, _)| same_path(listed, path)).unwrap_or_else(|| panic!("no row {}", path.display())).0
 }
 
 pub(super) fn choose(h: &mut Harness, path: &Path, item: usize) {
     let row = row(h, path);
     h.act(row, RowAction::Menu(masonry::kurbo::Point::new(200.0, 200.0)));
-    let menu = menu_layer(h).expect("меню базы не открылось");
+    let menu = menu_layer(h).expect("vault menu did not open");
     h.act(menu, MenuChoice::Item(item));
 }
 

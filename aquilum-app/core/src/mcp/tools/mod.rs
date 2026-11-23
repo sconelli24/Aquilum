@@ -16,21 +16,21 @@ use crate::app_core::Core;
 
 
 pub const INSTRUCTIONS: &str = concat!(
-    "Aquilum — локальная база знаний из markdown-файлов. ",
-    "Заметки адресуются относительным путём от корня базы (например «Проекты/Aquilum.md») ",
-    "или точным названием. Абсолютные пути не нужны. ",
-    "Если пользователь говорит «текущая заметка» или «эта заметка», сначала вызовите ",
-    "get_workspace и возьмите путь из поля activeNote. ",
-    "Перед выводами о содержимом базы проверяйте поле indexing: пока индекс строится, ",
-    "поиск может вернуть неполный результат.\n",
-    "Порядок работы: незнакомую базу начинайте с list_notes sort=links — сверху окажутся хабы, ",
-    "на которые ссылается больше всего заметок; дальше ищите, а не перебирайте наугад; ",
-    "длинную заметку читайте не целиком, а через note_outline и нужный раздел; правьте ",
-    "разделом, а не всей заметкой.\n",
-    "Фоновая работа с другой базой знаний: передайте её address из list_workspaces аргументом workspace — ",
-    "поиск, чтение и правка пойдут в фоновом гостевом индексе, а у пользователя на экране ничего не переключится. ",
-    "Запрещено вызывать switch_workspace и open_note для чтения или записи — они переключают видимое окно пользователя! ",
-    "switch_workspace и open_note вызываются ИСКЛЮЧИТЕЛЬНО по прямой просьбе пользователя показать/открыть базу или заметку на экране."
+    "Aquilum is a local knowledge base of markdown files. ",
+    "Notes are addressed by a path relative to the workspace root (e.g. \"Projects/Aquilum.md\") ",
+    "or by exact title. Absolute paths are not needed. ",
+    "If the user says \"the current note\" or \"this note\", first call ",
+    "get_workspace and take the path from the activeNote field. ",
+    "Before drawing conclusions about the workspace contents, check the indexing field: while the index is being built, ",
+    "search may return incomplete results.\n",
+    "Workflow: start an unfamiliar workspace with list_notes sort=links, which puts the hubs on top, ",
+    "the notes most other notes link to; then search instead of browsing at random; ",
+    "read a long note not in full but via note_outline and the section you need; edit ",
+    "by section, not the whole note.\n",
+    "Background work with another workspace: pass its address from list_workspaces as the workspace argument; ",
+    "search, reading and editing will run in a background guest index and nothing will switch on the user's screen. ",
+    "Do NOT call switch_workspace or open_note for reading or writing: they switch the user's visible window! ",
+    "switch_workspace and open_note are called ONLY at the user's direct request to show/open a workspace or note on screen."
 );
 
 pub fn definitions() -> Vec<Value> {
@@ -50,7 +50,7 @@ pub fn call(core: &Core, name: &str, arguments: &Value) -> Result<Value, String>
         .or_else(|| trash::call(core, name, arguments))
         .or_else(|| history::call(core, name, arguments))
         .or_else(|| workspace::call(core, name, arguments))
-        .unwrap_or_else(|| Err(format!("Неизвестный инструмент: {name}")))
+        .unwrap_or_else(|| Err(format!("Unknown tool: {name}")))
 }
 
 pub fn tool(name: &str, description: &str, properties: Value, required: &[&str]) -> Value {
@@ -67,7 +67,7 @@ pub fn tool(name: &str, description: &str, properties: Value, required: &[&str])
 }
 
 pub fn version_name_property() -> Value {
-    json!({ "type": "string", "description": "Название версии, которую создаст эта правка: в истории заметки она сразу будет под этим именем" })
+    json!({ "type": "string", "description": "Name of the version this edit creates: it will appear under this name in the note history right away" })
 }
 
 pub fn open_after_write(core: &Core, vault: &Vault, note: &Path, arguments: &Value) {
@@ -77,7 +77,7 @@ pub fn open_after_write(core: &Core, vault: &Vault, note: &Path, arguments: &Val
 }
 
 pub fn workspace_property() -> Value {
-    json!({ "type": "string", "description": "База знаний, если не текущая: address из list_workspaces или полный путь" })
+    json!({ "type": "string", "description": "Workspace, if not the current one: address from list_workspaces or a full path" })
 }
 
 impl super::vault::Vault {
@@ -89,7 +89,7 @@ impl super::vault::Vault {
         let folder = self.folder(&optional_text(arguments, "folder").unwrap_or_default())?;
         match folder.is_dir() {
             true => Ok(folder),
-            false => Err(format!("Папка не найдена: {}", self.relative(&folder))),
+            false => Err(format!("Folder not found: {}", self.relative(&folder))),
         }
     }
 }
@@ -106,7 +106,7 @@ pub fn require_write(core: &Core) -> Result<(), String> {
     if core.settings.get_config().mcp.allow_write {
         return Ok(());
     }
-    Err("Изменение заметок запрещено в настройках Aquilum".to_owned())
+    Err("Editing notes is disabled in Aquilum settings".to_owned())
 }
 
 #[cfg(test)]
@@ -130,9 +130,9 @@ mod tests {
     #[test]
     fn the_error_lists_the_arguments_that_did_arrive() {
         let error = text(&json!({ "heading": "Раздел" }), "note").unwrap_err();
-        assert!(error.contains("note"), "названо недостающее поле: {error}");
-        assert!(error.contains("heading"), "названо переданное поле: {error}");
-        assert!(text(&json!({}), "note").unwrap_err().contains("не передано"));
+        assert!(error.contains("note"), "the missing field is named: {error}");
+        assert!(error.contains("heading"), "the passed field is named: {error}");
+        assert!(text(&json!({}), "note").unwrap_err().contains("no arguments were passed"));
     }
 
     #[test]

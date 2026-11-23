@@ -20,8 +20,8 @@ fn token_server(reply: &'static str) -> (&'static str, JoinHandle<String>) {
     let server = thread::spawn(move || {
         let (stream, _) = listener.accept().unwrap();
         let mut connection = Connection::new(&stream).unwrap();
-        let Ok(head) = connection.read_head() else { panic!("запрос токена не разобран") };
-        let Ok(body) = connection.read_body(&head, 1 << 16) else { panic!("тело запроса токена не прочитано") };
+        let Ok(head) = connection.read_head() else { panic!("token request not parsed") };
+        let Ok(body) = connection.read_body(&head, 1 << 16) else { panic!("token request body not read") };
         connection.send(&Response::json(reply.to_owned()), false).unwrap();
         String::from_utf8(body).unwrap()
     });
@@ -57,7 +57,7 @@ fn the_code_from_the_browser_becomes_tokens() {
     let tokens = login.finish(&web_agent("test"), &AtomicBool::new(false)).unwrap();
 
     assert_eq!((tokens.access.as_str(), tokens.refresh.as_str()), ("доступ", "обновление"));
-    assert!(browser.join().unwrap().contains("Вход выполнен"));
+    assert!(browser.join().unwrap().contains("Signed in"));
     let form = server.join().unwrap();
     assert!(form.contains("grant_type=authorization_code") && form.contains("code=abc") && form.contains("code_verifier="));
 }
@@ -118,6 +118,6 @@ fn a_foreign_or_refused_link_fails_the_login() {
         Err(RemoteError::Failed(message)) => message,
         other => panic!("{link}: {:?}", other.map(|tokens| tokens.access)),
     };
-    assert_eq!(failure("db-aquilum://1/connect?oauth_token=oauth2code%3A&oauth_token_secret=abc&state=чужое"), "ответ входа не совпал с запросом");
-    assert_eq!(failure("db-aquilum://1/connect?not_approved=true"), "вход отклонён в облаке");
+    assert_eq!(failure("db-aquilum://1/connect?oauth_token=oauth2code%3A&oauth_token_secret=abc&state=чужое"), "sign-in response did not match the request");
+    assert_eq!(failure("db-aquilum://1/connect?not_approved=true"), "sign-in rejected by the cloud");
 }

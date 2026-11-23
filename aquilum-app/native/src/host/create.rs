@@ -3,7 +3,7 @@ use super::*;
 impl Host {
     pub(super) fn create_window(&mut self, event_loop: &dyn ActiveEventLoop) {
         let attributes = WindowAttributes::default()
-            .with_title("Aquilum")
+            .with_title("Apus")
             .with_decorations(NATIVE_FRAME)
             .with_visible(false)
             .with_window_icon(window_icon());
@@ -21,7 +21,7 @@ impl Host {
             Some(position) => attributes.with_position(position),
             None => attributes,
         };
-        let window = event_loop.create_window(attributes).expect("окно");
+        let window = event_loop.create_window(attributes).expect("window");
         self.accessibility = Accessibility::attach(&*window, event_loop.create_proxy());
         cloak(&*window, true);
         self.restore_maximized(&*window);

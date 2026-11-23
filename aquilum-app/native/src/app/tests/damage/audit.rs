@@ -29,7 +29,7 @@ fn right_sidebar_scroll_stays_inside_its_viewport_scroll_audit() {
         reports.push(report);
     }
     assert!(reports.iter().filter(|r| !r.moved.is_empty()).count() >= 8, "sidebar was rasterized instead of shifted");
-    summary("правая панель", &reports);
+    summary("right panel", &reports);
 }
 
 #[test]
@@ -66,7 +66,7 @@ fn settings_scroll_matches_full_frames_on_desktop_and_phone_scroll_audit() {
                 reports.push(report);
             }
             assert!(moved > 0, "the settings content never scrolled");
-            summary(&format!("настройки {section:?} @{}", spec.scale), &reports);
+            summary(&format!("settings {section:?} @{}", spec.scale), &reports);
         }
     }
 }
@@ -99,7 +99,7 @@ fn reader_frames_match_and_an_opaque_reader_stops_hidden_covers_scroll_audit() {
         assert_eq!(report.differ, 0, "reader, step {step}");
         reports.push(report);
     }
-    summary("читалка", &reports);
+    summary("reader", &reports);
     h.escape();
     h.settle();
     assert_eq!(frames.draw(&mut h).differ, 0, "the note did not return after closing the reader");

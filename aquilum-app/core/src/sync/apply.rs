@@ -102,7 +102,7 @@ pub fn whole(remote: &RemoteFile, length: usize) -> Result<(), SyncError> {
     if length as u64 == remote.size {
         return Ok(());
     }
-    Err(RemoteError::Failed(format!("{} скачан не полностью", remote.path)).into())
+    Err(RemoteError::Failed(format!("{} was not fully downloaded", remote.path)).into())
 }
 
 fn pull(vault: &Vault<'_>, facts: &Facts<'_>, staged: &Staged) -> Result<(), SyncError> {

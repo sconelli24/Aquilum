@@ -13,7 +13,7 @@ pub fn pins(rows: &[Row], line: f64, step: f64) -> Vec<usize> {
         let Some(row) = rows.get(under) else { break };
         let top = under as f64 * step - line;
         let index = if row.depth > slot {
-            rows[..under].iter().rposition(|r| r.depth <= slot).expect("у вложенной строки есть родитель")
+            rows[..under].iter().rposition(|r| r.depth <= slot).expect("a nested row has a parent")
         } else if row.depth == slot && row.folder && row.expanded && top < at {
             under
         } else {

@@ -11,7 +11,7 @@ fn rows(divided: bool) -> Vec<(f64, bool)> {
         Entry { label: "Отменить", icon: None, disabled: false, divided: false },
         Entry { label: "Копировать", icon: None, disabled: false, divided },
     ];
-    let mut root = RenderRoot::new(Menu::entries("меню", &entries).erased(), |_| {}, crate::test_dir::options(300, 300, 1.0));
+    let mut root = RenderRoot::new(Menu::entries("menu", &entries).erased(), |_| {}, crate::test_dir::options(300, 300, 1.0));
     let _ = root.redraw();
     let mut list: WidgetRef<'_, dyn Widget> = root.get_layer_root(0);
     while list.children().len() == 1 {
@@ -23,9 +23,9 @@ fn rows(divided: bool) -> Vec<(f64, bool)> {
 #[test]
 fn a_menu_stays_inside_the_safe_area() {
     let (area, menu) = (Rect::new(0.0, 40.0, 360.0, 700.0), Size::new(180.0, 140.0));
-    assert_eq!(Menu::around(Rect::new(300.0, 0.0, 340.0, 20.0), menu, area), (Point::new(172.0, 48.0), 140.0), "под строкой состояния и у правого края");
-    assert_eq!(Menu::around(Rect::new(10.0, 650.0, 60.0, 670.0), menu, area), (Point::new(10.0, 506.0), 140.0), "у нижнего края — над выделением");
-    assert_eq!(Menu::around(Rect::new(10.0, 100.0, 60.0, 120.0), menu, area), (Point::new(10.0, 124.0), 140.0), "под выделением");
+    assert_eq!(Menu::around(Rect::new(300.0, 0.0, 340.0, 20.0), menu, area), (Point::new(172.0, 48.0), 140.0), "below the status bar and at the right edge");
+    assert_eq!(Menu::around(Rect::new(10.0, 650.0, 60.0, 670.0), menu, area), (Point::new(10.0, 506.0), 140.0), "at the bottom edge, above the selection");
+    assert_eq!(Menu::around(Rect::new(10.0, 100.0, 60.0, 120.0), menu, area), (Point::new(10.0, 124.0), 140.0), "below the selection");
 }
 
 #[test]
@@ -34,9 +34,9 @@ fn a_tall_menu_scrolls_on_the_roomier_side_and_never_covers_the_trigger() {
     for trigger in [Rect::new(10.0, 150.0, 60.0, 170.0), Rect::new(10.0, 250.0, 60.0, 270.0)] {
         let (at, height) = Menu::around(trigger, menu, area);
         let placed = Rect::from_origin_size(at, Size::new(menu.width, height));
-        assert!(placed.y1 <= trigger.y0 || placed.y0 >= trigger.y1, "меню накрыло строку {trigger:?}: {placed:?}");
-        assert!(placed.y0 >= area.y0 && placed.y1 <= area.y1, "меню вышло за область: {placed:?}");
-        assert!(height < menu.height && height >= (trigger.y0 - area.y0).max(area.y1 - trigger.y1) - size::SPACE_4 - size::SPACE_8 - 1.0, "высота не по большей стороне: {height}");
+        assert!(placed.y1 <= trigger.y0 || placed.y0 >= trigger.y1, "the menu covered the row {trigger:?}: {placed:?}");
+        assert!(placed.y0 >= area.y0 && placed.y1 <= area.y1, "the menu went outside the area: {placed:?}");
+        assert!(height < menu.height && height >= (trigger.y0 - area.y0).max(area.y1 - trigger.y1) - size::SPACE_4 - size::SPACE_8 - 1.0, "height is not based on the larger side: {height}");
     }
 }
 
@@ -44,9 +44,9 @@ fn a_tall_menu_scrolls_on_the_roomier_side_and_never_covers_the_trigger() {
 fn a_divider_separates_groups_by_its_own_height() {
     let plain = rows(false);
     let divided = rows(true);
-    assert_eq!(divided.iter().map(|&(_, rule)| rule).collect::<Vec<_>>(), [false, true, false], "линия между пунктами");
+    assert_eq!(divided.iter().map(|&(_, rule)| rule).collect::<Vec<_>>(), [false, true, false], "a rule between items");
     let shift = divided[2].0 - plain[1].0;
-    assert!((shift - (size::BORDER_1 + 2.0 * size::SPACE_4 + size::GAP_XS)).abs() < 0.5, "второй пункт сдвинут на {shift}");
+    assert!((shift - (size::BORDER_1 + 2.0 * size::SPACE_4 + size::GAP_XS)).abs() < 0.5, "the second item is shifted by {shift}");
 }
 
 fn frame(widget: WidgetRef<'_, dyn Widget>) -> Rect {
@@ -56,7 +56,7 @@ fn frame(widget: WidgetRef<'_, dyn Widget>) -> Rect {
 #[test]
 fn items_sit_four_pixels_inside_the_menu_and_layers_keep_fractional_positions() {
     let entries = [Entry { label: "Копировать", icon: None, disabled: false, divided: false }, Entry { label: "Вставить", icon: None, disabled: false, divided: false }];
-    let mut root = RenderRoot::new(Menu::entries("меню", &entries).erased(), |_| {}, crate::test_dir::options(300, 300, 1.0));
+    let mut root = RenderRoot::new(Menu::entries("menu", &entries).erased(), |_| {}, crate::test_dir::options(300, 300, 1.0));
     let _ = root.redraw();
     let menu = root.get_layer_root(0);
     let mut list = menu;
@@ -66,7 +66,7 @@ fn items_sit_four_pixels_inside_the_menu_and_layers_keep_fractional_positions() 
     let (outer, item) = (frame(menu), frame(list.children()[0]));
     assert_eq!((item.x0 - outer.x0, item.y0 - outer.y0, outer.x1 - item.x1), (size::PADDING_2XS, size::PADDING_2XS, size::PADDING_2XS));
     let at = Point::new(10.25, 20.5);
-    root.add_layer(Menu::entries("слой", &entries), at);
+    root.add_layer(Menu::entries("layer", &entries), at);
     let _ = root.redraw();
-    assert_eq!(root.get_layer_root(1).ctx().window_transform().translation().to_point(), at, "слой округлён до целого пикселя");
+    assert_eq!(root.get_layer_root(1).ctx().window_transform().translation().to_point(), at, "the layer is rounded to a whole pixel");
 }

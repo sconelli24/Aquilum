@@ -32,7 +32,7 @@ fn speeds(b: &mut Bench, at: (f64, f64)) {
             times.push(t.elapsed().as_secs_f64() * 1000.0);
         }
         let [p50, p95, max] = percentiles(&times, [0.5, 0.95, 1.0]);
-        eprintln!("быстрая прокрутка {px} px за кадр: p50 {p50:.1} мс, p95 {p95:.1}, максимум {max:.1}");
+        eprintln!("fast scroll {px} px per frame: p50 {p50:.1} ms, p95 {p95:.1}, max {max:.1}");
     }
 }
 
@@ -51,12 +51,12 @@ fn typing(b: &mut Bench, at: (f64, f64)) {
         b.timed(false);
         times.push(format!("{:.1}", t.elapsed().as_secs_f64() * 1000.0));
     }
-    eprintln!("набор в середине (5 букв, 3 Enter, 3 Backspace), мс: {}", times.join(" "));
+    eprintln!("typing in the middle (5 letters, 3 Enter, 3 Backspace), ms: {}", times.join(" "));
     let t = Instant::now();
     b.h.app.tick(&mut b.h.root, Instant::now() + Duration::from_secs(3600));
     let ui = t.elapsed();
     crate::disk::wait();
-    eprintln!("сохранение: поток интерфейса {ui:?}, запись в фоне {:?}", t.elapsed());
+    eprintln!("save: UI thread {ui:?}, background write {:?}", t.elapsed());
 }
 
 #[test]
@@ -80,8 +80,8 @@ fn big_note_audit() {
     }
     let settled = t.elapsed();
     let doc = b.h.app.text.byte_len();
-    eprintln!("заметка {:.0} МБ: открытие {opened:?}, первая сцена {scene:?}, первый кадр {shown:?}, вставки готовы {settled:?}", mb(doc));
-    eprintln!("куча после открытия +{:.0} МБ", mb(crate::memory_probe::heap().saturating_sub(heap)));
+    eprintln!("note {:.0} MB: open {opened:?}, first scene {scene:?}, first frame {shown:?}, embeds ready {settled:?}", mb(doc));
+    eprintln!("heap after open +{:.0} MB", mb(crate::memory_probe::heap().saturating_sub(heap)));
     let before = Threads::now();
     let threads = std::thread::available_parallelism().map_or(1, std::num::NonZero::get) as f64;
     let mut windows = Vec::new();
@@ -93,9 +93,9 @@ fn big_note_audit() {
         }
         windows.push(format!("{:.1}", (crate::memory_probe::cpu_ms() - cpu) / idle.elapsed().as_secs_f64() / 10.0 / threads));
     }
-    eprintln!("простой по 5 с, % от всех {threads} потоков: {}", windows.join(" "));
-    eprintln!("куча после простоя +{:.0} МБ", mb(crate::memory_probe::heap().saturating_sub(heap)));
-    eprintln!("потоки в простое: {}", before.busy(50.0));
+    eprintln!("idle for 5 s, % of all {threads} threads: {}", windows.join(" "));
+    eprintln!("heap after idle +{:.0} MB", mb(crate::memory_probe::heap().saturating_sub(heap)));
+    eprintln!("idle threads: {}", before.busy(50.0));
     let at = (f64::from(b.w) / 2.0, f64::from(b.hh) / 2.0);
     let scroll = b.h.app.note_ids.as_ref().unwrap().scroll.clone();
     for fraction in [0.0, 0.5, 0.95] {
@@ -108,18 +108,18 @@ fn big_note_audit() {
         let t = Instant::now();
         b.h.app.flush_view();
         let flush = t.elapsed();
-        eprintln!("место {:>3.0}%: прыжок {jump:?}; кадров {n}, p50 {p50:.2} мс, p95 {p95:.2}, максимум {max:.2}; запись места {flush:?}", fraction * 100.0);
+        eprintln!("position {:>3.0}%: jump {jump:?}; frames {n}, p50 {p50:.2} ms, p95 {p95:.2}, max {max:.2}; position write {flush:?}", fraction * 100.0);
     }
     let mut drag = Vec::new();
     for step in 0..10 {
-        let _zone = aq_trace::zone("стенд: шаг ползунка");
+        let _zone = aq_trace::zone("bench: slider step");
         let t = Instant::now();
         scroll.edit(&mut b.h.root, |mut area| crate::ui::scroll::ScrollArea::set_fraction(&mut area, 0.10 + f64::from(step) * 0.01));
         b.h.deliver();
         b.timed(false);
         drag.push(t.elapsed().as_secs_f64() * 1000.0);
     }
-    eprintln!("ползунок, шаги по 1 %: {}", drag.iter().map(|t| format!("{t:.0}")).collect::<Vec<_>>().join(" "));
+    eprintln!("slider, steps of 1 %: {}", drag.iter().map(|t| format!("{t:.0}")).collect::<Vec<_>>().join(" "));
     let (mut stuck, mut worst) = (0, 0.0f64);
     for _ in 0..200 {
         let before = super::super::support::note_offset(&b.h);
@@ -130,7 +130,7 @@ fn big_note_audit() {
         worst = worst.max(t.elapsed().as_secs_f64() * 1000.0);
         stuck += usize::from(super::super::support::note_offset(&b.h) == before);
     }
-    eprintln!("тачпад по 3 px: событий 200, без сдвига {stuck}, худший кадр {worst:.1} мс");
+    eprintln!("touchpad 3 px: 200 events, without shift {stuck}, worst frame {worst:.1} ms");
     speeds(&mut b, at);
     typing(&mut b, at);
     let toggle = b.h.app.chrome.as_ref().unwrap().toggle_sidebar;
@@ -143,7 +143,7 @@ fn big_note_audit() {
         panel.push(t.elapsed().as_secs_f64() * 1000.0);
     }
     let [p50, max] = percentiles(&panel, [0.5, 1.0]);
-    eprintln!("панель: кадров 30, p50 {p50:.1} мс, максимум {max:.1} мс");
+    eprintln!("panel: 30 frames, p50 {p50:.1} ms, max {max:.1} ms");
     if let Ok(out) = std::env::var("AQ_TRACE") {
         aq_trace::write(std::path::Path::new(&out)).unwrap();
     }
