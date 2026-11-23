@@ -25,6 +25,7 @@ impl App {
             popup: None,
             typing: None,
             graph: graph_page::GraphState::default(),
+            canvas: Default::default(),
             suggest_layer: None,
             editor_menu: None,
             find: None,

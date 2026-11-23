@@ -113,6 +113,7 @@ fn workspace_filters_and_sorts_entries() {
     fs::write(directory.path().join("doc.pdf"), "").expect("pdf fixture");
     fs::write(directory.path().join("novel.epub"), "").expect("epub fixture");
     fs::write(directory.path().join("notes.txt"), "").expect("text fixture");
+    fs::write(directory.path().join("Board.canvas"), "").expect("canvas fixture");
     fs::write(directory.path().join("._alpha.md"), "").expect("macOS fixture");
     fs::create_dir(directory.path().join(".Архив")).expect("dot folder fixture");
     fs::create_dir(directory.path().join(".git")).expect("git fixture");
@@ -127,6 +128,7 @@ fn workspace_filters_and_sorts_entries() {
             "Folder",
             "alpha",
             "Beta",
+            "Board.canvas",
             "doc.pdf",
             "Gamma",
             "notes.txt",

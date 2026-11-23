@@ -83,7 +83,11 @@ pub fn relative_key(root: &Path, path: &Path) -> String {
     strip_markdown_extension(&relative_slash_path(root, path)).to_lowercase()
 }
 
+/// Notes are linked by title; canvases only by full name (`[[Board.canvas]]`), as in Obsidian.
 pub fn title_key(path: &Path) -> String {
+    if crate::search::paths::is_canvas(path) {
+        return path.file_name().map(|name| name.to_string_lossy().to_lowercase()).unwrap_or_default();
+    }
     crate::search::paths::title(path).to_lowercase()
 }
 

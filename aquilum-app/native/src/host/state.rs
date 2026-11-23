@@ -103,6 +103,7 @@ impl Host {
     pub(super) fn trim_renderer(&mut self) {
         if crate::render::take_trim() {
             self.renderer.trim();
+            crate::system::release_memory();
             self.full_next = true;
         }
     }

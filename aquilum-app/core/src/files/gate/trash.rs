@@ -3,7 +3,7 @@ use crate::app_core::Core;
 use crate::files::deletions::deletion_files;
 use crate::files::error::FileCommandError;
 use crate::files::trash::{move_to_trash_impl, restore_from_trash_impl};
-use crate::search::paths::is_note;
+use crate::search::paths::is_versioned;
 use std::path::{Path, PathBuf};
 
 pub fn trash(core: &Core, workspace: &Path, path: &Path) -> Result<PathBuf, FileCommandError> {
@@ -64,7 +64,7 @@ fn restore_all(
 fn note_moves(files: &[(PathBuf, PathBuf)]) -> Vec<(PathBuf, PathBuf)> {
     files
         .iter()
-        .filter(|(from, _)| is_note(from))
+        .filter(|(from, _)| is_versioned(from))
         .cloned()
         .collect()
 }

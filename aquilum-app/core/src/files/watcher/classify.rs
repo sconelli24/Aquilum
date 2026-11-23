@@ -1,5 +1,5 @@
 use super::batch::{WatchBatch, WatchScope};
-use crate::search::paths::{is_hidden, is_markdown, is_plain_text};
+use crate::search::paths::{is_canvas, is_hidden, is_markdown, is_plain_text};
 use notify::event::ModifyKind;
 use notify::{Event, EventKind};
 use std::path::Path;
@@ -12,7 +12,7 @@ pub fn classify(result: notify::Result<Event>, root: &Path) -> Option<WatchBatch
         return None;
     }
     let paths = event.paths.into_iter().filter(|path| !is_hidden(root, path)).collect::<Vec<_>>();
-    let notes = paths.iter().any(|path| is_markdown(path) || is_plain_text(path));
+    let notes = paths.iter().any(|path| is_markdown(path) || is_plain_text(path) || is_canvas(path));
     let scope = match (is_structural(&event.kind), notes) {
         _ if paths.is_empty() => return None,
         (true, true) => WatchScope::Structure,
@@ -67,6 +67,12 @@ mod tests {
         let batch = classify(written(&["Заметка.md"]), Path::new("")).unwrap();
         assert_eq!(batch.scope, WatchScope::Content);
         assert_eq!(batch.paths.len(), 1);
+    }
+
+    #[test]
+    fn a_canvas_write_touches_content() {
+        let batch = classify(written(&["Board.canvas"]), Path::new("")).unwrap();
+        assert_eq!(batch.scope, WatchScope::Content);
     }
 
     #[test]

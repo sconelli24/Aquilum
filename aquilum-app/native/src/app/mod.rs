@@ -1,6 +1,7 @@
 mod actions;
 mod back;
 mod caches;
+mod canvas_page;
 
 pub(crate) use caches::Moment;
 mod commands;
@@ -80,6 +81,7 @@ pub(in crate::app) enum Popup {
     Templates(templates::TemplatesState),
     Workspaces(workspaces::WorkspacesState),
     Confirm(DialogIds, confirm::Confirmed),
+    CanvasMenu { layer: WidgetId, commands: Vec<canvas_page::CanvasCommand> },
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -121,6 +123,7 @@ pub struct App {
     popup: Option<Popup>,
     typing: Option<(crate::ui::settings::schema::Setter, String, usize)>,
     graph: graph_page::GraphState,
+    canvas: canvas_page::CanvasState,
     suggest_layer: Option<(WidgetId, WidgetId)>,
     editor_menu: Option<(WidgetId, WidgetId, &'static [editor_requests::EditorCommand])>,
     find: Option<crate::ui::find::FindBar>,

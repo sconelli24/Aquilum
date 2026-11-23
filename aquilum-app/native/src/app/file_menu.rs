@@ -116,6 +116,7 @@ impl App {
             }
             Some(Popup::Confirm(dialog, then)) => self.on_confirm(root, dialog, then, id, action),
             Some(Popup::Menu { layer, commands }) => return self.on_menu(root, layer, commands, action),
+            Some(Popup::CanvasMenu { layer, commands }) => return self.on_canvas_menu(root, layer, commands, action),
             Some(Popup::SortMenu { layer, button }) => match self.dropdown_answer(root, layer, button, id, action) {
                 None => self.popup = Some(Popup::SortMenu { layer, button }),
                 Some(chosen) => {

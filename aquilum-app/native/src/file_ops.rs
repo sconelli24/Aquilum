@@ -103,6 +103,13 @@ pub fn create_note(core: &Core, folder: &Path, title: Option<&str>) -> Result<Pa
     first_free(|i| folder.join(format!("{}.md", counted(&base, i))), |path| gate::create(core, path, &"", Source::Me, None))
 }
 
+pub fn create_canvas(core: &Core, folder: &Path) -> Result<PathBuf, FileCommandError> {
+    std::fs::create_dir_all(folder)?;
+    let base = crate::i18n::t("canvas.title");
+    let ext = aquilum_core::canvas::EXTENSION;
+    first_free(|i| folder.join(format!("{}.{ext}", counted(&base, i))), |path| gate::create(core, path, &aquilum_core::canvas::EMPTY, Source::Me, None))
+}
+
 fn counted(base: &str, index: usize) -> String {
     if index == 0 { base.to_owned() } else { format!("{base} {index}") }
 }

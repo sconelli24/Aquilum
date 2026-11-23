@@ -5,7 +5,7 @@ use crate::files::error::FileCommandError;
 use crate::files::models::FileRenameResult;
 use crate::files::rename::rename_with_links;
 use crate::history::Source;
-use crate::search::paths::is_note;
+use crate::search::paths::is_versioned;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
@@ -53,7 +53,7 @@ pub(super) fn notes_under(path: &Path) -> Vec<PathBuf> {
     WalkDir::new(path)
         .into_iter()
         .filter_map(Result::ok)
-        .filter(|entry| entry.file_type().is_file() && is_note(entry.path()))
+        .filter(|entry| entry.file_type().is_file() && is_versioned(entry.path()))
         .map(|entry| entry.into_path())
         .collect()
 }

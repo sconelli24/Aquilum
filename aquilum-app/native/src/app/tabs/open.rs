@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use aquilum_core::search::paths::{is_markdown, is_plain_text, same_path};
+use aquilum_core::search::paths::{is_canvas, is_markdown, is_plain_text, same_path};
 use masonry::app::RenderRoot;
 use masonry::widgets::IndexedStack;
 
@@ -14,7 +14,7 @@ impl App {
         self.show_suggest(root, None);
         self.close_editor_menu(root);
         let tab = self.tabs.active();
-        let stays = if tab.graph { self.graph_shown() } else { tab.path.as_deref().is_some_and(|path| self.shows(path)) };
+        let stays = if tab.graph { self.graph_shown() } else { tab.path.as_deref().is_some_and(|path| self.shows(path) || self.canvas_shows(path)) };
         if !self.show_tab(root) {
             self.refresh_tabs(root);
             return;
@@ -30,6 +30,18 @@ impl App {
 
     fn show_tab(&mut self, root: &mut RenderRoot) -> bool {
         let tab = self.tabs.active().clone();
+        if let Some(path) = tab.path.as_deref().filter(|p| is_canvas(p) && !tab.graph && self.tree.root().is_some()) {
+            self.opened(None);
+            self.leave_note();
+            self.drop_note_page(root);
+            self.show_canvas(root, path);
+            self.tree.set_active(root, Some(path.to_path_buf()));
+            self.show_page(root, 5);
+            return true;
+        }
+        if !tab.path.as_deref().is_some_and(|p| self.canvas_shows(p)) {
+            self.leave_canvas(root);
+        }
         let opened = self.opened(tab.path.as_deref().filter(|path| !self.shows(path)));
         if tab.graph && self.tree.root().is_some() {
             self.leave_note();
@@ -134,7 +146,7 @@ impl App {
     }
 
     pub(crate) fn open_in_with_offset(&mut self, root: &mut RenderRoot, path: PathBuf, new_tab: bool, offset: Option<usize>) -> bool {
-        if !is_markdown(&path) && !is_plain_text(&path) {
+        if !is_markdown(&path) && !is_plain_text(&path) && !is_canvas(&path) {
             return false;
         }
         let current = self.note.as_ref().map(|n| n.path.clone());

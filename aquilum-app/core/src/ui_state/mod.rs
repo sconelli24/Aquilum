@@ -1,3 +1,4 @@
+pub mod canvas;
 pub mod cleanup;
 pub mod database;
 #[cfg(test)]

@@ -26,7 +26,14 @@ pub fn apply(root: &Path, index: &SearchIndex, writer: &IndexWriter, transaction
 }
 
 fn index_note(root: &Path, index: &SearchIndex, writer: &IndexWriter, transaction: &Transaction<'_>, path: &Path, key: &str, probe: Probe) -> Result<bool, SearchError> {
-    let mut pages = Pages::open(path)?;
+    let synthetic;
+    let mut pages = if crate::search::paths::is_canvas(path) {
+        let text = std::fs::read_to_string(path)?;
+        synthetic = crate::canvas::index_text(&crate::canvas::Canvas::parse(&text).unwrap_or_default());
+        Pages::of(&synthetic)
+    } else {
+        Pages::open(path)?
+    };
     let mut old = match probe.up_to_date {
         true => pages::stored(transaction, key)?,
         false => {

@@ -7,7 +7,7 @@ use crate::files::error::FileCommandError;
 use crate::files::models::FileWriteResult;
 use crate::history::delta::single;
 use crate::history::{Change, NoteWrite, Source};
-use crate::search::paths::is_note;
+use crate::search::paths::is_versioned;
 use crate::text::content::{Content, Splice};
 use std::fs;
 use std::ops::Range;
@@ -91,7 +91,7 @@ pub fn create(
     version_name: Option<&str>,
 ) -> Result<FileWriteResult, FileCommandError> {
     let result = create_content_file(path, content)?;
-    if is_note(path) {
+    if is_versioned(path) {
         let write = NoteWrite { text: content, hash: &result.hash, source, name: version_name, change: None, original: None };
         record(core, path, write);
     }

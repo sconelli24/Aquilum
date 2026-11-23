@@ -3,7 +3,7 @@ use super::index::SearchIndex;
 use super::index_document::{apply, probe, probe_one, remove_note};
 use super::metadata::{self, FileState, PathKey};
 use super::pages;
-use super::paths::{is_hidden, is_markdown, markdown_files};
+use super::paths::{indexed_files, is_hidden, is_indexed};
 use super::progress::IndexProgress;
 use rusqlite::{Connection, Transaction};
 use std::collections::{HashMap, HashSet};
@@ -47,7 +47,7 @@ impl IndexSynchronizer {
         let force = pages::count(&self.connection)? != output.index.document_count();
         let mut transaction = self.connection.transaction()?;
         let mut processed = 0;
-        for path in markdown_files(&output.root) {
+        for path in indexed_files(&output.root) {
             if cancelled.load(Ordering::Relaxed) {
                 return Ok(());
             }
@@ -90,13 +90,13 @@ impl IndexSynchronizer {
         for path in paths.into_iter().filter(|path| path.starts_with(&root) && !is_hidden(&root, path)) {
             match path.metadata() {
                 Ok(found) if found.is_dir() => {
-                    for note in markdown_files(&path) {
+                    for note in indexed_files(&path) {
                         if let Ok(found) = note.metadata() {
                             output.update(&transaction, &note, &found)?;
                         }
                     }
                 }
-                Ok(found) if is_markdown(&path) => output.update(&transaction, &path, &found)?,
+                Ok(found) if is_indexed(&path) => output.update(&transaction, &path, &found)?,
                 Ok(_) => {}
                 Err(_) => output.forget(&transaction, &path)?,
             }

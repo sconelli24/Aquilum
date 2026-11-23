@@ -1,6 +1,6 @@
 use base64::Engine;
 
-pub(super) const ENDPOINT: &str = "https://github.com/Freaction/Aquilum/releases/latest/download/latest.json";
+pub(super) const ENDPOINT: &str = "https://github.com/sconelli24/Aquilum/releases/latest/download/latest.json";
 pub(super) const PUBLIC_KEY: &str = "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEI4QTY0MzM1MDczQUNDMTQKUldRVXpEb0hOVU9tdUFCWnVMRWlBVTRGWmlFOW0wd2VteVlXd3luMFAyMmczWktQbkRvVmhTQSsK";
 
 #[derive(Clone, Debug, PartialEq)]

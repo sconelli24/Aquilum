@@ -37,6 +37,8 @@ impl TextEditor {
             wraps: false,
             centered: false,
             renaming: false,
+            suggest_names: false,
+            suggest_submit: false,
             scroll_x: 0.0,
             focused: false,
             table: None,
@@ -66,6 +68,12 @@ impl TextEditor {
     pub fn single_line(text: &str) -> Self {
         let text = text.replace(['\r', '\n'], " ");
         TextEditor { single_line: true, ..TextEditor::new(&text) }
+    }
+
+    /// A one-line field that completes note names from the vault while you type.
+    pub fn suggesting_notes(mut self) -> Self {
+        self.suggest_names = true;
+        self
     }
 
     pub fn printed(mut self) -> Self {

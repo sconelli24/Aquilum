@@ -22,6 +22,7 @@ impl App {
         self.on_home_resolved(root);
         self.on_link_titles(root);
         self.on_graph_results(root);
+        title |= self.poll_canvas_embeds(root);
         title |= self.on_opened(root);
         self.on_update(root);
         self.on_retention_done(root);
@@ -46,6 +47,7 @@ impl App {
                     if let Some(note) = &mut self.note {
                         note.flush(&self.workspace.core, &self.text);
                     }
+                    self.flush_canvas();
                     let _ = done.send(());
                 }
                 CoreEvent::WorkspaceRescanned => rescan = true,
@@ -77,6 +79,7 @@ impl App {
             {
                 self.set_text(root, text);
             }
+            self.canvas_files_changed(root, &touched, rescan);
         }
         if rescan {
             self.tree.reload(root);

@@ -14,6 +14,8 @@ enum Source {
     Link { wrap: bool, close: bool },
     Key,
     Value,
+    /// The whole text of a note-name field.
+    Name,
 }
 
 impl Source {
@@ -25,7 +27,7 @@ impl Source {
     }
 
     fn local(self) -> bool {
-        !matches!(self, Source::Link { .. })
+        !matches!(self, Source::Link { .. } | Source::Name)
     }
 }
 
@@ -48,6 +50,20 @@ impl TextEditor {
         if let Some(next) = self.property_suggest() {
             let selected = self.keep_selected(&next.query, &next.items);
             self.suggest = Some(Suggest { selected, ..next });
+            return self.publish_suggest(id);
+        }
+        if self.suggest_names {
+            let Some(resolver) = self.doc.resolver.clone() else { return };
+            let query = self.doc.whole();
+            if query.trim().is_empty() {
+                return self.close_suggest();
+            }
+            let items = match resolver.suggest(query.trim()) {
+                Some(items) => items,
+                None => self.suggest.as_ref().map(|s| s.items.clone()).unwrap_or_default(),
+            };
+            let selected = self.keep_selected(&query, &items);
+            self.suggest = Some(Suggest { from: 0, to: self.doc.len(), query, items, selected, source: Source::Name });
             return self.publish_suggest(id);
         }
         let Some(resolver) = self.doc.resolver.clone() else { return };
@@ -149,12 +165,13 @@ impl TextEditor {
         let insert = match s.source {
             Source::Link { wrap, close } => format!("{}{title}{}", if wrap { OPEN } else { "" }, if close { CLOSE } else { "" }),
             Source::Key => format!("{title}: "),
-            Source::Value => title.clone(),
+            Source::Value | Source::Name => title.clone(),
         };
         let skip = matches!(s.source, Source::Link { close: false, .. }) && self.doc.after(s.to).starts_with(CLOSE);
         let caret = s.from + insert.len() + if skip { CLOSE.len() } else { 0 };
         self.dispatch(vec![(s.from..s.to, insert)], Some((caret, caret)), Kind::Other);
         self.close_suggest();
+        self.suggest_submit = s.source == Source::Name;
         true
     }
 }
