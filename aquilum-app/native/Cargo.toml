@@ -8,10 +8,10 @@ edition = "2024"
 workspace = ".."
 
 [package.metadata.packager]
-productName = "Aquilum"
-identifier = "com.dmitriy.aquilum-app"
-description = "Fast local-first Markdown knowledge base"
-homepage = "https://github.com/Freaction/Aquilum"
+productName = "Apus"
+identifier = "com.sconelli.apus"
+description = "Fast, light local-first Markdown notes"
+homepage = "https://github.com/sconelli24/Aquilum"
 binaries = [{ path = "aquilum-app", main = true }]
 icons = ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"]
 
@@ -31,10 +31,10 @@ memory-probe = []
 
 [dependencies]
 aquilum-core = { path = "../core" }
-# Основная ветка xilem: Masonry без релиза больше года, бэкенды под vello_cpu только там.
-# Ревизия зафиксирована, обновлять пачками.
+# xilem main branch: Masonry has had no release for over a year, and the vello_cpu backends exist only there.
+# Revision is pinned; update in batches.
 masonry = { git = "https://github.com/linebender/xilem", rev = "271a27a6d4a930f7878d404f9014e3c50a3a9b88", default-features = false }
-# 0.31 — бета, версия зафиксирована точно: API между бетами ломается.
+# 0.31 is a beta, the version is pinned exactly: the API breaks between betas.
 winit = "=0.31.0-beta.3"
 vello_cpu = { path = "vendor/vello_cpu", features = ["multithreading"] }
 rayon = "1.12"
@@ -94,7 +94,7 @@ accesskit_unix = "=0.22.1"
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-core = "0.62"
 windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Graphics_Direct3D", "Win32_Graphics_Direct3D11", "Win32_Graphics_DirectManipulation", "Win32_Graphics_Dwm", "Win32_Graphics_Dxgi", "Win32_Graphics_Dxgi_Common", "Win32_Graphics_Gdi", "Win32_Graphics_Imaging", "Win32_Media_Audio", "Win32_Media_MediaFoundation", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_Variant", "Win32_System_LibraryLoader", "Win32_System_Memory", "Win32_System_ProcessStatus", "Win32_System_Diagnostics_ToolHelp", "Win32_System_Threading", "Win32_System_Registry", "Win32_UI_Input_Pointer", "Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_UI_WindowsAndMessaging"] }
-# Под accesskit 0.24 из Masonry: та же версия, что у accesskit_winit 0.32.
+# For accesskit 0.24 from Masonry: the same version as accesskit_winit 0.32 uses.
 accesskit_windows = "=0.32.1"
 
 [target.'cfg(target_os = "linux")'.dependencies]
@@ -105,9 +105,9 @@ gstreamer-app = "0.24"
 gstreamer-video = "0.24"
 
 [build-dependencies]
-# Шрифты фронтенда лежат в WOFF2, а fontique читает только TTF/OTF: распаковка при сборке.
+# Frontend fonts are WOFF2, but fontique reads only TTF/OTF: unpacked at build time.
 wuff = "0.2.9"
-# Переименование семейства кириллической половины Inter (см. build.rs).
+# Renaming the family of the Cyrillic half of Inter (see build.rs).
 write-fonts = { version = "0.50", features = ["read"] }
 
 [dev-dependencies]

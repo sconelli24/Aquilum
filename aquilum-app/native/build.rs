@@ -1,29 +1,29 @@
-//! Токены дизайн-системы для нативного интерфейса.
+//! Design-system tokens for the native interface.
 //!
-//! Источник — файлы токенов в синтаксисе CSS-переменных (`assets/styles/tokens/*.tokens`, темы —
-//! `assets/styles/themes/*.tokens`). Расширение не `.css`, потому что это не таблицы стилей: их читает
-//! только эта сборка. Здесь объявления `--q-*` вычисляются целиком: `var()`,
-//! `color-mix(in srgb, …)`, `calc`/`min`/`max`/`clamp`, `rem` (база 16 px → логические пиксели).
+//! Source: token files in CSS-variable syntax (`assets/styles/tokens/*.tokens`, themes in
+//! `assets/styles/themes/*.tokens`). The extension is not `.css` because these are not style sheets: only
+//! this build reads them. Here `--q-*` declarations are fully evaluated: `var()`,
+//! `color-mix(in srgb, …)`, `calc`/`min`/`max`/`clamp`, `rem` (base 16 px → logical pixels).
 //!
-//! Темы: `:root` — светлая тема Aquilum, `[data-theme="dark"]` — тёмная. Другие темы — блоки
-//! `[data-theme="id"]` с `--q-theme-name` и `color-scheme`: тёмная (`color-scheme: dark`) строится поверх
-//! тёмной темы Aquilum, светлая — поверх `:root`. Селектор может перечислять несколько тем через запятую.
+//! Themes: `:root` is the Aquilum light theme, `[data-theme="dark"]` the dark one. Other themes are blocks
+//! `[data-theme="id"]` with `--q-theme-name` and `color-scheme`: a dark theme (`color-scheme: dark`) is built on top of
+//! the Aquilum dark theme, a light one on top of `:root`. A selector may list several themes separated by commas.
 //!
-//! Шрифты — `assets/fonts/*.woff2`: распаковываются в TTF, у кириллической
-//! половины Inter семейство переименовывается в «Inter Cyrillic» (обе половины называются «Inter»,
-//! а fontique из одноимённых шрифтов с одинаковым начертанием берёт один — кириллица ушла бы в
-//! системный шрифт; стек «Inter, Inter Cyrillic» подбирает шрифт по кластерам). Список —
+//! Fonts are `assets/fonts/*.woff2`: unpacked to TTF; in the Cyrillic
+//! half of Inter the family is renamed to "Inter Cyrillic" (both halves are called "Inter",
+//! and fontique picks only one of same-named fonts with the same style, so Cyrillic would fall back to the
+//! system font; the stack "Inter, Inter Cyrillic" picks the font per cluster). The list is
 //! `$OUT_DIR/fonts.rs`.
 //!
-//! На выходе `$OUT_DIR/tokens.rs`:
-//! - `Theme` — цвета, тени, размеры и насыщенность заголовков (зависят от темы); значения `LIGHT`, `DARK`
-//!   и список встроенных тем `THEMES`;
-//! - `INPUTS` и `derive` — цвета, которые меняются поверх темы (акцент и правки пользователя), и пересчёт
-//!   зависящих от них токенов: зависимость линейна, рецепт снимается пробами (вход прозрачный или белый);
-//! - модули `size` (логические пиксели), `number`, `em`, `ms`, `text` — константы, одинаковые
-//!   для всех тем;
-//! - модуль `motion` — длительности в секундах (`FAST`, `MEDIUM`, `NORMAL`, `MORPH`, `SLOWER`) и кривые
-//!   `EASE_*` четвёркой чисел из токенов `--q-duration-*` и `--q-ease-*`.
+//! Output `$OUT_DIR/tokens.rs`:
+//! - `Theme`: colors, shadows, sizes and heading weight (theme-dependent); the values `LIGHT`, `DARK`
+//!   and the list of built-in themes `THEMES`;
+//! - `INPUTS` and `derive`: colors that change on top of a theme (accent and user overrides), and recomputation of
+//!   the tokens that depend on them: the dependence is linear, the recipe is obtained by probes (input transparent or white);
+//! - modules `size` (logical pixels), `number`, `em`, `ms`, `text`: constants identical
+//!   across all themes;
+//! - module `motion`: durations in seconds (`FAST`, `MEDIUM`, `NORMAL`, `MORPH`, `SLOWER`) and curves
+//!   `EASE_*` as four numbers from the `--q-duration-*` and `--q-ease-*` tokens.
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::fmt::Write as _;
@@ -40,9 +40,9 @@ const TOKEN_FILES: &[&str] = &[
     "components.tokens",
 ];
 const THEME_FILES: &[&str] = &["dark.tokens", "catppuccin.tokens"];
-/// Цвета акцента — первые три входа `derive`: основной, `500` и `600` (темнее).
+/// Accent colors: the first three `derive` inputs: main, `500` and `600` (darker).
 const ACCENT: [&str; 3] = ["blue-alpha-main", "blue-500", "blue-600"];
-/// Цвета, которые пользователь меняет поверх темы в настройках.
+/// Colors the user changes on top of a theme in settings.
 const EDITABLE: &[&str] = &[
     "bg-canvas",
     "sidebar-bg",
@@ -63,13 +63,13 @@ const EDITABLE: &[&str] = &[
     "editor-heading-5-color",
     "editor-heading-6-color",
 ];
-/// `--q-base-font-size`: 1rem в логических пикселях.
+/// `--q-base-font-size`: 1rem in logical pixels.
 const REM: f64 = 16.0;
-/// Значение зависит от окна или родителя (`vh`, `vw`, `ch`, `inherit`): статически не вычисляется,
-/// попадает в `text::*` как есть, считается в коде виджета.
-const DYNAMIC: &str = "динамическое значение";
+/// The value depends on the window or parent (`vh`, `vw`, `ch`, `inherit`): not computed statically,
+/// it goes into `text::*` as is and is resolved in widget code.
+const DYNAMIC: &str = "dynamic value";
 
-/// Числа, которые зависят от темы: размер и насыщенность заголовков.
+/// Numbers that depend on the theme: heading size and weight.
 fn themed_number(name: &str) -> bool {
     name.strip_prefix("editor-heading-").is_some_and(|rest| rest.ends_with("-scale") || rest.ends_with("-weight"))
 }
@@ -91,7 +91,7 @@ enum Kind {
 struct Field {
     name: String,
     kind: Kind,
-    /// По темам, в порядке `THEMES`.
+    /// Per theme, in `THEMES` order.
     values: Vec<Value>,
 }
 
@@ -107,13 +107,13 @@ fn main() {
     let inputs: Vec<&str> = ACCENT.iter().chain(EDITABLE).copied().collect();
     for input in &inputs {
         if !fields.iter().any(|f| f.name == *input && f.kind == Kind::Color) {
-            problems.push(format!("{input}: не цвет темы, а входит в INPUTS"));
+            problems.push(format!("{input}: not a theme color, but is in INPUTS"));
         }
     }
     let derivations: Vec<Derivation> = themes.iter().map(|theme| derivation(theme, &fields, &inputs, &mut problems)).collect();
-    // Нерешённые токены не роняют сборку, но видны в выводе cargo.
+    // Unresolved tokens do not fail the build, but are visible in cargo output.
     for problem in &problems {
-        println!("cargo:warning=токен {problem}");
+        println!("cargo:warning=token {problem}");
     }
     let out = generate(&themes, &fields, &consts, &inputs, &derivations);
     let out_path = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("tokens.rs");
@@ -124,7 +124,7 @@ fn theme_id(selector: &str) -> Option<&str> {
     selector.trim().strip_prefix("[data-theme=\"")?.strip_suffix("\"]")
 }
 
-/// Встроенные темы: светлая и тёмная Aquilum, затем остальные в порядке объявления.
+/// Built-in themes: Aquilum light and dark, then the rest in declaration order.
 fn themes(styles: &Path, problems: &mut Vec<String>) -> Vec<Built> {
     let mut files: Vec<PathBuf> = TOKEN_FILES.iter().map(|f| styles.join("tokens").join(f)).collect();
     files.extend(THEME_FILES.iter().map(|f| styles.join("themes").join(f)));
@@ -147,18 +147,18 @@ fn themes(styles: &Path, problems: &mut Vec<String>) -> Vec<Built> {
             }
         }
     }
-    let mut themes = vec![Built { id: "light".to_owned(), name: "Aquilum".to_owned(), dark: false, vars: root.clone() }];
+    let mut themes = vec![Built { id: "light".to_owned(), name: "Apus".to_owned(), dark: false, vars: root.clone() }];
     let mut dark_vars = root.clone();
     for (id, mut own) in overrides {
         let dark = own.remove("theme-scheme").is_some_and(|scheme| scheme == "dark");
         let name = own.remove("theme-name").map(|name| name.trim_matches(['\'', '"']).to_owned());
         if id == "dark" {
             dark_vars.extend(own);
-            themes.push(Built { id, name: "Aquilum".to_owned(), dark: true, vars: dark_vars.clone() });
+            themes.push(Built { id, name: "Apus".to_owned(), dark: true, vars: dark_vars.clone() });
             continue;
         }
         let Some(name) = name else {
-            problems.push(format!("тема {id}: нет --q-theme-name"));
+            problems.push(format!("theme {id}: no --q-theme-name"));
             continue;
         };
         let mut vars = if dark { dark_vars.clone() } else { root.clone() };
@@ -172,7 +172,7 @@ fn same_kind(value: &Value, kind: Kind) -> bool {
     matches!((value, kind), (Value::Color(_), Kind::Color) | (Value::Shadows(_), Kind::Shadows) | (Value::Number(_), Kind::Number))
 }
 
-/// Поля `Theme` (зависят от темы) и константы (одинаковы во всех темах).
+/// `Theme` fields (theme-dependent) and constants (same across all themes).
 fn fields(themes: &[Built], problems: &mut Vec<String>) -> (Vec<Field>, Consts) {
     let mut fields = Vec::new();
     let mut consts: Consts = BTreeMap::new();
@@ -190,11 +190,11 @@ fn fields(themes: &[Built], problems: &mut Vec<String>) -> (Vec<Field>, Consts) 
                 match value {
                     Ok(v) if same_kind(v, kind) => resolved.push(v.clone()),
                     Ok(v) => {
-                        problems.push(format!("{name}: в теме {} {v:?}", theme.id));
+                        problems.push(format!("{name}: in theme {} {v:?}", theme.id));
                         resolved.push(first.clone());
                     }
                     Err(e) => {
-                        problems.push(format!("{name}: в теме {}: {e}", theme.id));
+                        problems.push(format!("{name}: in theme {}: {e}", theme.id));
                         resolved.push(first.clone());
                     }
                 }
@@ -223,7 +223,7 @@ fn fields(themes: &[Built], problems: &mut Vec<String>) -> (Vec<Field>, Consts) 
                     consts.entry("motion").or_default().push((format!("{}: (f64, f64, f64, f64)", id.to_uppercase()), curve));
                 }
             }
-            Ok(_) if values.iter().all(Result::is_ok) => problems.push(format!("{name}: значение без цвета зависит от темы")),
+            Ok(_) if values.iter().all(Result::is_ok) => problems.push(format!("{name}: non-color value depends on the theme")),
             Err(e) if e == DYNAMIC => consts
                 .entry("text")
                 .or_default()
@@ -241,10 +241,10 @@ fn premultiplied(c: [f64; 4]) -> [f64; 4] {
     [c[0] * c[3], c[1] * c[3], c[2] * c[3], c[3]]
 }
 
-/// Веса входов: индекс в `INPUTS` и множитель premultiplied-цвета.
+/// Input weights: index in `INPUTS` and premultiplied-color multiplier.
 type Weights = Vec<(usize, f64)>;
 
-/// Цвет как функция входов: premultiplied-основа и веса входов.
+/// Color as a function of inputs: premultiplied base and input weights.
 enum Recipe {
     Color([f64; 4], Weights),
     Shadows(Vec<(Shadow, [f64; 4], Weights)>),
@@ -260,13 +260,13 @@ impl Recipe {
 }
 
 struct Derivation {
-    /// Значение входа без правки — в порядке вычисления (вход после тех, от которых зависит).
+    /// Input value without override, in evaluation order (an input after those it depends on).
     inputs: Vec<(usize, Recipe)>,
-    /// Остальные поля, зависящие от входов.
+    /// Other fields that depend on inputs.
     fields: Vec<(String, Recipe)>,
 }
 
-/// Все токены, на которые ссылается значение через `var()`, транзитивно.
+/// All tokens referenced by a value through `var()`, transitively.
 struct References<'a> {
     vars: &'a BTreeMap<String, String>,
     memo: HashMap<String, BTreeSet<String>>,
@@ -297,19 +297,19 @@ fn linear(base: [f64; 4], white: [f64; 4], name: &str, problems: &mut Vec<String
     let (b, w) = (premultiplied(base), premultiplied(white));
     let delta = w[3] - b[3];
     if (0..3).any(|i| (w[i] - b[i] - delta).abs() > 1e-6) {
-        problems.push(format!("{name}: цвет зависит от входа нелинейно"));
+        problems.push(format!("{name}: color depends on an input nonlinearly"));
     }
     delta
 }
 
-/// Рецепт `name` по входам `symbolic`: пробы с прозрачными входами и с каждым входом белым.
+/// Recipe `name` over inputs `symbolic`: probes with transparent inputs and with each input white.
 fn recipe(theme: &Built, name: &str, symbolic: &[usize], inputs: &[&str], problems: &mut Vec<String>) -> Option<Recipe> {
     let resolve = |white: Option<usize>| {
         let overlay: BTreeMap<String, String> =
             symbolic.iter().map(|&k| (inputs[k].to_owned(), if white == Some(k) { "#ffffff" } else { "transparent" }.to_owned())).collect();
         Resolver::layered(&theme.vars, &overlay).value(name)
     };
-    let base = resolve(None).map_err(|e| problems.push(format!("{name} в теме {}: {e}", theme.id))).ok()?;
+    let base = resolve(None).map_err(|e| problems.push(format!("{name} in theme {}: {e}", theme.id))).ok()?;
     let whites: Vec<Value> = symbolic.iter().map(|&k| resolve(Some(k))).collect::<Result<_, _>>().ok()?;
     let weights = |base: [f64; 4], white: &dyn Fn(&Value) -> Option<[f64; 4]>, problems: &mut Vec<String>| {
         symbolic
@@ -347,14 +347,14 @@ fn derivation(theme: &Built, fields: &[Field], inputs: &[&str], problems: &mut V
         let symbolic = depends(input, Some(j));
         match recipe(theme, input, &symbolic, inputs, problems) {
             Some(r @ Recipe::Color(..)) => pending.push((j, r)),
-            _ => problems.push(format!("{input} в теме {}: вход без рецепта", theme.id)),
+            _ => problems.push(format!("{input} in theme {}: input without a recipe", theme.id)),
         }
     }
     let mut ordered: Vec<(usize, Recipe)> = Vec::new();
     while !pending.is_empty() {
         let ready = pending.iter().position(|(_, r)| r.uses().iter().all(|k| ordered.iter().any(|(placed, _)| placed == k)));
         let Some(at) = ready else {
-            problems.push(format!("тема {}: входы зависят друг от друга по кругу", theme.id));
+            problems.push(format!("theme {}: inputs depend on each other circularly", theme.id));
             break;
         };
         ordered.push(pending.remove(at));
@@ -422,8 +422,8 @@ fn theme_const(index: usize, theme: &Built) -> String {
 
 fn generate(themes: &[Built], fields: &[Field], consts: &Consts, inputs: &[&str], derivations: &[Derivation]) -> String {
     let mut out = String::new();
-    out.push_str("// Сгенерировано build.rs из assets/styles — не править.\n\n");
-    out.push_str("/// Цвета, тени и заголовки дизайн-системы для одной темы.\n#[derive(Clone, Copy, Debug)]\npub struct Theme {\n");
+    out.push_str("// Generated by build.rs from assets/styles; do not edit.\n\n");
+    out.push_str("/// Design-system colors, shadows and headings for one theme.\n#[derive(Clone, Copy, Debug)]\npub struct Theme {\n");
     for field in fields {
         let ty = match field.kind {
             Kind::Color => "Color",
@@ -440,28 +440,28 @@ fn generate(themes: &[Built], fields: &[Field], consts: &Consts, inputs: &[&str]
         }
         out.push_str("};\n\n");
     }
-    writeln!(out, "/// Встроенные темы: светлая и тёмная Aquilum, затем остальные.\npub static THEMES: [Builtin; {}] = [", themes.len()).unwrap();
+    writeln!(out, "/// Built-in themes: Aquilum light and dark, then the rest.\npub static THEMES: [Builtin; {}] = [", themes.len()).unwrap();
     for (index, theme) in themes.iter().enumerate() {
         writeln!(out, "    Builtin {{ id: {:?}, name: {:?}, dark: {}, theme: {} }},", theme.id, theme.name, theme.dark, theme_const(index, theme)).unwrap();
     }
     out.push_str("];\n\n");
     let quoted: Vec<String> = inputs.iter().map(|i| format!("{i:?}")).collect();
-    writeln!(out, "/// Входы `derive`: три цвета акцента, затем цвета, которые правит пользователь.\npub const INPUTS: [&str; {}] = [{}];\n", inputs.len(), quoted.join(", ")).unwrap();
+    writeln!(out, "/// `derive` inputs: three accent colors, then the colors the user edits.\npub const INPUTS: [&str; {}] = [{}];\n", inputs.len(), quoted.join(", ")).unwrap();
     writeln!(out, "pub const INPUT_COUNT: usize = {};\n", inputs.len()).unwrap();
-    out.push_str("/// Текущее значение входа в теме.\npub fn input_color(t: &Theme, index: usize) -> Color {\n    match index {\n");
+    out.push_str("/// Current value of an input in the theme.\npub fn input_color(t: &Theme, index: usize) -> Color {\n    match index {\n");
     for (k, input) in inputs.iter().enumerate() {
         writeln!(out, "        {k} => t.{},", ident(input)).unwrap();
     }
     out.push_str("        _ => Color::TRANSPARENT,\n    }\n}\n\n");
     let numbers: Vec<&Field> = fields.iter().filter(|f| f.kind == Kind::Number).collect();
     let quoted: Vec<String> = numbers.iter().map(|f| format!("{:?}", f.name)).collect();
-    writeln!(out, "/// Числа темы, которые правит пользователь.\npub const NUMBERS: [&str; {}] = [{}];\n", numbers.len(), quoted.join(", ")).unwrap();
+    writeln!(out, "/// Theme numbers the user edits.\npub const NUMBERS: [&str; {}] = [{}];\n", numbers.len(), quoted.join(", ")).unwrap();
     out.push_str("pub fn number_mut(t: &mut Theme, index: usize) -> Option<&mut f32> {\n    match index {\n");
     for (k, field) in numbers.iter().enumerate() {
         writeln!(out, "        {k} => Some(&mut t.{}),", ident(&field.name)).unwrap();
     }
     out.push_str("        _ => None,\n    }\n}\n\n");
-    out.push_str("/// Пересчитывает тему `theme` (индекс в `THEMES`) с заданными входами; `None` — значение темы.\n");
+    out.push_str("/// Recomputes theme `theme` (index in `THEMES`) with the given inputs; `None` means the theme's own value.\n");
     out.push_str("pub fn derive(theme: usize, t: &mut Theme, set: &[Option<[f32; 4]>; INPUT_COUNT]) {\n    match theme {\n");
     for index in 0..themes.len() {
         writeln!(out, "        {index} => derive_{index}(t, set),").unwrap();
@@ -493,7 +493,7 @@ fn generate(themes: &[Built], fields: &[Field], consts: &Consts, inputs: &[&str]
     out
 }
 
-/// Шрифты интерфейса и редактора: то же, что подключает `src/fonts/catalog.ts`.
+/// Interface and editor fonts: same as what `src/fonts/catalog.ts` includes.
 const FONT_FILES: &[&str] = &[
     "inter-latin-wght-normal.woff2",
     "inter-latin-wght-italic.woff2",
@@ -516,7 +516,7 @@ fn fonts() {
     let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/fonts");
     let out = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("fonts");
     std::fs::create_dir_all(&out).unwrap();
-    let mut list = String::from("// Сгенерировано build.rs из assets/fonts — не править.
+    let mut list = String::from("// Generated by build.rs from assets/fonts; do not edit.
 pub const FONTS: &[&[u8]] = &[
 ");
     for file in FONT_FILES {
@@ -558,7 +558,7 @@ pub const FONTS: &[&[u8]] = &[
     std::fs::write(out.join("../fonts.rs"), list).unwrap();
 }
 
-/// Объявления `--q-*` с селектором блока, комментарии вырезаны.
+/// `--q-*` declarations with the block selector, comments stripped.
 fn declarations(css: &str) -> Vec<(String, String, String)> {
     let mut text = String::new();
     let mut rest = css;
@@ -592,9 +592,9 @@ fn declarations(css: &str) -> Vec<(String, String, String)> {
 
 #[derive(Clone, Debug, PartialEq)]
 enum Value {
-    /// RGBA, 0..1, не premultiplied.
+    /// RGBA, 0..1, not premultiplied.
     Color([f64; 4]),
-    /// Логические пиксели.
+    /// Logical pixels.
     Length(f64),
     Number(f64),
     Em(f64),
@@ -614,7 +614,7 @@ struct Shadow {
 
 struct Resolver<'a> {
     vars: &'a BTreeMap<String, String>,
-    /// Значения поверх `vars` — для проб входов.
+    /// Values on top of `vars`, for input probes.
     overlay: Option<&'a BTreeMap<String, String>>,
     stack: Vec<String>,
 }
@@ -630,16 +630,16 @@ impl<'a> Resolver<'a> {
 
     fn value(&mut self, name: &str) -> Result<Value, String> {
         if self.stack.iter().any(|n| n == name) {
-            return Err(format!("цикл через --q-{name}"));
+            return Err(format!("cycle through --q-{name}"));
         }
-        let raw = self.overlay.and_then(|o| o.get(name)).or_else(|| self.vars.get(name)).ok_or_else(|| format!("нет --q-{name}"))?.clone();
+        let raw = self.overlay.and_then(|o| o.get(name)).or_else(|| self.vars.get(name)).ok_or_else(|| format!("no --q-{name}"))?.clone();
         self.stack.push(name.to_owned());
         let result = self.expression(&raw);
         self.stack.pop();
         result
     }
 
-    /// Значение целиком: список теней через запятую или одно выражение.
+    /// Whole value: a comma-separated list of shadows or a single expression.
     fn expression(&mut self, raw: &str) -> Result<Value, String> {
         let raw = raw.trim();
         if raw.starts_with("cubic-bezier(") || raw.starts_with('\'') || raw.contains("', ") {
@@ -661,18 +661,18 @@ impl<'a> Resolver<'a> {
         let mut parser = Parser { src: raw.as_bytes(), pos: 0 };
         let value = self.sum(&mut parser)?;
         if parser.pos != raw.len() {
-            return Err(format!("не разобрано «{}»", &raw[parser.pos..]));
+            return Err(format!("unparsed '{}'", &raw[parser.pos..]));
         }
         Ok(value)
     }
 
-    /// Тень: `x y blur [spread] color`; `var()` на месте тени раскрывается в её тени.
+    /// Shadow: `x y blur [spread] color`; `var()` in place of a shadow expands to its shadows.
     fn shadows(&mut self, raw: &str) -> Result<Vec<Shadow>, String> {
         let words = split_top(raw.trim(), ' ');
         if words.len() == 1 {
             return match self.expression(words[0])? {
                 Value::Shadows(s) => Ok(s),
-                other => Err(format!("ожидалась тень, получено {other:?}")),
+                other => Err(format!("expected a shadow, got {other:?}")),
             };
         }
         let mut lengths = Vec::new();
@@ -682,11 +682,11 @@ impl<'a> Resolver<'a> {
                 Value::Length(px) => lengths.push(px),
                 Value::Number(n) if n == 0.0 => lengths.push(0.0),
                 Value::Color(c) => color = Some(c),
-                other => return Err(format!("часть тени {other:?}")),
+                other => return Err(format!("shadow part {other:?}")),
             }
         }
         let at = |i: usize| lengths.get(i).copied().unwrap_or(0.0);
-        Ok(vec![Shadow { x: at(0), y: at(1), blur: at(2), spread: at(3), color: color.ok_or("тень без цвета")? }])
+        Ok(vec![Shadow { x: at(0), y: at(1), blur: at(2), spread: at(3), color: color.ok_or("shadow without a color")? }])
     }
 
     fn sum(&mut self, p: &mut Parser) -> Result<Value, String> {
@@ -739,7 +739,7 @@ impl<'a> Resolver<'a> {
         }
         if p.peek().is_some_and(|c| c.is_ascii_digit() || c == b'.' || c == b'-') {
             let number = p.take_while(|c| c.is_ascii_digit() || c == b'.' || c == b'-');
-            let n: f64 = number.parse().map_err(|_| format!("число «{number}»"))?;
+            let n: f64 = number.parse().map_err(|_| format!("number '{number}'"))?;
             let unit = p.take_while(|c| c.is_ascii_alphabetic() || c == b'%');
             return match unit {
                 "" => Ok(Value::Number(n)),
@@ -750,7 +750,7 @@ impl<'a> Resolver<'a> {
                 "s" => Ok(Value::Time(n * 1000.0)),
                 "%" => Ok(Value::Number(n / 100.0)),
                 "vh" | "vw" | "ch" => Err(DYNAMIC.into()),
-                other => Err(format!("единица «{other}»")),
+                other => Err(format!("unit '{other}'")),
             };
         }
         let word = p.take_while(|c| c.is_ascii_alphanumeric() || c == b'-');
@@ -760,7 +760,7 @@ impl<'a> Resolver<'a> {
                 "inherit" => Err(DYNAMIC.into()),
                 "white" => Ok(Value::Color([1.0, 1.0, 1.0, 1.0])),
                 "black" => Ok(Value::Color([0.0, 0.0, 0.0, 1.0])),
-                _ => Err(format!("слово «{word}»")),
+                _ => Err(format!("word '{word}'")),
             };
         }
         p.pos += 1;
@@ -770,7 +770,7 @@ impl<'a> Resolver<'a> {
             match p.src.get(p.pos) {
                 Some(b'(') => depth += 1,
                 Some(b')') => depth -= 1,
-                None => return Err("незакрытая скобка".into()),
+                None => return Err("unclosed parenthesis".into()),
                 _ => {}
             }
             p.pos += 1;
@@ -779,7 +779,7 @@ impl<'a> Resolver<'a> {
         let args = split_top(args, ',');
         match word {
             "var" => {
-                let name = args[0].trim().strip_prefix("--q-").ok_or("var() не на --q-")?;
+                let name = args[0].trim().strip_prefix("--q-").ok_or("var() not on --q-")?;
                 match self.value(name) {
                     Ok(v) => Ok(v),
                     Err(e) if args.len() > 1 => self.expression(args[1]).map_err(|_| e),
@@ -789,7 +789,7 @@ impl<'a> Resolver<'a> {
             "calc" => self.expression(args[0]),
             "min" | "max" => {
                 let mut values = args.iter().map(|a| self.expression(a));
-                let mut acc = values.next().ok_or("пустой min/max")??;
+                let mut acc = values.next().ok_or("empty min/max")??;
                 for v in values {
                     let v = v?;
                     acc = arith(acc, v, |a, b| if word == "min" { a.min(b) } else { a.max(b) })?;
@@ -803,7 +803,7 @@ impl<'a> Resolver<'a> {
             }
             "rgb" | "rgba" => {
                 let parts: Vec<&str> = args.iter().flat_map(|a| a.split_whitespace()).filter(|s| *s != "/").collect();
-                let channel = |s: &str| s.trim().parse::<f64>().map_err(|_| format!("канал «{s}»"));
+                let channel = |s: &str| s.trim().parse::<f64>().map_err(|_| format!("channel '{s}'"));
                 let alpha = match parts.get(3) {
                     Some(a) if a.ends_with('%') => channel(a.trim_end_matches('%'))? / 100.0,
                     Some(a) => channel(a)?,
@@ -825,7 +825,7 @@ impl<'a> Resolver<'a> {
                 };
                 Ok(Value::Color(mix(a, pa, b, pb)))
             }
-            other => Err(format!("функция «{other}»")),
+            other => Err(format!("function '{other}'")),
         }
     }
 
@@ -838,10 +838,10 @@ impl<'a> Resolver<'a> {
         let percent = match words.get(1) {
             Some(p) => match p.strip_suffix('%').and_then(|n| n.parse::<f64>().ok()) {
                 Some(n) => Some(n / 100.0),
-                // `calc(var(--x) * 100%)`: проценты уже переведены в доли.
+                // `calc(var(--x) * 100%)`: percentages are already converted to fractions.
                 None => match self.expression(p)? {
                     Value::Number(n) => Some(n),
-                    other => return Err(format!("доля {other:?}")),
+                    other => return Err(format!("fraction {other:?}")),
                 },
             },
             None => None,
@@ -850,7 +850,7 @@ impl<'a> Resolver<'a> {
     }
 }
 
-/// Смешение в sRGB по правилам color-mix: в premultiplied-пространстве.
+/// sRGB mixing per color-mix rules: in premultiplied space.
 fn mix(a: [f64; 4], pa: f64, b: [f64; 4], pb: f64) -> [f64; 4] {
     let alpha = a[3] * pa + b[3] * pb;
     if alpha == 0.0 {
@@ -866,7 +866,7 @@ fn arith(a: Value, b: Value, f: impl Fn(f64, f64) -> f64) -> Result<Value, Strin
         (Value::Number(a), Value::Number(b)) => Ok(Value::Number(f(a, b))),
         (Value::Length(a), Value::Number(b)) if b == 0.0 => Ok(Value::Length(f(a, 0.0))),
         (Value::Number(a), Value::Length(b)) if a == 0.0 => Ok(Value::Length(f(0.0, b))),
-        (a, b) => Err(format!("арифметика {a:?} и {b:?}")),
+        (a, b) => Err(format!("arithmetic on {a:?} and {b:?}")),
     }
 }
 
@@ -875,7 +875,7 @@ fn scale(a: Value, b: Value, f: impl Fn(f64, f64) -> f64) -> Result<Value, Strin
         (Value::Length(a), Value::Number(b)) => Ok(Value::Length(f(a, b))),
         (Value::Number(a), Value::Length(b)) => Ok(Value::Length(f(a, b))),
         (Value::Number(a), Value::Number(b)) => Ok(Value::Number(f(a, b))),
-        (a, b) => Err(format!("умножение {a:?} и {b:?}")),
+        (a, b) => Err(format!("multiplication of {a:?} and {b:?}")),
     }
 }
 
@@ -895,7 +895,7 @@ fn parse_hex(hex: &str) -> Result<[f64; 4], String> {
     }
 }
 
-/// Делит по разделителю вне скобок и кавычек.
+/// Splits on a delimiter outside parentheses and quotes.
 fn split_top(s: &str, sep: char) -> Vec<&str> {
     let (mut parts, mut depth, mut start, mut quote) = (Vec::new(), 0, 0, false);
     for (i, c) in s.char_indices() {
@@ -951,7 +951,7 @@ impl<'a> Parser<'a> {
             self.pos += 1;
             Ok(())
         } else {
-            Err(format!("ожидался «{}»", c as char))
+            Err(format!("expected '{}'", c as char))
         }
     }
 }
@@ -998,8 +998,8 @@ fn rust_value(v: &Value) -> String {
             format!("&[{}]", items.join(", "))
         }
         Value::Number(n) => format!("{:?}", *n as f32),
-        // Значение темы обязано быть цветом, тенями или числом; несовпадения отсеяны выше.
-        other => panic!("значение темы {other:?}"),
+        // A theme value must be a color, shadows or a number; mismatches were filtered out above.
+        other => panic!("theme value {other:?}"),
     }
 }
 

@@ -1,4 +1,4 @@
-const NAME: &str = "Aquilum";
+const NAME: &str = "Apus";
 
 pub fn available() -> bool {
     crate::system::DESKTOP && cfg!(feature = "installed")
@@ -134,7 +134,7 @@ mod tests {
     #[test]
     #[ignore]
     fn round_trip_when_initially_off() {
-        assert!(!super::enabled(), "автозапуск уже включён — тест не трогает реальную запись");
+        assert!(!super::enabled(), "autostart is already enabled - the test does not touch the real entry");
         assert!(super::set(true));
         assert!(super::enabled());
         assert!(super::set(false));

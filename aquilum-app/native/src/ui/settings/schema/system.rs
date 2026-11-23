@@ -2,7 +2,7 @@ use super::*;
 use crate::updater::Status;
 
 pub(super) const AUTHOR_URL: &str = "https://t.me/dmitriy_yiu";
-const REPOSITORY_URL: &str = "https://github.com/Freaction/Aquilum";
+const REPOSITORY_URL: &str = "https://github.com/sconelli24/Aquilum";
 
 pub fn update_row(status: &Status) -> Row {
     let description = match status {

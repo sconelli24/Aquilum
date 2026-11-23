@@ -3,9 +3,9 @@ use super::*;
 impl App {
     pub fn title(&self) -> String {
         match (&self.note, self.canvas_title()) {
-            (Some(note), _) => format!("{} — Aquilum", note.path.file_stem().unwrap_or_default().to_string_lossy()),
-            (None, Some(canvas)) => format!("{canvas} — Aquilum"),
-            (None, None) => "Aquilum".to_owned(),
+            (Some(note), _) => format!("{} — Apus", note.path.file_stem().unwrap_or_default().to_string_lossy()),
+            (None, Some(canvas)) => format!("{canvas} — Apus"),
+            (None, None) => "Apus".to_owned(),
         }
     }
 
