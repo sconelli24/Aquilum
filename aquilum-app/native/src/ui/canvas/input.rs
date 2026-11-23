@@ -65,6 +65,7 @@ impl CanvasView {
         ctx.submit_action::<CanvasAction>(CanvasAction::Editing(Some(id)));
         ctx.request_layout();
         ctx.request_paint_only();
+        ctx.request_post_paint();
     }
 
     fn finish_editing(&mut self, ctx: &mut EventCtx<'_>) {
@@ -118,6 +119,7 @@ impl CanvasView {
         self.submit_edit(ctx);
         ctx.request_layout();
         ctx.request_paint_only();
+        ctx.request_post_paint();
         ctx.set_handled();
     }
 
@@ -161,6 +163,7 @@ impl CanvasView {
                 self.dismiss_prompt(ctx);
                 ctx.request_focus();
                 ctx.request_paint_only();
+                ctx.request_post_paint();
                 ctx.submit_action::<CanvasAction>(CanvasAction::Menu { at: ctx.to_window(local), world, node, edge });
                 ctx.set_handled();
             }
@@ -181,10 +184,12 @@ impl CanvasView {
             PointerEvent::Cancel(_) => {
                 self.gesture = None;
                 ctx.request_paint_only();
+                ctx.request_post_paint();
             }
             PointerEvent::Leave(_) => {
                 if self.pointer.take().is_some() {
                     ctx.request_paint_only();
+                    ctx.request_post_paint();
                 }
             }
             PointerEvent::Scroll(PointerScrollEvent { delta, state, .. }) => {
@@ -225,6 +230,7 @@ impl CanvasView {
         self.flash = None;
         ctx.request_focus();
         ctx.request_paint_only();
+        ctx.request_post_paint();
         let world = self.world(local);
         let hit = node_at(&self.canvas.nodes, world);
         if count >= 2 {
@@ -303,6 +309,7 @@ impl CanvasView {
             None => {
                 if previous.is_none_or(|p| (p - local).hypot() > 0.5) {
                     ctx.request_paint_only();
+                    ctx.request_post_paint();
                 }
             }
             Some(Gesture::Pan { last, travelled, slop }) => {
@@ -331,6 +338,7 @@ impl CanvasView {
                 }
                 ctx.request_layout();
                 ctx.request_paint_only();
+                ctx.request_post_paint();
             }
             Some(Gesture::Resize { node, grip, start, rect }) => {
                 let resized = grip.resize(*rect, world - *start);
@@ -340,10 +348,12 @@ impl CanvasView {
                 }
                 ctx.request_layout();
                 ctx.request_paint_only();
+                ctx.request_post_paint();
             }
             Some(Gesture::Connect { end, .. }) | Some(Gesture::Marquee { end, .. }) => {
                 *end = world;
                 ctx.request_paint_only();
+                ctx.request_post_paint();
             }
         }
         if let Some(delta) = pan {
@@ -390,6 +400,7 @@ impl CanvasView {
         }
         ctx.request_layout();
         ctx.request_paint_only();
+        ctx.request_post_paint();
     }
 
     pub(super) fn key(&mut self, ctx: &mut EventCtx<'_>, key: &KeyboardEvent) {
@@ -441,6 +452,7 @@ impl CanvasView {
             _ => return,
         }
         ctx.request_paint_only();
+        ctx.request_post_paint();
         ctx.set_handled();
     }
 
