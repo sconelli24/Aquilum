@@ -134,10 +134,7 @@ impl App {
             Outcome::default()
         } else {
             let title = template.name;
-            let opened = self.create_note_titled(root, Some(&title));
-            if opened {
-                self.commit_text(root, crop::Rope::from(content));
-            }
+            let opened = self.create_note_titled_with(root, Some(&title), &content);
             Outcome { title: opened, ..Outcome::default() }
         }
     }

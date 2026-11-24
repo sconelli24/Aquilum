@@ -116,3 +116,23 @@ fn enter_inserts_the_chosen_template_into_the_open_note() {
     h.deliver();
     assert!(h.app.text.to_string().contains("Заготовка Книга.md"), "{}", h.app.text.to_string());
 }
+
+#[test]
+fn a_note_created_from_a_template_keeps_the_template_text_and_saves_it() {
+    let mut h = Harness::new();
+    fill_templates(&h, &["Книга.md"]);
+    assert!(h.app.note.is_none(), "the test starts without an open note");
+    h.app.open_templates(&mut h.root);
+    h.settle();
+    h.type_text("книга");
+    let outcome = h.app.templates_key(&mut h.root, &Key::Named(NamedKey::Enter), Modifiers::empty());
+    assert!(outcome.is_some() && h.app.popup.is_none(), "Enter did not select a template");
+    h.deliver();
+    h.settle();
+    let note = h.app.note.as_ref().expect("the new note is open").path.clone();
+    assert!(h.app.text.to_string().contains("Заготовка Книга.md"), "the template text was lost when the note finished opening: {:?}", h.app.text.to_string());
+    h.app.commit_note();
+    crate::disk::wait();
+    let saved = std::fs::read_to_string(&note).unwrap();
+    assert!(saved.contains("Заготовка Книга.md"), "the file on disk is missing the template text: {saved:?}");
+}

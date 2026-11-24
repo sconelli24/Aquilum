@@ -113,9 +113,15 @@ impl App {
     }
 
     pub(super) fn create_note_titled(&mut self, root: &mut RenderRoot, title: Option<&str>) -> bool {
+        self.create_note_titled_with(root, title, "")
+    }
+
+    /// A new note that already has `content` on disk: opening is asynchronous, so text applied to the editor right after
+    /// `open` would be overwritten by the (empty) file when the read finishes.
+    pub(super) fn create_note_titled_with(&mut self, root: &mut RenderRoot, title: Option<&str>, content: &str) -> bool {
         let Some(workspace) = self.tree.root() else { return false };
         let folder = crate::vault_files::notes_dir(&self.workspace.core, workspace);
-        match file_ops::create_note(&self.workspace.core, &folder, title) {
+        match file_ops::create_note_with(&self.workspace.core, &folder, title, content) {
             Ok(path) => {
                 self.tree.paths_changed(root, std::slice::from_ref(&path));
                 self.open(root, path)
