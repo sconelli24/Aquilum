@@ -145,6 +145,17 @@ mod tests {
     }
 
     #[test]
+    fn wikipedia_lookups_are_off_for_a_fresh_profile_but_a_saved_choice_is_kept() {
+        let open = |json: &str| {
+            let dir = tempfile::tempdir().unwrap();
+            std::fs::write(dir.path().join("settings.json"), json).unwrap();
+            SettingsManager::new(dir.path()).get_config()
+        };
+        assert!(!open("{}").analysis.enable_wikixiv, "note-derived words never go to Wikipedia unless asked for");
+        assert!(open(r#"{"analysis":{"enableWikixiv":true}}"#).analysis.enable_wikixiv, "turned on by the user");
+    }
+
+    #[test]
     fn a_fresh_profile_starts_with_small_fonts_and_a_65_character_column() {
         let dir = tempfile::tempdir().unwrap();
         let config = SettingsManager::new(dir.path()).get_config();

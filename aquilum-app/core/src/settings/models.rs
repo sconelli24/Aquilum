@@ -38,7 +38,7 @@ impl Default for AnalysisSettings {
         Self {
             enable_bm25f: true,
             enable_adamic_adar: true,
-            enable_wikixiv: true,
+            enable_wikixiv: false,
             bm25f_params: Bm25fParams::default(),
         }
     }
