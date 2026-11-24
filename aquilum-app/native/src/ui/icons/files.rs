@@ -29,6 +29,12 @@ pub const FILE_X: Icon = Icon::lucide(&[
     Shape::Path("m14.5 12.5-5 5"),
     Shape::Path("m9.5 12.5 5 5"),
 ]);
+pub const CANVAS: Icon = Icon::lucide(&[
+    Shape::Rect { x: 3.0, y: 3.0, w: 7.0, h: 9.0, rx: 1.0 },
+    Shape::Rect { x: 14.0, y: 3.0, w: 7.0, h: 5.0, rx: 1.0 },
+    Shape::Rect { x: 14.0, y: 12.0, w: 7.0, h: 9.0, rx: 1.0 },
+    Shape::Rect { x: 3.0, y: 16.0, w: 7.0, h: 5.0, rx: 1.0 },
+]);
 pub const FOLDER: Icon = Icon::lucide(&[Shape::Path(FOLDER_OUTLINE)]);
 pub const FOLDER_PLUS: Icon = Icon::lucide(&[Shape::Path("M12 10v6"), Shape::Path("M9 13h6"), Shape::Path(FOLDER_OUTLINE)]);
 pub const FOLDER_SEARCH: Icon = Icon::lucide(&[

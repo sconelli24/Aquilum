@@ -87,8 +87,7 @@ pub(super) fn empty_state() -> (NewWidget<Flex>, WidgetId) {
 pub(super) fn rename_field(row: &Row) -> (NewWidget<Flex>, Handle<TextEditor>) {
     let indent = size::SIDEBAR_ITEM_PADDING
         + row.depth as f64 * size::SIDEBAR_TREE_INDENT
-        + size::SIDEBAR_ICON_SIZE
-        + size::SIDEBAR_ITEM_GAP;
+        + (size::SIDEBAR_ICON_SIZE + size::SIDEBAR_ITEM_GAP) * 2.0;
     let name = if row.folder {
         row.name.clone()
     } else {

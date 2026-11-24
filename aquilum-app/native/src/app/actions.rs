@@ -121,6 +121,21 @@ impl App {
         }
     }
 
+    pub(super) fn create_folder_in(&mut self, root: &mut RenderRoot, folder: &Path) {
+        let folder = match self.tree.root() {
+            Some(vault) if vault == folder => crate::vault_files::notes_dir(&self.workspace.core, vault),
+            _ => folder.to_path_buf(),
+        };
+        match file_ops::create_folder(&folder, &file_ops::untitled(), 0) {
+            Ok(path) => {
+                self.tree.paths_changed(root, std::slice::from_ref(&path));
+                self.tree.reveal(root, &path);
+                self.tree.start_rename(root, path);
+            }
+            Err(error) => report!("folder not created: {error}"),
+        }
+    }
+
     pub(super) fn create_note_in(&mut self, root: &mut RenderRoot, folder: &Path) -> bool {
         let folder = match self.tree.root() {
             Some(vault) if vault == folder => crate::vault_files::notes_dir(&self.workspace.core, vault),
@@ -142,11 +157,19 @@ impl App {
     }
 
     pub fn pointer_event(&mut self, root: &mut RenderRoot, event: masonry::core::PointerEvent) {
+        let mut empty_spot = None;
         if let masonry::core::PointerEvent::Down(press) = &event {
             let at = press.state.position.to_logical::<f64>(press.state.scale_factor);
-            self.tree.press_outside(root, masonry::kurbo::Point::new(at.x, at.y));
+            let at = masonry::kurbo::Point::new(at.x, at.y);
+            self.tree.press_outside(root, at);
+            if crate::ui::keymap::pointer::context(press.button) && self.popup.is_none() && self.tree.is_empty_spot(root, at) {
+                empty_spot = Some(at);
+            }
         }
         root.handle_pointer_event(event);
+        if let Some(at) = empty_spot {
+            self.open_create_menu(root, at);
+        }
     }
 
     /// Action in the main window; `true` means the open note changed (and so did the window title).
@@ -160,14 +183,7 @@ impl App {
             Some(TreeAction::CreateNote) => return self.create_note_titled(root, None),
             Some(TreeAction::NewNote { folder }) => return self.create_note_in(root, &folder),
             Some(TreeAction::NewFolder { folder }) => {
-                match file_ops::create_folder(&folder, &file_ops::untitled(), 0) {
-                    Ok(path) => {
-                        self.tree.paths_changed(root, std::slice::from_ref(&path));
-                        self.tree.reveal(root, &path);
-                        self.tree.start_rename(root, path);
-                    }
-                    Err(error) => report!("folder not created: {error}"),
-                }
+                self.create_folder_in(root, &folder);
                 return false;
             }
             Some(TreeAction::SortMenu { button }) => {

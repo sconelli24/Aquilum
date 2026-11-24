@@ -576,6 +576,8 @@
     "filter": "Поиск",
     "newNote": "Новая заметка",
     "newFolder": "Новая папка",
+    "newCanvas": "Новый холст",
+    "createActions": "Создать",
     "sort": "Изменить порядок сортировки",
     "collapseAll": "Свернуть всё",
     "sortNameAsc": "Имя файла (А — Я)",

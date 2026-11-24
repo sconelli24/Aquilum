@@ -570,6 +570,8 @@
     "filter": "Search",
     "newNote": "New note",
     "newFolder": "New folder",
+    "newCanvas": "New canvas",
+    "createActions": "Create",
     "sort": "Change sort order",
     "collapseAll": "Collapse all",
     "sortNameAsc": "File name (A to Z)",

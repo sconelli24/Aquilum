@@ -570,6 +570,8 @@
     "filter": "Buscar",
     "newNote": "Nota nueva",
     "newFolder": "Carpeta nueva",
+    "newCanvas": "Nuevo canvas",
+    "createActions": "Crear",
     "sort": "Cambiar el orden",
     "collapseAll": "Contraer todo",
     "sortNameAsc": "Nombre de archivo (A a Z)",

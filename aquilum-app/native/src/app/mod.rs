@@ -73,6 +73,7 @@ pub(in crate::app) enum Popup {
     FileMenu { layer: WidgetId, targets: Vec<PathBuf>, clicked: PathBuf, tab: Option<Uuid> },
     Settings { dialog: SettingsDialog, menu: Option<settings::OpenMenu> },
     Menu { layer: WidgetId, commands: Vec<MenuCommand> },
+    CreateMenu { layer: WidgetId, folder: PathBuf },
     SortMenu { layer: WidgetId, button: WidgetId },
     TabsMenu { layer: WidgetId, button: WidgetId },
     Viewer { layer: WidgetId },

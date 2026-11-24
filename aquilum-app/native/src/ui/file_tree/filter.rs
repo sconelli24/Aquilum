@@ -24,6 +24,17 @@ impl FileTree {
         }
     }
 
+    /// True when the point is inside the list but not over a row (the empty space below it).
+    pub fn is_empty_spot(&self, root: &RenderRoot, at: Point) -> bool {
+        let Some(scroll) = self.scroll else { return false };
+        if self.model.root().is_none() || self.model.renaming().is_some() {
+            return false;
+        }
+        let Some(under) = root.get_layer_root(0).find_widget_under_pointer(at).map(|widget| widget.id()) else { return false };
+        let inside = root.get_widget(scroll.id()).is_some_and(|list| list.find_widget_by_id(under).is_some());
+        inside && !self.row_ids.contains(&under)
+    }
+
     pub(super) fn set_filter(&mut self, root: &mut RenderRoot, query: &str) {
         if let Some(toolbar) = self.toolbar {
             toolbar.placeholder.edit(root, |mut placeholder| Placeholder::set_empty(&mut placeholder, query.is_empty()));

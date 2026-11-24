@@ -14,7 +14,7 @@ impl Popup {
         let dialog = |layer: WidgetId| (layer, Box::new(DialogAnswer::Cancel) as ErasedAction);
         let menu = |layer: WidgetId| (layer, Box::new(MenuChoice::Dismissed) as ErasedAction);
         match self {
-            Popup::FileMenu { layer, .. } | Popup::Menu { layer, .. } | Popup::CanvasMenu { layer, .. } | Popup::SortMenu { layer, .. } | Popup::TabsMenu { layer, .. } => menu(*layer),
+            Popup::FileMenu { layer, .. } | Popup::Menu { layer, .. } | Popup::CanvasMenu { layer, .. } | Popup::SortMenu { layer, .. } | Popup::CreateMenu { layer, .. } | Popup::TabsMenu { layer, .. } => menu(*layer),
             Popup::Settings { menu: Some(open), .. } => menu(open.layer),
             Popup::Settings { dialog: settings, .. } => match &settings.confirm {
                 Some((confirm, _)) => dialog(confirm.layer),

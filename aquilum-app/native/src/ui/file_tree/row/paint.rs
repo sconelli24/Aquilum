@@ -29,8 +29,13 @@ pub fn icon_x(depth: usize) -> f64 {
     size::SIDEBAR_ITEM_PADDING + depth as f64 * size::SIDEBAR_TREE_INDENT
 }
 
-pub fn text_x(depth: usize) -> f64 {
+/// Left edge of the kind icon (folder, note or canvas), which follows the chevron slot.
+pub fn kind_x(depth: usize) -> f64 {
     icon_x(depth) + size::SIDEBAR_ICON_SIZE + size::SIDEBAR_ITEM_GAP
+}
+
+pub fn text_x(depth: usize) -> f64 {
+    kind_x(depth) + size::SIDEBAR_ICON_SIZE + size::SIDEBAR_ITEM_GAP
 }
 
 pub fn paint(ctx: &mut PaintCtx<'_>, painter: &mut Painter<'_>, bounds: Rect, row: &Row, look: Look, texts: &mut Texts) {
@@ -77,6 +82,19 @@ pub fn paint(ctx: &mut PaintCtx<'_>, painter: &mut Painter<'_>, bounds: Rect, ro
         let origin = Point::new(bounds.x0 + icon_x(row.depth) + inset, bounds.y0 + size::SIDEBAR_ITEM_PADDING + inset);
         icon.draw(painter, origin, glyph, 1.6, icon_color);
     }
+
+    let kind = if row.folder {
+        if row.expanded { icons::FOLDER_OPEN } else { icons::FOLDER }
+    } else if aquilum_core::search::paths::is_canvas(&row.path) {
+        icons::CANVAS
+    } else if aquilum_core::search::paths::is_note(&row.path) {
+        icons::FILE_TEXT
+    } else {
+        icons::FILE
+    };
+    let glyph = 16.0;
+    let inset = (size::SIDEBAR_ICON_SIZE - glyph) / 2.0;
+    kind.draw(painter, Point::new(bounds.x0 + kind_x(row.depth) + inset, bounds.y0 + size::SIDEBAR_ITEM_PADDING + inset), glyph, 1.6, icon_color);
 
     let style = text::Style::ui(size::SIDEBAR_ICON_SIZE);
     let top = bounds.y0 + size::SIDEBAR_ITEM_PADDING;
