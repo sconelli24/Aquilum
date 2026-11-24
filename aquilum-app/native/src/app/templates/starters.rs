@@ -45,6 +45,11 @@ pub fn template_text(path: &Path) -> String {
     apply_placeholders(&read_text(path).unwrap_or_default())
 }
 
+/// The text of a template for the daily note of `date`.
+pub fn template_text_on(path: &Path, date: chrono::NaiveDate) -> String {
+    super::placeholders::apply_placeholders_on(&read_text(path).unwrap_or_default(), date)
+}
+
 pub fn write_starters(core: &Core, folder: &Path) -> Vec<PathBuf> {
     if let Err(error) = std::fs::create_dir_all(folder) {
         report!("templates folder not created: {error}");

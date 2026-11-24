@@ -371,6 +371,21 @@
       "folder": "Carpeta de adjuntos",
       "folderHint": "Carpeta de la base de conocimiento para imágenes, videos, portadas y libros pegados"
     },
+    "calendar": {
+      "section": "Calendario",
+      "show": "Mostrar el calendario",
+      "showHint": "Un mes en la barra lateral; al hacer clic en un día se abre o se crea su nota diaria",
+      "progress": "Mostrar el progreso del año",
+      "progressHint": "Una barra con los días transcurridos del año, bajo el mes",
+      "confirm": "Confirmar antes de crear una nota",
+      "confirmHint": "Preguntar antes al hacer clic en un día que aún no tiene nota diaria",
+      "weeks": "Mostrar también las semanas",
+      "weeksHint": "Una segunda barra con las semanas transcurridas del año",
+      "folder": "Carpeta de notas diarias",
+      "folderHint": "Una ruta dentro de la base de conocimiento; vacío — la raíz",
+      "template": "Plantilla de la nota diaria",
+      "templateHint": "Una nota de la carpeta de plantillas, como Daily; vacío — una nota en blanco. {{date}} se convierte en el día de la nota"
+    },
     "trash": {
       "section": "Papelera",
       "deleted": "En la papelera",
@@ -648,6 +663,14 @@
     "columnWidth": "Ancho de la columna, caracteres",
     "columnWidthAria": "Ancho de la columna"
   },
+    "calendar": {
+      "title": "Calendario",
+      "newTitle": "Nueva nota diaria",
+      "newDescription": "La nota «{{name}}» aún no existe. ¿Quieres crearla?",
+      "create": "Crear",
+      "days": "Días {{done}} de {{total}}",
+      "weeks": "Semanas {{done}} de {{total}}"
+    },
     "canvas": {
       "title": "Lienzo",
       "emptyHint": "Doble clic para añadir una tarjeta, o clic derecho para más opciones",

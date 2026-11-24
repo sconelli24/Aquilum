@@ -48,6 +48,13 @@ pub fn apply_placeholders(text: &str) -> String {
     apply_at(text, &chrono::Local::now(), i18n::language())
 }
 
+/// Like [`apply_placeholders`], but `{{date}}` is the given day (at the current time of day), as
+/// in the daily note of a day other than today.
+pub fn apply_placeholders_on(text: &str, date: chrono::NaiveDate) -> String {
+    let now = chrono::Local::now();
+    apply_at(text, &date.and_time(now.time()), i18n::language())
+}
+
 fn apply_at<T: Datelike + Timelike>(text: &str, now: &T, language: Language) -> String {
     let mut out = String::with_capacity(text.len());
     let mut rest = text;
@@ -145,5 +152,16 @@ mod tests {
         assert_eq!(apply_at(pattern, &now, Language::Ru), "воскресенье, 11 октябрь 2026 (вс, окт.)");
         assert_eq!(apply_at(pattern, &now, Language::En), "Sunday, 11 October 2026 (Sun, Oct)");
         assert_eq!(apply_at(pattern, &now, Language::Es), "domingo, 11 octubre 2026 (dom., oct.)");
+    }
+}
+
+#[cfg(test)]
+mod on_a_day {
+    use super::*;
+
+    #[test]
+    fn the_date_is_the_given_day_not_today() {
+        let text = apply_placeholders_on("{{date:YYYY-MM-DD}} {{date:DDDD}}", chrono::NaiveDate::from_ymd_opt(2020, 2, 29).unwrap());
+        assert!(text.starts_with("2020-02-29 "), "{text}");
     }
 }

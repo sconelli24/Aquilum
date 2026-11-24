@@ -11,6 +11,7 @@ mod args;
 mod autostart;
 mod app;
 mod clipboard;
+mod calendar;
 mod canvas;
 mod cover;
 mod poster;

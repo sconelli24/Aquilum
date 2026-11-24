@@ -24,7 +24,7 @@ use crate::ui::widgets::Slot;
 
 pub use placeholders::apply_placeholders;
 pub use scan::NoteTemplate;
-pub use starters::write_starters;
+pub use starters::{template_text_on, write_starters};
 use starters::template_text;
 
 pub struct TemplatesState {

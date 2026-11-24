@@ -98,9 +98,14 @@ pub fn move_all(core: &Arc<Core>, sources: Vec<PathBuf>, target: PathBuf) {
 }
 
 pub fn create_note(core: &Core, folder: &Path, title: Option<&str>) -> Result<PathBuf, FileCommandError> {
+    create_note_with(core, folder, title, "")
+}
+
+/// A new note that starts with `content`.
+pub fn create_note_with(core: &Core, folder: &Path, title: Option<&str>, content: &str) -> Result<PathBuf, FileCommandError> {
     std::fs::create_dir_all(folder)?;
     let base = title.map(sanitize_file_name).filter(|t| !t.is_empty()).unwrap_or_else(untitled);
-    first_free(|i| folder.join(format!("{}.md", counted(&base, i))), |path| gate::create(core, path, &"", Source::Me, None))
+    first_free(|i| folder.join(format!("{}.md", counted(&base, i))), |path| gate::create(core, path, &content, Source::Me, None))
 }
 
 pub fn create_canvas(core: &Core, folder: &Path) -> Result<PathBuf, FileCommandError> {

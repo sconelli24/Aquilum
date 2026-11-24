@@ -1,5 +1,6 @@
 pub mod backlinks;
 pub mod book;
+pub mod calendar;
 pub mod canvas;
 pub mod dialog;
 pub mod file_tree;

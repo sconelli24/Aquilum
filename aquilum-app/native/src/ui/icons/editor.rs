@@ -44,6 +44,12 @@ pub const TABLE: Icon = Icon::lucide(&[
 pub const ROWS: Icon = Icon::lucide(&[Shape::Rect { x: 3.0, y: 3.0, w: 18.0, h: 18.0, rx: 2.0 }, Shape::Path("M21 9H3"), Shape::Path("M21 15H3")]);
 pub const COLUMNS: Icon = Icon::lucide(&[Shape::Rect { x: 3.0, y: 3.0, w: 18.0, h: 18.0, rx: 2.0 }, Shape::Path("M9 3v18"), Shape::Path("M15 3v18")]);
 pub const ZOOM_IN: Icon = Icon::lucide(&[Shape::Circle { cx: 11.0, cy: 11.0, r: 8.0 }, Shape::Path("M21 21 16.65 16.65"), Shape::Path("M11 8v6"), Shape::Path("M8 11h6")]);
+pub const MAXIMIZE: Icon = Icon::lucide(&[
+    Shape::Path("M8 3H5a2 2 0 0 0-2 2v3"),
+    Shape::Path("M21 8V5a2 2 0 0 0-2-2h-3"),
+    Shape::Path("M3 16v3a2 2 0 0 0 2 2h3"),
+    Shape::Path("M16 21h3a2 2 0 0 0 2-2v-3"),
+]);
 pub const ALIGN_LEFT: Icon = Icon::lucide(&[Shape::Path("M21 5H3"), Shape::Path("M15 12H3"), Shape::Path("M17 19H3")]);
 pub const ALIGN_CENTER: Icon = Icon::lucide(&[Shape::Path("M21 5H3"), Shape::Path("M17 12H7"), Shape::Path("M19 19H5")]);
 pub const ALIGN_RIGHT: Icon = Icon::lucide(&[Shape::Path("M21 5H3"), Shape::Path("M21 12H9"), Shape::Path("M21 19H7")]);

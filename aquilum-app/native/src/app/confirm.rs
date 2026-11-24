@@ -4,7 +4,7 @@ use masonry::app::RenderRoot;
 use masonry::core::{ErasedAction, WidgetId};
 use masonry::kurbo::Point;
 
-use super::{App, Popup};
+use super::{App, Outcome, Popup};
 use crate::file_ops;
 use crate::i18n::{t, t_with};
 use crate::ui::dialog::{ConfirmDialog, DialogAnswer, DialogIds};
@@ -13,6 +13,8 @@ pub(in crate::app) enum Confirmed {
     Delete(Vec<PathBuf>),
     ResetGraph,
     ManualUpdate(String),
+    /// Create the daily note of this day, which has none, and open it.
+    CreateDaily(chrono::NaiveDate),
 }
 
 impl App {
@@ -21,25 +23,30 @@ impl App {
         self.show_layer(root, layer, Point::ORIGIN, |_| Popup::Confirm(dialog, then));
     }
 
-    pub(in crate::app) fn on_confirm(&mut self, root: &mut RenderRoot, dialog: DialogIds, then: Confirmed, id: WidgetId, action: &ErasedAction) {
+    pub(in crate::app) fn on_confirm(&mut self, root: &mut RenderRoot, dialog: DialogIds, then: Confirmed, id: WidgetId, action: &ErasedAction) -> Outcome {
         let Some(answer) = dialog.answer(id, action) else {
             self.popup = Some(Popup::Confirm(dialog, then));
-            return;
+            return Outcome::default();
         };
         crate::ui::dialog::close(root, dialog.layer);
         if answer != DialogAnswer::Confirm {
-            return;
+            return Outcome::default();
         }
         match then {
             Confirmed::Delete(targets) => {
-                let Some(workspace) = self.tree.root().map(Path::to_path_buf) else { return };
+                let Some(workspace) = self.tree.root().map(Path::to_path_buf) else { return Outcome::default() };
                 self.commit_note();
                 file_ops::trash_all(&self.workspace.core, workspace, targets);
                 self.tree.clear_selection(root);
             }
             Confirmed::ResetGraph => self.reset_graph_settings(root),
             Confirmed::ManualUpdate(url) => crate::system::open_url(&url),
+            Confirmed::CreateDaily(date) => {
+                let title = self.create_daily(root, date);
+                return Outcome { title, ..Outcome::default() };
+            }
         }
+        Outcome::default()
     }
 
     pub(in crate::app) fn confirm_delete(&mut self, root: &mut RenderRoot, targets: Vec<PathBuf>) {

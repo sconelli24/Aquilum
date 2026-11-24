@@ -1,6 +1,7 @@
 mod actions;
 mod back;
 mod caches;
+mod calendar;
 mod canvas_page;
 
 pub(crate) use caches::Moment;

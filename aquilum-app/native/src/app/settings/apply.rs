@@ -172,6 +172,8 @@ impl App {
             || before.analysis.enable_bm25f != after.analysis.enable_bm25f
             || before.updates.auto != after.updates.auto
             || before.templates.folder != after.templates.folder
+            || before.calendar.show != after.calendar.show
+            || before.calendar.progress != after.calendar.progress
             || mcp_changed
             || retention;
         if let Err(error) = core.settings.update_config(after) {

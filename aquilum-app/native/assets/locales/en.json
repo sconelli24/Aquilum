@@ -371,6 +371,21 @@
       "folder": "Attachments folder",
       "folderHint": "Folder in the knowledge base for pasted images, videos, covers and books"
     },
+    "calendar": {
+      "section": "Calendar",
+      "show": "Show the calendar",
+      "showHint": "A month in the sidebar; clicking a day opens or creates its daily note",
+      "progress": "Show the progress of the year",
+      "progressHint": "A bar with the days of the year gone by, under the month",
+      "confirm": "Confirm before creating a note",
+      "confirmHint": "Ask first when you click a day that has no daily note yet",
+      "weeks": "Also show the weeks",
+      "weeksHint": "A second bar with the weeks of the year gone by",
+      "folder": "Daily notes folder",
+      "folderHint": "A path inside the knowledge base; empty — the root",
+      "template": "Daily note template",
+      "templateHint": "A note of the templates folder, like Daily; empty — a blank note. {{date}} becomes the day of the note"
+    },
     "trash": {
       "section": "Trash",
       "deleted": "In the trash",
@@ -648,6 +663,14 @@
     "columnWidth": "Column width, characters",
     "columnWidthAria": "Column width"
   },
+    "calendar": {
+      "title": "Calendar",
+      "newTitle": "New daily note",
+      "newDescription": "The note “{{name}}” does not exist yet. Do you want to create it?",
+      "create": "Create",
+      "days": "Days {{done}} of {{total}}",
+      "weeks": "Weeks {{done}} of {{total}}"
+    },
     "canvas": {
       "title": "Canvas",
       "emptyHint": "Double-click to add a card, or right-click for more",

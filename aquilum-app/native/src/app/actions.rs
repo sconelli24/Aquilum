@@ -37,6 +37,9 @@ impl App {
             let title = self.on_graph_action(root, id, &action);
             return Outcome { title, ..Outcome::default() };
         }
+        if let Some(outcome) = self.on_calendar_action(root, id, &action) {
+            return outcome;
+        }
         if let Some(outcome) = self.on_canvas_action(root, id, &action) {
             return outcome;
         }

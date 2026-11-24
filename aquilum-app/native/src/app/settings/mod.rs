@@ -101,6 +101,7 @@ impl App {
     }
 
     fn finish(&mut self, root: &mut RenderRoot, effect: Effect) -> Outcome {
+        self.sync_calendar(root);
         match effect {
             Effect::None => Outcome::default(),
             Effect::Smart(smart) => {

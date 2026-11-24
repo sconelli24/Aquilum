@@ -10,6 +10,21 @@ pub(super) fn files(config: &AppConfig) -> Vec<Block> {
     }]
 }
 
+pub(super) fn calendar(config: &AppConfig) -> Vec<Block> {
+    let c = &config.calendar;
+    let mut rows = vec![row(t("settings.calendar.show"), Some(t("settings.calendar.showHint")), Control::Switch(c.show), |c, v| c.calendar.show = flag(v))];
+    if c.show {
+        rows.push(row(t("settings.calendar.confirm"), Some(t("settings.calendar.confirmHint")), Control::Switch(c.confirm), |c, v| c.calendar.confirm = flag(v)));
+        rows.push(row(t("settings.calendar.progress"), Some(t("settings.calendar.progressHint")), Control::Switch(c.progress), |c, v| c.calendar.progress = flag(v)));
+        if c.progress {
+            rows.push(row(t("settings.calendar.weeks"), Some(t("settings.calendar.weeksHint")), Control::Switch(c.progress_weeks), |c, v| c.calendar.progress_weeks = flag(v)));
+        }
+        rows.push(row(t("settings.calendar.folder"), Some(t("settings.calendar.folderHint")), Control::Text { value: c.folder.clone(), commit: false }, |c, v| c.calendar.folder = text(v)));
+        rows.push(row(t("settings.calendar.template"), Some(t("settings.calendar.templateHint")), Control::Text { value: c.template.clone(), commit: false }, |c, v| c.calendar.template = text(v)));
+    }
+    vec![Block { title: t("settings.calendar.section"), rows }]
+}
+
 pub(super) fn analysis(config: &AppConfig) -> Vec<Block> {
     let a = &config.analysis;
     let methods = Block {

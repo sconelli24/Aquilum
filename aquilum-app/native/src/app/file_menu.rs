@@ -165,7 +165,7 @@ impl App {
                     MenuChoice::Sub(_) | MenuChoice::Dismissed => root.remove_layer(layer),
                 }
             }
-            Some(Popup::Confirm(dialog, then)) => self.on_confirm(root, dialog, then, id, action),
+            Some(Popup::Confirm(dialog, then)) => return self.on_confirm(root, dialog, then, id, action),
             Some(Popup::Menu { layer, commands }) => return self.on_menu(root, layer, commands, action),
             Some(Popup::CanvasMenu { layer, commands }) => return self.on_canvas_menu(root, layer, commands, action),
             Some(Popup::SortMenu { layer, button }) => match self.dropdown_answer(root, layer, button, id, action) {

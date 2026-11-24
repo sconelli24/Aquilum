@@ -39,6 +39,7 @@ pub struct Chrome {
     pub vault_buttons: workspaces::Buttons,
     pub sidebar: Handle<Collapse>,
     pub sidebar_sash: WidgetId,
+    pub calendar: Handle<crate::ui::calendar::CalendarPanel>,
     pub note_page: Handle<Slot>,
     pub rail: Handle<Collapse>,
     pub rail_settings: WidgetId,
@@ -71,6 +72,7 @@ impl Chrome {
 pub struct RootParts<'a> {
     pub workspace_name: &'a str,
     pub note: NewWidget<dyn Widget>,
+    pub calendar: crate::ui::calendar::CalendarState,
     pub sidebar_open: bool,
     pub sidebar_from: bool,
     pub sidebar_width: f64,
@@ -93,10 +95,10 @@ pub struct RootParts<'a> {
 }
 
 pub fn root(tree: NewWidget<impl Widget>, parts: RootParts<'_>) -> (NewWidget<impl Widget>, Chrome) {
-    let RootParts { workspace_name, note, sidebar_open, sidebar_from, sidebar_width, panel_width, tabs, active_tab, tab_title, empty_tab, vault_open, vault_error, panel_open, panel_from, panel_mode, has_analysis, focus_mode, home, graph, graph_active, screen } = parts;
+    let RootParts { workspace_name, note, calendar, sidebar_open, sidebar_from, sidebar_width, panel_width, tabs, active_tab, tab_title, empty_tab, vault_open, vault_error, panel_open, panel_from, panel_mode, has_analysis, focus_mode, home, graph, graph_active, screen } = parts;
 
     let rail = rail(sidebar_open, home, focus_mode);
-    let sidebar = sidebar(tree, workspace_name, sidebar_width, sidebar_open && !focus_mode, sidebar_from);
+    let sidebar = sidebar(tree, workspace_name, calendar, sidebar_width, sidebar_open && !focus_mode, sidebar_from);
 
     let note_page = Slot::new(note);
     let note_handle = Handle::of(&note_page);
@@ -155,6 +157,7 @@ pub fn root(tree: NewWidget<impl Widget>, parts: RootParts<'_>) -> (NewWidget<im
         vault_buttons,
         sidebar: sidebar.handle,
         sidebar_sash: sidebar.sash,
+        calendar: sidebar.calendar,
         note_page: note_handle,
         rail: rail.handle,
         rail_settings: titlebar.settings,

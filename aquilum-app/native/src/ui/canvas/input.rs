@@ -13,7 +13,7 @@ const NEW_CARD: (f64, f64) = (260.0, 120.0);
 const DUPLICATE_OFFSET: f64 = 40.0;
 
 impl CanvasView {
-    fn edge_at(&self, local: Point) -> Option<usize> {
+    pub(super) fn edge_at(&self, local: Point) -> Option<usize> {
         let affine = self.affine();
         self.canvas.edges.iter().enumerate().rev().find_map(|(i, edge)| {
             let curve = self.curve(edge)?;
@@ -165,6 +165,29 @@ impl CanvasView {
                 ctx.request_paint_only();
                 ctx.request_post_paint();
                 ctx.submit_action::<CanvasAction>(CanvasAction::Menu { at: ctx.to_window(local), world, node, edge });
+                ctx.set_handled();
+            }
+            PointerEvent::Down(down) if pointer::press(down.button) && self.gesture.is_none() && self.panel_button_at(ctx.local_position(down.state.position)).is_some() => {
+                if let Some(button) = self.panel_button_at(ctx.local_position(down.state.position)) {
+                    self.dismiss_prompt(ctx);
+                    ctx.request_focus();
+                    self.press_zoom_button(button);
+                    ctx.request_layout();
+                    ctx.request_anim_frame();
+                    ctx.request_paint_only();
+                    ctx.request_post_paint();
+                }
+                ctx.set_handled();
+            }
+            PointerEvent::Down(down) if pointer::close(down.button) || (pointer::press(down.button) && self.space && self.editing.is_none() && down.state.count < 2) => {
+                // The middle button, or Space held, drags the board from anywhere, over cards included.
+                let local = ctx.local_position(down.state.position);
+                self.dismiss_prompt(ctx);
+                ctx.request_focus();
+                self.gesture = Some(Gesture::Pan { last: local, travelled: 0.0, slop: 0.0 });
+                ctx.request_paint_only();
+                ctx.request_post_paint();
+                ctx.capture_pointer();
                 ctx.set_handled();
             }
             PointerEvent::Down(down) if pointer::press(down.button) => {
@@ -404,6 +427,16 @@ impl CanvasView {
     }
 
     pub(super) fn key(&mut self, ctx: &mut EventCtx<'_>, key: &KeyboardEvent) {
+        if matches!(&key.key, Key::Character(c) if c.as_str() == " ") &&self.editing.is_none() && self.asking.is_none() {
+            let held = key.state == KeyState::Down;
+            if self.space != held {
+                self.space = held;
+                ctx.request_paint_only();
+                ctx.request_post_paint();
+            }
+            ctx.set_handled();
+            return;
+        }
         if key.state != KeyState::Down {
             return;
         }

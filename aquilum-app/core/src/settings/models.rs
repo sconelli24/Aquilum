@@ -238,6 +238,32 @@ pub struct AppConfig {
     pub templates: TemplateSettings,
     pub files: FilesSettings,
     pub updates: UpdateSettings,
+    pub calendar: CalendarSettings,
+}
+
+/// The calendar in the sidebar and the daily notes it opens.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct CalendarSettings {
+    /// Show the calendar in the sidebar.
+    pub show: bool,
+    /// Show the progress of the year, in days and in weeks, under the month.
+    pub progress: bool,
+    /// With the progress shown, also the weeks of the year (the days are always there).
+    pub progress_weeks: bool,
+    /// Ask before creating the note of a day that has none.
+    pub confirm: bool,
+    /// Folder of the daily notes inside the knowledge base; empty means the root.
+    pub folder: String,
+    /// Template of a new daily note: a note of the templates folder, with or without `.md`;
+    /// empty means a blank note.
+    pub template: String,
+}
+
+impl Default for CalendarSettings {
+    fn default() -> Self {
+        Self { show: true, progress: true, progress_weeks: false, confirm: true, folder: "Daily".to_string(), template: String::new() }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

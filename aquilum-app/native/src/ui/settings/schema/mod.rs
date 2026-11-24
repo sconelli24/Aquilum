@@ -47,7 +47,7 @@ pub fn blocks(section: Section, config: &AppConfig, ctx: &Context) -> Vec<Block>
         Section::Themes => themes(config),
         Section::Editor => editor(config),
         Section::Reader => reader(config),
-        Section::Data => [templates(config, ctx), files(config)].into_iter().flatten().collect(),
+        Section::Data => [templates(config, ctx), files(config), calendar(config)].into_iter().flatten().collect(),
         Section::Analysis => analysis(config),
         Section::Mcp => mcp(config, ctx),
         Section::History => history(config, ctx),

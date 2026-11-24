@@ -41,6 +41,7 @@ fn parts(text: &str) -> RootParts<'_> {
         })
         .0
         .erased(),
+        calendar: Default::default(),
         sidebar_open: true,
         sidebar_from: true,
         sidebar_width: crate::ui::tokens::size::SIDEBAR_WIDTH + crate::ui::tokens::size::BORDER_1,

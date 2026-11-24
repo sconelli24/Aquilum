@@ -56,7 +56,7 @@ fn templates_and_attachments_share_one_section_and_search_tuning_lives_with_bm25
     let config = AppConfig::default();
     let ctx = Context::new(1.0);
     let titles: Vec<String> = blocks(Section::Data, &config, &ctx).into_iter().map(|b| b.title).collect();
-    assert_eq!(titles, [t("settings.templates.section"), t("settings.files.section")]);
+    assert_eq!(titles, [t("settings.templates.section"), t("settings.files.section"), t("settings.calendar.section")]);
     for old in ["templates", "files", "data"] {
         assert_eq!(Section::from_key(old), Some(Section::Data), "the saved section '{old}' opens the shared section");
     }

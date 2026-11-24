@@ -171,6 +171,12 @@ impl Widget for CanvasView {
         {
             return grip.cursor();
         }
+        if self.panel_button_at(pos).is_some() {
+            return CursorIcon::Pointer;
+        }
+        if self.space {
+            return CursorIcon::Grab;
+        }
         if self.dot_at(pos).is_some() { CursorIcon::Crosshair } else { CursorIcon::Default }
     }
 

@@ -80,6 +80,7 @@ impl App {
                 self.set_text(root, text);
             }
             self.canvas_files_changed(root, &touched, rescan);
+            self.sync_calendar(root);
         }
         if rescan {
             self.tree.reload(root);

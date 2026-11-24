@@ -5,7 +5,8 @@ use masonry::kurbo::{Affine, BezPath, Circle, Point, Rect, RoundedRect, Shape, S
 use masonry::peniko::Color;
 
 use super::card::{BORDER, RADIUS};
-use super::{CanvasView, Gesture};
+use super::{CanvasView, Gesture, PANEL_BUTTON, ZoomButton};
+use crate::ui::icons;
 use crate::canvas::geometry::{self, Grip};
 use crate::ui::text::Style;
 use crate::ui::theme;
@@ -17,6 +18,8 @@ const EDGE_WIDTH: f64 = 2.0;
 const ARROW: f64 = 10.0;
 const GRIP: f64 = 7.0;
 const DOT: f64 = 5.0;
+/// Size of the icons in the zoom panel.
+const ICON: f64 = 16.0;
 
 /// The short text a tile or label shows for a node.
 pub(super) fn title(node: &Node) -> String {
@@ -99,12 +102,24 @@ impl CanvasView {
         }
 
         let edges = self.canvas.edges.clone();
+        // Like Obsidian, the edge under the pointer is highlighted unless a card or a drag is in the way.
+        let hovered_edge = match (self.pointer, &self.gesture) {
+            (Some(p), None) if !self.space && geometry::node_at(&self.canvas.nodes, self.world(p)).is_none() => self.edge_at(p).map(|i| self.canvas.edges[i].id.clone()),
+            _ => None,
+        };
         for edge in &edges {
             let Some(curve) = self.curve(edge) else { continue };
             let screen = geometry::Curve { cubic: affine * curve.cubic, ..curve };
             let selected = self.edge.as_deref() == Some(edge.id.as_str());
-            let color = if selected { tm.border_accent } else { geometry::color(edge.color.as_deref()).unwrap_or(tm.text_muted) };
-            painter.stroke(&screen.path(), &Stroke::new(if selected { EDGE_WIDTH + 1.0 } else { EDGE_WIDTH }), color).draw();
+            let hovered = !selected && hovered_edge.as_deref() == Some(edge.id.as_str());
+            let color = if selected {
+                tm.border_accent
+            } else if hovered {
+                tm.border_accent.multiply_alpha(0.7)
+            } else {
+                geometry::color(edge.color.as_deref()).unwrap_or(tm.text_muted)
+            };
+            painter.stroke(&screen.path(), &Stroke::new(if selected || hovered { EDGE_WIDTH + 1.0 } else { EDGE_WIDTH }), color).draw();
             if edge.to_arrow() {
                 painter.fill(&screen.arrow(true, ARROW), color).draw();
             }
@@ -215,6 +230,25 @@ impl CanvasView {
             }
             _ => {}
         }
+
+        // Floating zoom panel, top right, as in Obsidian.
+        let (frame, buttons) = self.panel();
+        let shape = RoundedRect::from_rect(frame, size::ROUNDED_SM);
+        painter.fill(shape, tm.bg_surface).draw();
+        let over = self.pointer.filter(|_| self.gesture.is_none()).and_then(|p| self.panel_button_at(p));
+        for (button, rect) in ZoomButton::ALL.into_iter().zip(buttons) {
+            if over == Some(button) {
+                painter.fill(RoundedRect::from_rect(rect, size::ROUNDED_SM), tm.border_default.multiply_alpha(0.5)).draw();
+            }
+            let icon = match button {
+                ZoomButton::In => icons::PLUS,
+                ZoomButton::Out => icons::MINUS,
+                ZoomButton::Reset => icons::ROTATE_CCW,
+                ZoomButton::Fit => icons::MAXIMIZE,
+            };
+            icon.draw(painter, Point::new(rect.x0 + (PANEL_BUTTON - ICON) / 2.0, rect.y0 + (PANEL_BUTTON - ICON) / 2.0), ICON, 2.0, tm.text_secondary);
+        }
+        painter.stroke(shape, &Stroke::new(1.0), tm.border_default).draw();
 
         let line = Self::line_height();
         if self.canvas.nodes.is_empty() && !self.readonly {

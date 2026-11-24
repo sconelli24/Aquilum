@@ -1,4 +1,5 @@
 mod adaptive;
+mod calendar;
 mod canvas;
 mod damage;
 mod dataview_scroll;

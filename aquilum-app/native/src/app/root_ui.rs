@@ -93,6 +93,7 @@ impl App {
         let from = self.shown.replace(target).unwrap_or(target);
         let parts = ui::RootParts {
             workspace_name: &workspace_name,
+            calendar: self.initial_calendar(),
             note,
             sidebar_open: target.0,
             sidebar_from: from.0,

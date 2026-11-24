@@ -22,6 +22,7 @@ impl CanvasView {
             gesture: None,
             origins: Vec::new(),
             pointer: None,
+            space: false,
             moved_at: None,
             labels: Default::default(),
             asking: None,

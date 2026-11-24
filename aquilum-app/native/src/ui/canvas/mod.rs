@@ -74,6 +74,25 @@ struct Asking {
     pod: WidgetPod<dyn Widget>,
 }
 
+/// Buttons of the floating zoom panel, top to bottom.
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum ZoomButton {
+    In,
+    Out,
+    Reset,
+    Fit,
+}
+
+impl ZoomButton {
+    const ALL: [ZoomButton; 4] = [ZoomButton::In, ZoomButton::Out, ZoomButton::Reset, ZoomButton::Fit];
+}
+
+/// Side of a panel button and the gap to the board's corner, in screen pixels.
+const PANEL_BUTTON: f64 = 32.0;
+const PANEL_MARGIN: f64 = 12.0;
+/// Zoom step of the panel's + and − buttons.
+const PANEL_STEP: f64 = 1.25;
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum Gesture {
     Pan { last: Point, travelled: f64, slop: f64 },
@@ -106,6 +125,8 @@ pub struct CanvasView {
     /// Node positions when a move started, for every node that moves along.
     origins: Vec<(usize, f64, f64)>,
     pointer: Option<Point>,
+    /// Space is held: a left drag pans the board, as in Obsidian.
+    space: bool,
     moved_at: Option<Instant>,
     labels: HashMap<String, Line>,
     asking: Option<Asking>,
@@ -140,6 +161,37 @@ impl CanvasView {
     /// Centre of the view in board coordinates.
     pub fn center(&self) -> Point {
         Point::new(self.camera.center_x, -self.camera.center_y)
+    }
+
+    /// The panel's frame and the square of each button, in the widget's coordinates.
+    fn panel(&self) -> (Rect, [Rect; 4]) {
+        let x1 = self.size.width - PANEL_MARGIN;
+        let y0 = PANEL_MARGIN;
+        let buttons = std::array::from_fn(|i| {
+            let top = y0 + PANEL_BUTTON * i as f64;
+            Rect::new(x1 - PANEL_BUTTON, top, x1, top + PANEL_BUTTON)
+        });
+        (Rect::new(x1 - PANEL_BUTTON, y0, x1, y0 + PANEL_BUTTON * 4.0), buttons)
+    }
+
+    fn panel_button_at(&self, local: Point) -> Option<ZoomButton> {
+        let (_, buttons) = self.panel();
+        ZoomButton::ALL.into_iter().zip(buttons).find_map(|(button, rect)| rect.contains(local).then_some(button))
+    }
+
+    /// Does what a panel button says; the view zooms around its centre.
+    fn press_zoom_button(&mut self, button: ZoomButton) {
+        let centre = Point::new(self.size.width / 2.0, self.size.height / 2.0);
+        match button {
+            ZoomButton::In => self.zoom_at(PANEL_STEP, centre),
+            ZoomButton::Out => self.zoom_at(1.0 / PANEL_STEP, centre),
+            ZoomButton::Reset => self.zoom_at(1.0 / self.camera.scale, centre),
+            ZoomButton::Fit => {
+                let bounds = self.bounds(None);
+                self.fit(bounds, true);
+            }
+        }
+        self.moved();
     }
 
     fn zoom_at(&mut self, factor: f64, local: Point) {
