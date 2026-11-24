@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="Freaction/Aquilum"
+REPO="sconelli24/Aquilum"
 APP_DIR="$HOME/Applications"
 APP_PATH="$APP_DIR/Aquilum.app"
 
