@@ -150,7 +150,8 @@ impl State {
             d
         } else if self.levels.is_empty() && !self.paragraph && indented(line) {
             Block::Code { first: !self.indenting, last: !after.is_some_and(indented), fence: false, lang: None }
-        } else if let Some(level) = after.and_then(underline).filter(|_| self.levels.is_empty() && !rest.trim().is_empty()) {
+        // Only `===` underlines a title: `---` under a line of text is a divider, not a level 2 heading.
+        } else if let Some(level) = after.and_then(underline).filter(|&level| level == 1 && self.levels.is_empty() && !rest.trim().is_empty()) {
             Block::Heading { level, marker: 0 }
         } else {
             Block::Text

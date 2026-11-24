@@ -51,7 +51,8 @@ fn headings_atx_setext_and_non_headings() {
     assert_eq!(block(&doc, "###### Заголовок H6"), &Block::Heading { level: 6, marker: 7 });
     assert_eq!(block(&doc, "Заголовок H1 (Setext)"), &Block::Heading { level: 1, marker: 0 });
     assert_eq!(doc.block(at(&doc, "Заголовок H1 (Setext)") + 1), &Block::Underline);
-    assert_eq!(block(&doc, "Заголовок H2 (Setext)"), &Block::Heading { level: 2, marker: 0 });
+    assert_eq!(block(&doc, "Заголовок H2 (Setext)"), &Block::Text, "`---` under a line is a divider, not a heading");
+    assert_eq!(doc.block(at(&doc, "Заголовок H2 (Setext)") + 1), &Block::Rule);
     assert_eq!(block(&doc, "####### Семь решёток — это НЕ заголовок"), &Block::Text);
     assert_eq!(block(&doc, "#Без пробела — это НЕ заголовок"), &Block::Text);
     assert_eq!(block(&doc, "# Заголовок с закрывающими решётками #"), &Block::Heading { level: 1, marker: 2 });

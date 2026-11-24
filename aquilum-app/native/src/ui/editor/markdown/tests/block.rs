@@ -99,10 +99,10 @@ fn setext_headings_and_their_underline() {
     let b = blocks("Заголовок\n=========\n\nВторой\n---\n\nтекст\n---\n- пункт\n---");
     assert_eq!(b[0], Block::Heading { level: 1, marker: 0 });
     assert_eq!(b[1], Block::Underline);
-    assert_eq!(b[3], Block::Heading { level: 2, marker: 0 });
-    assert_eq!(b[4], Block::Underline);
-    assert_eq!(b[6], Block::Heading { level: 2, marker: 0 });
-    assert_eq!(b[7], Block::Underline);
+    assert_eq!(b[3], Block::Text, "dashes under text do not make a heading");
+    assert_eq!(b[4], Block::Rule);
+    assert_eq!(b[6], Block::Text);
+    assert_eq!(b[7], Block::Rule, "a divider right below a line of text stays a divider");
     assert!(matches!(b[8], Block::Item(_)));
     assert_eq!(b[9], Block::Rule, "a rule after a list item stays a rule");
 }
