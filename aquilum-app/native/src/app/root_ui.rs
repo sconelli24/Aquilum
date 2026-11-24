@@ -55,7 +55,9 @@ impl App {
             None => None,
         };
         theme::set_choice(theme::Choice { light: config.ui.light_theme.clone(), dark: config.ui.dark_theme.clone(), overrides });
-        theme::apply_setting(&config.ui.theme, self.system_dark, primary.unwrap_or(&config.ui.primary_color));
+        // Following the theme means no accent of our own: the theme keeps the one it was built with.
+        let accent = if config.ui.accent_auto { "" } else { primary.unwrap_or(&config.ui.primary_color) };
+        theme::apply_setting(&config.ui.theme, self.system_dark, accent);
         crate::ui::motion::set(config.ui.animations);
         i18n::set_language(&config.ui.language);
         theme::set_ui_font(UiFont {

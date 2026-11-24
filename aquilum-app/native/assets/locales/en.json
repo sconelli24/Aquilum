@@ -208,6 +208,8 @@
       "homePage": "Home page",
       "homePageHint": "Note for the home button in this knowledge base; empty — no button",
       "primaryColor": "Accent color",
+      "accentAuto": "Accent color from the theme",
+      "accentAutoHint": "Uses the accent of the chosen theme. Turn it off to pick one yourself",
       "animations": "Animations",
       "animationsHint": "Smooth dialogs, panels and tabs, switches, focus mode and graph transitions. When off, everything changes at once"
     },

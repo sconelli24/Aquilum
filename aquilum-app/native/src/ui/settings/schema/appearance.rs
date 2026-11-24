@@ -51,11 +51,22 @@ pub(super) fn ui(config: &AppConfig, ctx: &Context) -> Vec<Block> {
         let page = Control::Text { value: ctx.home_page.clone(), commit: false };
         display.push(bound(t("settings.ui.homePage"), Some(t("settings.ui.homePageHint")), page, Setter::HomePage));
     }
-    display.push(row(t("settings.ui.primaryColor"), None, Control::Color(config.ui.primary_color.clone()), |c, v| {
-        if let Some([r, g, b]) = crate::ui::theme::parse_hex(&text(v)) {
-            c.ui.primary_color = format!("#{r:02x}{g:02x}{b:02x}");
+    display.push(row(t("settings.ui.accentAuto"), Some(t("settings.ui.accentAutoHint")), Control::Switch(config.ui.accent_auto), |c, v| {
+        c.ui.accent_auto = flag(v);
+        if !c.ui.accent_auto
+            && let Some(shown) = crate::ui::theme::input_hex("blue-alpha-main")
+        {
+            // Switching to manual starts from the accent the theme has now, so nothing changes on screen.
+            c.ui.primary_color = shown;
         }
     }));
+    if !config.ui.accent_auto {
+        display.push(row(t("settings.ui.primaryColor"), None, Control::Color(config.ui.primary_color.clone()), |c, v| {
+            if let Some([r, g, b]) = crate::ui::theme::parse_hex(&text(v)) {
+                c.ui.primary_color = format!("#{r:02x}{g:02x}{b:02x}");
+            }
+        }));
+    }
     display.push(row(t("settings.ui.animations"), Some(t("settings.ui.animationsHint")), Control::Switch(config.ui.animations), |c, v| c.ui.animations = flag(v)));
     vec![
         Block { title: t("settings.ui.display"), rows: display },

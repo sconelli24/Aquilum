@@ -122,3 +122,25 @@ fn theme_edits_are_stored_per_theme_in_settings_units() {
     assert_eq!(edits["editor-heading-2-weight"], "600");
     assert!(!config.ui.theme_overrides.contains_key("light"));
 }
+
+#[test]
+fn turning_the_accent_switch_off_starts_from_the_accent_the_theme_has() {
+    let _lock = crate::ui::theme::test_lock();
+    let mut config = AppConfig::default();
+    config.ui.dark_theme = "catppuccin-mocha".into();
+    crate::ui::theme::set_choice(crate::ui::theme::Choice { light: config.ui.light_theme.clone(), dark: config.ui.dark_theme.clone(), overrides: Default::default() });
+    crate::ui::theme::apply_setting("dark", false, "");
+    let ctx = Context::new(1.0);
+    let rows = ui(&config, &ctx).remove(0).rows;
+    assert!(rows.iter().all(|row| row.label != t("settings.ui.primaryColor")), "the color picker is hidden while the accent follows the theme");
+    let switch = rows.into_iter().find(|row| row.label == t("settings.ui.accentAuto")).expect("the accent switch");
+    let Some(Setter::Config(set)) = switch.setter else { panic!("the switch is written to the settings") };
+    set(&mut config, &Value::Bool(false));
+    assert!(!config.ui.accent_auto);
+    assert_eq!(config.ui.primary_color, "#89b4fa", "the hand-picked color starts as the theme's accent");
+    assert!(ui(&config, &ctx).remove(0).rows.iter().any(|row| row.label == t("settings.ui.primaryColor")), "the picker shows in manual mode");
+    set(&mut config, &Value::Bool(true));
+    assert!(config.ui.accent_auto);
+    crate::ui::theme::set_choice(crate::ui::theme::Choice::default());
+    crate::ui::theme::apply_setting("light", false, "");
+}

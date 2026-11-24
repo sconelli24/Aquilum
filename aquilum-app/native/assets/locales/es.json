@@ -208,6 +208,8 @@
       "homePage": "Página de inicio",
       "homePageHint": "Nota del botón de inicio en esta base de conocimiento; vacío — sin botón",
       "primaryColor": "Color de acento",
+      "accentAuto": "Color de acento del tema",
+      "accentAutoHint": "Usa el acento del tema elegido. Desactívalo para elegir uno a mano",
       "animations": "Animaciones",
       "animationsHint": "Transiciones suaves en diálogos, paneles, pestañas, interruptores, modo concentración y grafo. Desactivadas, todo cambia al instante"
     },

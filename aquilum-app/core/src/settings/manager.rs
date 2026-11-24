@@ -61,8 +61,14 @@ fn overlay(base: &mut Value, over: Value) {
 
 fn parse(content: &str) -> Result<AppConfig, serde_json::Error> {
     let mut merged = serde_json::to_value(AppConfig::default())?;
-    overlay(&mut merged, serde_json::from_str(content)?);
+    let saved: Value = serde_json::from_str(content)?;
+    // Before the accent followed the theme, a color chosen by hand was the accent: keep it manual.
+    let chose_by_hand = saved.pointer("/ui/primaryColor").and_then(Value::as_str).is_some_and(|color| !color.eq_ignore_ascii_case(&AppConfig::default().ui.primary_color)) && saved.pointer("/ui/accentAuto").is_none();
+    overlay(&mut merged, saved);
     let mut config: AppConfig = serde_json::from_value(merged)?;
+    if chose_by_hand {
+        config.ui.accent_auto = false;
+    }
     // The red theme of 0.3.23 and the night mode no longer exist: both open as the dark theme.
     if matches!(config.ui.theme.as_str(), "red" | "night") {
         config.ui.theme = "dark".into();
@@ -121,6 +127,21 @@ mod tests {
 
             assert_eq!(config.ui.theme, "dark");
         }
+    }
+
+    #[test]
+    fn the_accent_follows_the_theme_unless_a_color_was_chosen_by_hand_before() {
+        let open = |json: &str| {
+            let dir = tempfile::tempdir().unwrap();
+            std::fs::write(dir.path().join("settings.json"), json).unwrap();
+            SettingsManager::new(dir.path()).get_config()
+        };
+        assert!(open("{}").ui.accent_auto, "a fresh profile follows the theme");
+        assert!(open(r##"{"ui":{"primaryColor":"#1471EB"}}"##).ui.accent_auto, "the default color was never a choice");
+        let manual = open(r##"{"ui":{"primaryColor":"#e05a2b"}}"##);
+        assert!(!manual.ui.accent_auto, "a color picked in an older version stays the accent");
+        assert_eq!(manual.ui.primary_color, "#e05a2b");
+        assert!(open(r##"{"ui":{"primaryColor":"#e05a2b","accentAuto":true}}"##).ui.accent_auto, "an explicit choice wins over the migration");
     }
 
     #[test]

@@ -172,6 +172,13 @@ impl Harness {
         }
     }
 
+    /// The animations switch: the lowest switch of the Interface section (the accent switch is above it).
+    pub(super) fn animations_switch(&self) -> WidgetId {
+        let Some(Popup::Settings { dialog, .. }) = &self.app.popup else { panic!("settings not open") };
+        let top = |id: &WidgetId| self.root.get_widget(*id).unwrap().ctx().bounding_box().y0;
+        dialog.bindings.iter().filter(|(_, b)| matches!(b, Binding::Switch(_))).map(|(id, _)| *id).max_by(|a, b| top(a).total_cmp(&top(b))).expect("animations switch")
+    }
+
     pub(super) fn open_section(&mut self, section: Section) {
         let center = self.root.get_widget(self.nav(section)).unwrap().ctx().bounding_box().center();
         self.click(center.x, center.y);

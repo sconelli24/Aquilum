@@ -155,7 +155,7 @@ fn animations_switch_turns_motion_off_and_on() {
     let mut h = Harness::new();
     h.click(242.0, 578.0);
     assert!(h.config().ui.animations && crate::ui::motion::on());
-    let switch = h.binding("animations switch", |b| matches!(b, Binding::Switch(_)));
+    let switch = h.animations_switch();
     let center = h.root.get_widget(switch).unwrap().ctx().bounding_box().center();
     h.click(center.x, center.y);
     assert!(!h.config().ui.animations);

@@ -158,6 +158,8 @@ pub struct UiSettings {
     pub theme_overrides: BTreeMap<String, BTreeMap<String, String>>,
     pub language: String,
     pub primary_color: String,
+    /// The accent color comes from the chosen theme; `primary_color` is only used when this is off.
+    pub accent_auto: bool,
     pub animations: bool,
     #[serde(flatten)]
     pub font: FontSettings,
@@ -172,6 +174,7 @@ impl Default for UiSettings {
             theme_overrides: BTreeMap::new(),
             language: String::new(),
             primary_color: "#1471eb".to_string(),
+            accent_auto: true,
             animations: true,
             font: FontSettings {
                 font_family: "Inter".to_string(),

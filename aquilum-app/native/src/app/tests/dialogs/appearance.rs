@@ -6,9 +6,18 @@ fn color_field(h: &Harness) -> masonry::core::WidgetId {
     h.binding("primary color field", |b| matches!(b, Binding::Text { value, .. } if value.starts_with('#')))
 }
 
+/// The accent follows the theme by default: tests of the hand-picked color switch that off first.
+fn manual_accent(h: &mut Harness) {
+    let mut config = h.config();
+    config.ui.accent_auto = false;
+    h.app.workspace.core.settings.update_config(config).unwrap();
+    h.app.restyle(&mut h.root, false, None);
+}
+
 #[test]
 fn primary_color_field_updates_settings() {
     let mut h = Harness::new();
+    manual_accent(&mut h);
     h.click(242.0, 578.0);
     assert_eq!(h.section(), Some(Section::Ui));
     let field = color_field(&h);
@@ -67,6 +76,7 @@ fn explicit_themes_ignore_desktop_changes_but_remember_the_latest_preference() {
 #[test]
 fn primary_color_typed_into_field() {
     let mut h = Harness::new();
+    manual_accent(&mut h);
     h.click(242.0, 578.0);
     let field = color_field(&h);
     h.root.focus_on(Some(field));
@@ -127,6 +137,7 @@ fn restyle_matches_fresh_build() {
 #[test]
 fn color_picker_previews_live_and_saves_on_close() {
     let mut h = Harness::new();
+    manual_accent(&mut h);
     h.app.open_settings(&mut h.root);
     h.settle();
     let swatch = h.binding("color swatch", |b| matches!(b, Binding::Color(_)));
@@ -156,6 +167,7 @@ fn color_picker_previews_live_and_saves_on_close() {
 #[test]
 fn a_preset_swatch_sets_the_accent_at_once_and_is_saved_on_close() {
     let mut h = Harness::new();
+    manual_accent(&mut h);
     h.app.open_settings(&mut h.root);
     h.settle();
     let swatch = h.binding("color swatch", |b| matches!(b, Binding::Color(_)));
@@ -205,3 +217,27 @@ fn a_chosen_dark_theme_applies_in_dark_mode() {
     h.app.restyle(&mut h.root, false, None);
     assert_eq!(theme::active().id, "light");
 }
+
+#[test]
+fn the_accent_follows_the_chosen_theme_until_it_is_picked_by_hand() {
+    let mut h = Harness::new();
+    assert!(AppConfig::default().ui.accent_auto);
+    let mut config = h.config();
+    config.ui.theme = "dark".into();
+    config.ui.dark_theme = "catppuccin-mocha".into();
+    config.ui.primary_color = "#e05a2b".into();
+    h.app.workspace.core.settings.update_config(config).unwrap();
+    h.app.restyle(&mut h.root, false, None);
+    assert_eq!(theme::current().bg_accent.to_rgba8().to_u8_array(), [0x89, 0xb4, 0xfa, 0xff], "with the switch on the stored color is ignored");
+    let mut config = h.config();
+    config.ui.dark_theme = "catppuccin-macchiato".into();
+    h.app.workspace.core.settings.update_config(config).unwrap();
+    h.app.restyle(&mut h.root, false, None);
+    assert_eq!(theme::current().bg_accent.to_rgba8().to_u8_array(), [0x8a, 0xad, 0xf4, 0xff], "another theme brings its own accent");
+    let mut config = h.config();
+    config.ui.accent_auto = false;
+    h.app.workspace.core.settings.update_config(config).unwrap();
+    h.app.restyle(&mut h.root, false, None);
+    assert_eq!(theme::current().bg_accent.to_rgba8().to_u8_array(), [0xe0, 0x5a, 0x2b, 0xff], "manual mode uses the stored color");
+}
+

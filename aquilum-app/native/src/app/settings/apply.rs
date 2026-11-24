@@ -154,7 +154,7 @@ impl App {
         change(&mut after);
         let language_changed = before.ui.language != after.ui.language;
         let themes_changed = before.ui.light_theme != after.ui.light_theme || before.ui.dark_theme != after.ui.dark_theme || before.ui.theme_overrides != after.ui.theme_overrides;
-        let colors_changed = before.ui.theme != after.ui.theme || before.ui.primary_color != after.ui.primary_color || themes_changed;
+        let colors_changed = before.ui.theme != after.ui.theme || before.ui.primary_color != after.ui.primary_color || before.ui.accent_auto != after.ui.accent_auto || themes_changed;
         let fonts_changed = before.ui.font != after.ui.font
             || before.editor.font != after.editor.font
             || before.editor.line_height != after.editor.line_height
@@ -167,6 +167,7 @@ impl App {
         let smart_changed = smart != crate::ui::editor::Smart::from_config(&before);
         crate::ui::motion::set(after.ui.animations);
         let rows_changed = before.ui.animations != after.ui.animations
+            || before.ui.accent_auto != after.ui.accent_auto
             || themes_changed
             || before.analysis.enable_bm25f != after.analysis.enable_bm25f
             || before.updates.auto != after.updates.auto

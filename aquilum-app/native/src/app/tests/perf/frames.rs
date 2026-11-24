@@ -94,7 +94,7 @@ fn the_animations_switch_does_not_touch_an_animated_cover() {
     h.open(note);
     h.wait_cover(true);
     h.click(242.0, 578.0);
-    let switch = h.binding("переключатель анимаций", |b| matches!(b, crate::ui::settings::Binding::Switch(_)));
+    let switch = h.animations_switch();
     let center = h.root.get_widget(switch).unwrap().ctx().bounding_box().center();
     let alive = |h: &mut Harness| {
         h.anim(Duration::from_secs(1));
