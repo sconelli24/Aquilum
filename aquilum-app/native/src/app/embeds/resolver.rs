@@ -2,8 +2,8 @@ use std::collections::HashSet;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 
-use super::{Embeds, Entry, book, claim, dataview, links, media, refresh_after};
-use crate::ui::editor::resolve::{Book, Fetch, Grid, Media, Request, Resolver};
+use super::{Embeds, Entry, book, claim, dataview, links, media, note, refresh_after};
+use crate::ui::editor::resolve::{Book, Fetch, Grid, Media, NoteText, Request, Resolver};
 
 const SUGGESTIONS: usize = 12;
 
@@ -56,6 +56,21 @@ impl Resolver for Embeds {
         (value, stamp)
     }
 
+    fn note(&self, target: &str, anchor: Option<&str>) -> (Fetch<NoteText>, u64) {
+        let (target, anchor) = (target.to_owned(), anchor.map(str::to_owned));
+        let key = format!("{target}\0{}", anchor.as_deref().unwrap_or_default());
+        let (fetched, stamp) = self.fetch(|i| &i.notes, &key, move |inner| note::load(inner, &target, anchor.as_deref()));
+        let inside = match &fetched {
+            Fetch::Ready(shown) if shown.blocked.is_none() => self.nested(shown.path.clone()).revision(),
+            _ => 0,
+        };
+        (fetched, stamp.wrapping_mul(1_000_003).wrapping_add(inside))
+    }
+
+    fn nested(&self, note: &std::path::Path) -> Option<Arc<dyn Resolver>> {
+        Some(Arc::new(Embeds::nested(self, note.to_path_buf())))
+    }
+
     fn suggest(&self, query: &str) -> Option<Vec<String>> {
         let (text, key) = (query.to_owned(), query.to_lowercase());
         self.0.suggestions.entries.lock().unwrap_or_else(|e| e.into_inner()).retain(|k, _| *k == key);
@@ -88,6 +103,7 @@ impl Resolver for Embeds {
         self.0.media.sweep(|key| media::forget_key(&self.shared(key)));
         self.0.grids.sweep(|_| {});
         self.0.books.sweep(|_| {});
+        self.0.notes.sweep(|_| {});
     }
 
     fn request(&self, request: Request) {

@@ -55,6 +55,28 @@ pub struct Media {
     pub path: Option<std::path::PathBuf>,
 }
 
+/// Why an embedded note is not drawn.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Blocked {
+    /// The note is already being shown further up, so showing it again would never end.
+    Loop,
+    /// Embeds go only so many notes deep.
+    Depth,
+}
+
+/// A note, or part of one, shown inside another note.
+#[derive(Clone, Debug, PartialEq)]
+pub struct NoteText {
+    pub path: std::path::PathBuf,
+    pub title: String,
+    /// The heading or block id the embed points at, if any.
+    pub label: Option<String>,
+    pub text: Arc<str>,
+    /// Where `text` starts in the file, so opening the note can land there.
+    pub start: usize,
+    pub blocked: Option<Blocked>,
+}
+
 #[derive(Clone, Debug)]
 pub enum Request {
     TableMenu { at: Point, commands: Vec<(Command, bool)> },
@@ -79,6 +101,14 @@ pub trait Resolver: Send + Sync {
     fn dataview(&self, query: &str) -> (Fetch<Grid>, u64);
     fn media(&self, source: &str, wiki: bool) -> (Fetch<Media>, u64);
     fn book(&self, target: &str) -> (Fetch<Book>, u64);
+    /// A note, a section (`anchor` is a heading) or a block (`anchor` is `^id`) to show inside the open note.
+    fn note(&self, _target: &str, _anchor: Option<&str>) -> (Fetch<NoteText>, u64) {
+        (Fetch::Missing(String::new()), 0)
+    }
+    /// What resolves the embeds of a note that is itself shown inside this one: one level deeper, aware of the notes above.
+    fn nested(&self, _note: &std::path::Path) -> Option<Arc<dyn Resolver>> {
+        None
+    }
     fn request(&self, request: Request);
     fn sweep(&self) {}
     fn suggest(&self, _query: &str) -> Option<Vec<String>> {

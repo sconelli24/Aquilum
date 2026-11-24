@@ -3,6 +3,7 @@ mod cache;
 mod dataview;
 mod links;
 mod media;
+mod note;
 mod resolver;
 #[cfg(test)]
 mod testing;
@@ -17,7 +18,7 @@ use std::time::Duration;
 use aquilum_core::Core;
 use aquilum_core::search::paths::is_markdown;
 
-use crate::ui::editor::resolve::{Book, Fetch, Grid, Media, Request, Resolver};
+use crate::ui::editor::resolve::{Book, Fetch, Grid, Media, NoteText, Request, Resolver};
 use cache::{Cache, Entry, claim, commit, settle};
 
 struct Inner {
@@ -31,6 +32,13 @@ struct Inner {
     grids: Cache<Grid>,
     media: Cache<Media>,
     books: Cache<Book>,
+    notes: Cache<NoteText>,
+    /// The notes whose text is being drawn around this one, itself included: an embed of any of them would loop.
+    chain: Vec<PathBuf>,
+    depth: u8,
+    /// The embeds of notes shown inside this one, one per note, so their caches survive a re-layout.
+    children: Mutex<std::collections::HashMap<PathBuf, Embeds>>,
+    parent: Option<std::sync::Weak<Inner>>,
     suggestions: Cache<Vec<String>>,
     links: Mutex<links::Links>,
     book_queue: Mutex<BookQueue>,
@@ -46,6 +54,9 @@ struct BookQueue {
 impl Inner {
     fn touch(&self) {
         self.changed.store(true, Ordering::Release);
+        if let Some(parent) = self.parent.as_ref().and_then(std::sync::Weak::upgrade) {
+            parent.touch();
+        }
         (self.wake)();
     }
 
@@ -63,6 +74,7 @@ pub struct Embeds(Arc<Inner>);
 
 impl Embeds {
     pub fn new(core: Arc<Core>, root: PathBuf, document: PathBuf, cache: PathBuf, wake: Arc<dyn Fn() + Send + Sync>) -> Self {
+        let chain = vec![document.clone()];
         Embeds(Arc::new(Inner {
             core,
             root,
@@ -74,11 +86,55 @@ impl Embeds {
             grids: Cache::default(),
             media: Cache::default(),
             books: Cache::default(),
+            notes: Cache::default(),
+            chain,
+            depth: 0,
+            children: Mutex::default(),
+            parent: None,
             suggestions: Cache::default(),
             links: Mutex::default(),
             book_queue: Mutex::default(),
             requests: Mutex::new(Vec::new()),
         }))
+    }
+
+    /// What draws a note shown inside this one: the same vault and wake-up, one note and one level deeper.
+    pub fn nested(&self, note: PathBuf) -> Embeds {
+        if let Some(known) = self.0.children.lock().unwrap_or_else(|e| e.into_inner()).get(&note) {
+            return known.clone();
+        }
+        let note_key = note.clone();
+        let mut chain = self.0.chain.clone();
+        chain.push(note.clone());
+        let child = Embeds(Arc::new(Inner {
+            core: Arc::clone(&self.0.core),
+            root: self.0.root.clone(),
+            document: note,
+            cache: self.0.cache.clone(),
+            wake: Arc::clone(&self.0.wake),
+            stamps: AtomicU64::new(0),
+            changed: AtomicBool::new(false),
+            grids: Cache::default(),
+            media: Cache::default(),
+            books: Cache::default(),
+            notes: Cache::default(),
+            chain,
+            depth: self.0.depth + 1,
+            children: Mutex::default(),
+            parent: Some(Arc::downgrade(&self.0)),
+            suggestions: Cache::default(),
+            links: Mutex::default(),
+            book_queue: Mutex::default(),
+            requests: Mutex::new(Vec::new()),
+        }));
+        self.0.children.lock().unwrap_or_else(|e| e.into_inner()).insert(note_key, child.clone());
+        child
+    }
+
+    /// Changes anywhere below this embed: it grows when a nested cache takes a new value.
+    pub fn revision(&self) -> u64 {
+        let nested: u64 = self.0.children.lock().unwrap_or_else(|e| e.into_inner()).values().map(Embeds::revision).sum();
+        self.0.stamps.load(Ordering::Acquire) + nested
     }
 
     pub fn root(&self) -> &Path {
@@ -101,7 +157,7 @@ impl Embeds {
         fn running<T>(cache: &Cache<T>) -> bool {
             cache.entries.lock().unwrap_or_else(|e| e.into_inner()).values().any(|e| e.running)
         }
-        running(&self.0.grids) || running(&self.0.media) || running(&self.0.books)
+        running(&self.0.grids) || running(&self.0.media) || running(&self.0.books) || running(&self.0.notes) || self.0.children.lock().unwrap_or_else(|e| e.into_inner()).values().any(Embeds::busy)
     }
 
     fn shared(&self, key: &str) -> String {
@@ -121,7 +177,11 @@ impl Embeds {
         }
         if paths.iter().any(|p| is_markdown(p)) {
             self.0.books.epoch.fetch_add(1, Ordering::AcqRel);
+            self.0.notes.epoch.fetch_add(1, Ordering::AcqRel);
             stale = true;
+        }
+        for child in self.0.children.lock().unwrap_or_else(|e| e.into_inner()).values() {
+            child.forget_paths(paths);
         }
         if stale {
             self.0.touch();
@@ -135,6 +195,10 @@ impl Embeds {
         commit(&self.0.grids, &self.0.stamps);
         commit(&self.0.media, &self.0.stamps);
         commit(&self.0.books, &self.0.stamps);
+        commit(&self.0.notes, &self.0.stamps);
+        for child in self.0.children.lock().unwrap_or_else(|e| e.into_inner()).values() {
+            child.take_changed();
+        }
         commit(&self.0.suggestions, &self.0.stamps);
         true
     }
@@ -162,6 +226,10 @@ fn forget(inner: &Arc<Inner>) {
     inner.grids.epoch.fetch_add(1, Ordering::AcqRel);
     inner.suggestions.epoch.fetch_add(1, Ordering::AcqRel);
     inner.books.epoch.fetch_add(1, Ordering::AcqRel);
+    inner.notes.epoch.fetch_add(1, Ordering::AcqRel);
+    for child in inner.children.lock().unwrap_or_else(|e| e.into_inner()).values() {
+        forget(&child.0);
+    }
     links::refresh(inner);
     inner.touch();
 }
