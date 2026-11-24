@@ -49,6 +49,11 @@ impl Host {
         if self.app.find_key(root, key, modifiers) {
             return true;
         }
+        // Supr deletes the files selected in the tree, but only when nothing has the focus (see `App::delete_selected`).
+        if matches!(key, Key::Named(NamedKey::Delete)) && modifiers.is_empty() && !repeat && let Some(outcome) = self.app.delete_selected(root) {
+            self.apply(outcome);
+            return true;
+        }
         let outcome = self.app.search_key(root, key, modifiers).or_else(|| self.app.templates_key(root, key, modifiers)).or_else(|| self.app.palette_key(root, key, modifiers)).or_else(|| self.app.settings_key(root, key, modifiers));
         let Some(outcome) = outcome else { return false };
         self.apply(outcome);

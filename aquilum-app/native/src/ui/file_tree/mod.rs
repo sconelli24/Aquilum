@@ -130,6 +130,11 @@ impl FileTree {
         self.show_row(root, index);
     }
 
+    /// Rows a key like Supr acts on: the selected ones, or the one clicked last.
+    pub fn selected_paths(&self) -> Vec<PathBuf> {
+        self.model.selection_or_clicked()
+    }
+
     pub fn clear_selection(&mut self, root: &mut RenderRoot) {
         self.model.clear_selection();
         self.refresh(root);

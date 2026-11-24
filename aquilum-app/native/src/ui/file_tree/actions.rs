@@ -121,11 +121,8 @@ impl FileTree {
     }
 
     fn context_menu(&mut self, root: &mut RenderRoot, index: usize, at: Point) -> Option<TreeAction> {
+        // Every row has its menu: images, books and PDFs can be renamed, duplicated and deleted like notes.
         let row = self.model.rows()[index].clone();
-        let note = aquilum_core::search::paths::is_note(&row.path) || aquilum_core::search::paths::is_canvas(&row.path);
-        if !row.folder && !note {
-            return None;
-        }
         let targets = self.model.focus(index);
         self.refresh(root);
         Some(TreeAction::ContextMenu { targets, clicked: row.path, folder: row.folder, at })

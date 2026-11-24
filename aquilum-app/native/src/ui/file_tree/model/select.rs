@@ -43,6 +43,16 @@ impl TreeModel {
         Some(Press::Open { path: row.path, new_tab: false })
     }
 
+    /// What a key like Supr acts on: the selected rows or, when none is selected, the row clicked last.
+    pub fn selection_or_clicked(&self) -> Vec<PathBuf> {
+        let selected: Vec<PathBuf> = self.rows.iter().filter(|row| row.selected).map(|row| row.path.clone()).collect();
+        if !selected.is_empty() {
+            return selected;
+        }
+        let key = self.anchor.as_deref().map(comparable);
+        self.rows.iter().filter(|row| key.as_deref() == Some(comparable(&row.path).as_str())).map(|row| row.path.clone()).collect()
+    }
+
     pub fn focus(&mut self, index: usize) -> Vec<PathBuf> {
         let Some(row) = self.rows.get(index).cloned() else { return Vec::new() };
         let key = comparable(&row.path);

@@ -50,6 +50,20 @@ impl App {
         })
     }
 
+    /// Supr on the files selected in the tree. A text field, the canvas or any other widget that has the focus keeps the key, so this
+    /// never deletes files while you type or edit; the usual confirmation still comes first.
+    pub fn delete_selected(&mut self, root: &mut RenderRoot) -> Option<Outcome> {
+        if root.focused_widget().is_some() {
+            return None;
+        }
+        let targets = self.tree.selected_paths();
+        if targets.is_empty() {
+            return None;
+        }
+        self.confirm_delete(root, targets);
+        Some(Outcome::default())
+    }
+
     fn cycle_tab(&mut self, root: &mut RenderRoot, forward: bool) -> Outcome {
         let ids: Vec<_> = self.tabs.tabs().iter().map(|tab| tab.id).collect();
         if ids.is_empty() {
