@@ -15,6 +15,7 @@ mod keys;
 mod memory;
 mod misc;
 mod navigation;
+mod note_embeds;
 mod notes;
 mod palette;
 mod panels;

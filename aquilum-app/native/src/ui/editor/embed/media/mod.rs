@@ -7,7 +7,7 @@ mod view;
 
 pub use format::{format, media_line};
 pub use hit::{MediaHit, MediaOverlay};
-pub use markdown::{EmbedLine, is_embed, is_html_image, parse};
+pub use markdown::{EmbedLine, NoteEmbed, is_embed, is_html_image, note_embed, parse};
 pub use paint::draw_image;
 pub use view::MediaView;
 

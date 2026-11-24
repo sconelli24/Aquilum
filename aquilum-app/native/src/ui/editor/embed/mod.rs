@@ -4,6 +4,7 @@ mod drawing;
 mod math;
 pub mod media;
 mod metrics;
+mod note;
 pub mod panel;
 mod spec;
 
@@ -18,6 +19,7 @@ pub use dataview::dataview;
 pub use drawing::{Action, Drawing};
 pub use math::{Formula, formula, math};
 pub use media::{MediaHit, MediaOverlay, MediaView};
+pub use note::{Body as NoteBody, note};
 pub use spec::{Font, Spec};
 
 pub enum View {

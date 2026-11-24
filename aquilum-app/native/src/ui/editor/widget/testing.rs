@@ -31,6 +31,25 @@ impl TextEditor {
 }
 
 impl TextEditor {
+    /// Height and click targets of every card drawn in place of one or more lines (dataview, books, notes shown inside the note).
+    pub fn cards(&self) -> Vec<(f64, Vec<String>)> {
+        self.card_places().into_iter().map(|(_, height, links)| (height, links)).collect()
+    }
+
+    /// Where each card starts (x, y in the editor) with its height and click targets.
+    pub fn card_places(&self) -> Vec<(Point, f64, Vec<String>)> {
+        use crate::ui::editor::embed::{Action, View};
+        self.doc
+            .paragraphs()
+            .enumerate()
+            .filter(|(_, p)| p.fold == Fold::Head)
+            .filter_map(|(i, p)| match p.embed.map(|e| &e.view) {
+                Some(View::Drawing(drawing)) => Some((Point::new(self.embed_x(i), self.doc.top(i)), drawing.height, drawing.hits.iter().filter_map(|(_, action, _)| if let Action::Link { target } = action { Some(target.clone()) } else { None }).collect())),
+                _ => None,
+            })
+            .collect()
+    }
+
     pub fn card_scrollbar(&self) -> Option<crate::ui::scroll::bar::Span> {
         self.doc.paragraphs().filter(|p| p.fold == Fold::Head).find_map(|p| self.block_span(p.start))
     }

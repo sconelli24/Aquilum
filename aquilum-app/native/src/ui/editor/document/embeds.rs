@@ -9,12 +9,14 @@ use masonry::parley::{FontContext, LayoutContext};
 use super::super::embed::{self, Font, MediaView, Spec, View};
 use super::super::embed::media;
 use super::super::highlight::Lang;
-use super::super::resolve::{Fetch, Grid, Media};
+use super::super::resolve::{Blocked, Fetch, Grid, Media, NoteText};
 use super::super::markdown::{self, Block, Callout, Frame, Part, Reveal};
 use super::super::table::{self, TableView};
 use super::{Document, Embed, text};
 
 const LABEL_SIZE: u8 = 12;
+/// Space between the frame of a note shown inside a note and its text.
+const NOTE_PAD: f64 = 12.0;
 
 enum Fetched {
     Table,
@@ -22,6 +24,7 @@ enum Fetched {
     Media(media::EmbedLine, Fetch<Media>),
     Books(Vec<embed::BookRow>),
     Math(String),
+    Note(media::NoteEmbed, Fetch<NoteText>),
 }
 
 fn book_header(header: &str) -> (bool, String, String) {
@@ -104,6 +107,15 @@ impl Document {
                     _ => return None,
                 }
             }
+            (Block::Image, Some(resolver)) if media::note_embed(lines[0]).is_some() => {
+                let note = media::note_embed(lines[0])?;
+                let (fetched, stamp) = resolver.note(&note.target, note.anchor.as_deref());
+                if matches!(fetched, Fetch::Missing(_)) {
+                    self.embeds.remove(first);
+                    return None;
+                }
+                (Fetched::Note(note, fetched), stamp)
+            }
             (Block::Image, Some(resolver)) => {
                 let mut line = media::parse(lines[0]);
                 if let Some((_, width)) = self.resized.filter(|(at, _)| *at == start) {
@@ -159,6 +171,34 @@ impl Document {
             Fetched::Grid(grid) => View::Drawing(embed::dataview(&grid, available, self.print, &mut |spec| text::spec_layout(fcx, lcx, styles, fonts, spec))),
             Fetched::Media(line, fetched) => View::Media(MediaView::new(&fetched, line, available, self.uncropped == Some(start))),
             Fetched::Books(rows) => View::Drawing(embed::books(&rows, available, &mut |spec| text::spec_layout(fcx, lcx, styles, fonts, spec))),
+            Fetched::Note(note, fetched) => {
+                let width = (available - NOTE_PAD * 2.0).max(0.0);
+                let title_text = match &fetched {
+                    Fetch::Ready(shown) => match &shown.label {
+                        Some(label) => format!("{} › {label}", shown.title),
+                        None => shown.title.clone(),
+                    },
+                    _ => note.target.clone(),
+                };
+                let title = text::spec_layout(fcx, lcx, styles, fonts, &Spec { wrap: Some(width), ..Spec::plain(&title_text, Font::Ui(LABEL_SIZE + 1), markdown::LINK) });
+                let notice = |fcx: &mut FontContext, lcx: &mut LayoutContext<BrushIndex>, message: &str| {
+                    embed::NoteBody::Notice(text::spec_layout(fcx, lcx, styles, fonts, &Spec { wrap: Some(width), ..Spec::plain(message, Font::Ui(LABEL_SIZE + 1), markdown::SYNTAX) }))
+                };
+                let body = match &fetched {
+                    Fetch::Ready(shown) => match shown.blocked {
+                        Some(Blocked::Loop) => notice(fcx, lcx, &crate::i18n::t("editor.noteLoop")),
+                        Some(Blocked::Depth) => notice(fcx, lcx, &crate::i18n::t("editor.noteDepth")),
+                        None => {
+                            let nested = self.resolver.as_ref().and_then(|resolver| resolver.nested(&shown.path));
+                            let smart = crate::ui::editor::Smart { callouts: fonts.callouts, tags: fonts.tags, ..Default::default() };
+                            let (scene, height) = crate::ui::editor::TextEditor::render_nested(crop::Rope::from(shown.text.as_ref()), nested, smart, width, fcx, lcx);
+                            embed::NoteBody::Content(std::sync::Arc::new(scene), height)
+                        }
+                    },
+                    _ => notice(fcx, lcx, &crate::i18n::t("editor.noteLoading")),
+                };
+                View::Drawing(embed::note(available, title, &title_text, &note.link(), body))
+            }
             Fetched::Math(body) => match embed::math(&body, f64::from(fonts.size), available) {
                 Some(drawing) => View::Drawing(drawing),
                 None => {

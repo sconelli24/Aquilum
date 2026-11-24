@@ -87,7 +87,7 @@ fn media_lines_follow_tauri_rules() {
 ![](f(1).png)");
     assert_eq!(b[0], Block::Image);
     assert_eq!(b[1], Block::Image);
-    assert_ne!(b[2], Block::Image, "wiki embed without a media extension is not an image");
+    assert_eq!(b[2], Block::Image, "a wiki embed without a media extension is a note embed line");
     assert_ne!(b[3], Block::Image, "two images in a line are not an image block");
     assert_eq!(b[4], Block::Image);
     assert_ne!(b[5], Block::Image);

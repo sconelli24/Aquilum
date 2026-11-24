@@ -30,10 +30,44 @@ fn embeddable(source: &str) -> bool {
     images::kind(source).is_some() || images::extension(source).is_none()
 }
 
+/// A note shown inside the note: `![[Note]]`, `![[Note#Heading]]` or `![[Note#^block-id]]` on a line of its own.
+#[derive(Clone, Debug, PartialEq)]
+pub struct NoteEmbed {
+    pub target: String,
+    pub anchor: Option<String>,
+}
+
+impl NoteEmbed {
+    /// The target as a link spells it, to open the note at the same place.
+    pub fn link(&self) -> String {
+        match &self.anchor {
+            Some(anchor) => format!("{}#{anchor}", self.target),
+            None => self.target.clone(),
+        }
+    }
+}
+
+fn is_note_target(note: &str) -> bool {
+    let note = note.trim();
+    !note.is_empty() && (images::extension(note).is_none() || note.to_lowercase().ends_with(".md"))
+}
+
+pub fn note_embed(line: &str) -> Option<NoteEmbed> {
+    let inner = line.trim().strip_prefix("![[")?.strip_suffix("]]")?;
+    if inner.contains(['[', ']']) {
+        return None;
+    }
+    let link = split(inner);
+    if images::kind(link.note).is_some() || !is_note_target(link.note) {
+        return None;
+    }
+    Some(NoteEmbed { target: link.note.trim().to_owned(), anchor: link.anchor.map(|a| a.trim().to_owned()).filter(|a| !a.is_empty()) })
+}
+
 pub fn is_embed(line: &str) -> bool {
     let line = line.trim();
     if let Some(inner) = line.strip_prefix("![[").and_then(|l| l.strip_suffix("]]")) {
-        return !inner.contains(['[', ']']) && images::kind(split(inner).note).is_some();
+        return !inner.contains(['[', ']']) && (images::kind(split(inner).note).is_some() || note_embed(line).is_some());
     }
     let Some(rest) = line.strip_prefix("![") else { return false };
     let Some(close) = rest.find(']') else { return false };
@@ -139,11 +173,24 @@ mod tests {
 
     #[test]
     fn only_decodable_images_and_playable_videos_are_embeds() {
-        for line in ["![[a.png]]", "![[a.PNG|300]]", "![[clip.mp4]]", "![[a.png#x|10]]", "![](a.jpg)", "![](https://x.io/photo)", "![alt](<Files/a b.webp> \"t\")"] {
+        for line in ["![[a.png]]", "![[a.PNG|300]]", "![[clip.mp4]]", "![[a.png#x|10]]", "![[Заметка]]", "![[Заметка#Раздел]]", "![[Заметка#^id]]", "![[Папка/Заметка.md]]", "![](a.jpg)", "![](https://x.io/photo)", "![alt](<Files/a b.webp> \"t\")"] {
             assert!(is_embed(line), "{line}");
         }
-        for line in ["![[a.svg]]", "![[a.avif|200]]", "![[doc.pdf]]", "![[Заметка]]", "![](a.svg)", "![](https://x.io/a.avif?w=1)", "![](a.png", "![](a.pdf)"] {
+        for line in ["![[a.svg]]", "![[a.avif|200]]", "![[doc.pdf]]", "![[book.epub]]", "![[Заметка]] и текст", "![[]]", "![[a[b]]]", "![](a.svg)", "![](https://x.io/a.avif?w=1)", "![](a.png", "![](a.pdf)"] {
             assert!(!is_embed(line), "{line}");
+        }
+    }
+
+    #[test]
+    fn a_note_embed_names_the_note_and_where_in_it() {
+        let whole = note_embed("![[Заметка]]").unwrap();
+        assert_eq!((whole.target.as_str(), whole.anchor.as_deref(), whole.link().as_str()), ("Заметка", None, "Заметка"));
+        let part = note_embed("  ![[ Заметка # Раздел два ]]  ").unwrap();
+        assert_eq!((part.target.as_str(), part.anchor.as_deref(), part.link().as_str()), ("Заметка", Some("Раздел два"), "Заметка#Раздел два"));
+        assert_eq!(note_embed("![[Заметка#^abc-1]]").unwrap().anchor.as_deref(), Some("^abc-1"));
+        assert_eq!(note_embed("![[Заметка#]]").unwrap().anchor, None, "an empty anchor is the whole note");
+        for line in ["![[a.png]]", "![[clip.mp4]]", "![[doc.pdf]]", "[[Заметка]]", "![[Заметка]] после", "![](a.png)"] {
+            assert!(note_embed(line).is_none(), "{line}");
         }
     }
 

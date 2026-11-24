@@ -1,7 +1,7 @@
 use std::ops::Range;
 
 use masonry::core::{BrushIndex, render_text};
-use masonry::imaging::record::Glyph;
+use masonry::imaging::record::{Glyph, Scene, replay_transformed};
 use masonry::imaging::{Composite, GroupRef, PaintSink, Painter};
 use masonry::kurbo::{Affine, BezPath, Point, Rect, RoundedRect, Stroke};
 use masonry::parley::Layout;
@@ -34,6 +34,8 @@ pub(super) enum Item {
     Dim(Box<Item>),
     Path(BezPath, Option<Color>, Option<Stroke>),
     Glyphs(FontData, f32, Vec<Glyph>, Option<Color>),
+    /// Something drawn beforehand, such as the body of a note shown inside a note.
+    Scene(Point, std::sync::Arc<Scene>),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -178,6 +180,7 @@ pub(super) fn paint_item<S: PaintSink + ?Sized>(painter: &mut Painter<'_, S>, it
             Some(stroke) => painter.stroke(path, stroke, ink(color, palette)).transform(at).draw(),
             None => painter.fill(path, ink(color, palette)).transform(at).draw(),
         },
+        Item::Scene(p, scene) => replay_transformed(scene, painter.sink_mut(), at * Affine::translate(p.to_vec2())),
         Item::Glyphs(font, size, glyphs, color) => painter.glyphs(font, ink(color, palette)).transform(at).font_size(*size).hint(true).draw(&Style::Fill(Fill::NonZero), glyphs),
     }
 }
