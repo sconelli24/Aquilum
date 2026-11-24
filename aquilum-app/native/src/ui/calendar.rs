@@ -281,6 +281,7 @@ impl Widget for CalendarPanel {
         let tm = theme::current();
         let language = i18n::language();
         let hover = tm.border_default.multiply_alpha(0.5);
+        painter.fill(Rect::new(0.0, 0.0, self.size.width, self.size.height), tm.calendar_bg).draw();
         painter.fill(Rect::new(0.0, 0.0, self.size.width, 1.0), tm.border_default).draw();
 
         // Title and arrows.
@@ -317,14 +318,14 @@ impl Widget for CalendarPanel {
                     painter.fill(Circle::new(center, CELL / 2.0 - 1.0), hover).draw();
                 }
                 if is_today {
-                    painter.fill(Circle::new(center, CELL / 2.0 - 1.0), tm.border_accent.multiply_alpha(0.25)).draw();
+                    painter.fill(Circle::new(center, CELL / 2.0 - 1.0), tm.calendar_accent.multiply_alpha(0.25)).draw();
                 }
                 let key = DAY_KEYS[date.day0() as usize];
                 let text_color = if is_today { tm.text_primary } else { tm.text_secondary };
                 let number = date.day().to_string();
                 self.text(ctx, painter, key, &number, Rect::new(area.x0, area.y0 - 2.0, area.x1, area.y1 - 2.0), Align::Center, text_color);
                 if self.marked.contains(&date.day()) {
-                    painter.fill(Circle::new(Point::new(center.x, area.y1 - 4.0), 1.75), tm.border_accent).draw();
+                    painter.fill(Circle::new(Point::new(center.x, area.y1 - 4.0), 1.75), tm.calendar_accent).draw();
                 }
             }
         }

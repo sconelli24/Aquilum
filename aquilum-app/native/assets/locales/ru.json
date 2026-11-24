@@ -234,6 +234,8 @@
       "headingSize": "Размер, %",
       "headingSizeHint": "От размера текста заметки",
       "headingWeight": "Насыщенность",
+        "calendar-bg": "Фон календаря",
+        "calendar-accent": "Календарь: сегодня и отметки",
       "weightBold": "Жирный",
       "weightHeavy": "Сверхжирный",
       "color": {

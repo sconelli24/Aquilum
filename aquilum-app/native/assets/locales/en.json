@@ -232,6 +232,8 @@
       "headingSize": "Size, %",
       "headingSizeHint": "Relative to the note text",
       "headingWeight": "Weight",
+        "calendar-bg": "Calendar background",
+        "calendar-accent": "Calendar today and marks",
       "weightBold": "Bold",
       "weightHeavy": "Extra bold",
       "color": {

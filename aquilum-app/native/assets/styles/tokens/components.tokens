@@ -27,6 +27,8 @@
   --q-tabs-height: var(--q-size-40);
   --q-tabs-l-height: var(--q-size-48);
   --q-tabs-bg: var(--q-bg-surface);
+  --q-calendar-bg: var(--q-sidebar-bg);
+  --q-calendar-accent: var(--q-border-accent);
   --q-tabs-font-size: var(--q-font-size-ui-base);
   --q-tabs-font-family: var(--q-font-family-ui);
   --q-tabs-font-weight: var(--q-font-weight-ui-base);

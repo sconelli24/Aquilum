@@ -232,6 +232,8 @@
       "headingSize": "Tamaño, %",
       "headingSizeHint": "Respecto del texto de la nota",
       "headingWeight": "Grosor",
+        "calendar-bg": "Fondo del calendario",
+        "calendar-accent": "Calendario: día de hoy y marcas",
       "weightBold": "Negrita",
       "weightHeavy": "Extra negrita",
       "color": {

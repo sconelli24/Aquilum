@@ -39,7 +39,7 @@ const TOKEN_FILES: &[&str] = &[
     "elevations.tokens",
     "components.tokens",
 ];
-const THEME_FILES: &[&str] = &["dark.tokens", "catppuccin.tokens"];
+const THEME_FILES: &[&str] = &["dark.tokens", "catppuccin.tokens", "paper.tokens"];
 /// Accent colors: the first three `derive` inputs: main, `500` and `600` (darker).
 const ACCENT: [&str; 3] = ["blue-alpha-main", "blue-500", "blue-600"];
 /// Colors the user changes on top of a theme in settings.
@@ -47,6 +47,8 @@ const EDITABLE: &[&str] = &[
     "bg-canvas",
     "sidebar-bg",
     "tabs-bg",
+    "calendar-bg",
+    "calendar-accent",
     "editor-bg",
     "text-primary",
     "text-secondary",

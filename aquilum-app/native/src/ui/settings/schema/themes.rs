@@ -3,10 +3,12 @@ use crate::ui::theme;
 use crate::ui::tokens::Builtin;
 
 /// Theme colors edited by the user (`tokens::derive` inputs after the three accent colors).
-const COLORS: [&str; 12] = [
+const COLORS: [&str; 14] = [
     "bg-canvas",
     "sidebar-bg",
     "tabs-bg",
+    "calendar-bg",
+    "calendar-accent",
     "editor-bg",
     "text-primary",
     "text-secondary",

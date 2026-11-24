@@ -124,8 +124,8 @@ fn builtin_themes_start_with_aquilum_and_have_unique_ids() {
     let ids: Vec<&str> = tokens::THEMES.iter().map(|b| b.id).collect();
     assert_eq!(&ids[..2], ["light", "dark"]);
     assert!(ids.iter().enumerate().all(|(i, id)| !ids[..i].contains(id)), "{ids:?}");
-    assert_eq!(super::builtins(false).map(|b| b.id).collect::<Vec<_>>(), ["light", "catppuccin-latte"]);
-    assert_eq!(super::builtins(true).map(|b| b.id).collect::<Vec<_>>(), ["dark", "catppuccin-frappe", "catppuccin-macchiato", "catppuccin-mocha"]);
+    assert_eq!(super::builtins(false).map(|b| b.id).collect::<Vec<_>>(), ["light", "catppuccin-latte", "paper-notebook", "paper-legal", "paper-kraft", "paper-washi", "paper-pastel"]);
+    assert_eq!(super::builtins(true).map(|b| b.id).collect::<Vec<_>>(), ["dark", "catppuccin-frappe", "catppuccin-macchiato", "catppuccin-mocha", "paper-chalkboard", "paper-moleskine"]);
     let light = tokens::LIGHT;
     assert!((light.editor_heading_1_scale - 24.0 / 14.0).abs() < 1e-6);
     assert_eq!((light.editor_heading_3_scale, light.editor_heading_3_weight), (1.0, 700.0));
@@ -213,4 +213,19 @@ fn the_mode_picks_the_chosen_theme_and_its_edits() {
     assert_eq!(super::active().id, "light", "a dark theme is not applied in light mode");
     super::set_choice(super::Choice::default());
     super::apply_setting(if before { "dark" } else { "light" }, before, "#1471eb");
+}
+
+#[test]
+fn the_calendar_has_its_own_color_that_follows_the_sidebar_unless_the_theme_sets_it() {
+    let (index, latte) = builtin("catppuccin-latte");
+    assert_eq!(rgba(latte.theme.calendar_bg), rgba(latte.theme.sidebar_bg), "without its own color the calendar sits on the sidebar");
+    let notebook = builtin("paper-notebook").1.theme;
+    assert_eq!(rgba(notebook.calendar_bg), [0xff, 0xfd, 0xf4, 0xff]);
+    assert_ne!(rgba(notebook.calendar_bg), rgba(notebook.sidebar_bg));
+    let mut set = [None; tokens::INPUT_COUNT];
+    set[tokens::INPUTS.iter().position(|input| *input == "calendar-bg").unwrap()] = Some([1.0, 0.0, 0.0, 1.0]);
+    let mut theme = latte.theme;
+    tokens::derive(index, &mut theme, &set);
+    assert_eq!(rgba(theme.calendar_bg), [255, 0, 0, 255]);
+    assert_eq!(rgba(theme.sidebar_bg), rgba(latte.theme.sidebar_bg), "editing the calendar leaves the sidebar alone");
 }
