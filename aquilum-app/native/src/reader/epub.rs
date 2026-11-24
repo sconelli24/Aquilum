@@ -8,6 +8,8 @@ use super::zip::Zip;
 pub struct Epub {
     zip: Zip,
     pub sections: Vec<(String, String)>,
+    /// Path of the cover image inside the archive, as the package declares it.
+    cover: Option<String>,
 }
 
 
@@ -69,7 +71,19 @@ impl Epub {
                 (href, Cfi::Point(vec![element_path(&opf, itemref)]).to_string())
             })
             .collect();
-        Some(Epub { zip, sections })
+        let items: Vec<NodeId> = descendants(&opf, Dom::ROOT, "item").collect();
+        let by_property = items.iter().find(|&&item| opf.attr(item, "properties").is_some_and(|p| p.split_whitespace().any(|word| word == "cover-image"))).and_then(|&item| opf.attr(item, "href"));
+        let declared = descendants(&opf, Dom::ROOT, "meta").find(|&meta| opf.attr(meta, "name") == Some("cover")).and_then(|meta| opf.attr(meta, "content")).and_then(|id| manifest.get(id).copied());
+        let by_name = items
+            .iter()
+            .find(|&&item| opf.attr(item, "media-type").is_some_and(|kind| kind.starts_with("image/")) && [opf.attr(item, "id"), opf.attr(item, "href")].into_iter().flatten().any(|value| value.to_lowercase().contains("cover")))
+            .and_then(|&item| opf.attr(item, "href"));
+        let cover = by_property.or(declared).or(by_name).map(|href| join(&folder, href));
+        Some(Epub { zip, sections, cover })
+    }
+
+    pub fn cover(&self) -> Option<Vec<u8>> {
+        self.zip.read(self.cover.as_deref()?)
     }
 
     pub fn size(&self, index: usize) -> usize {

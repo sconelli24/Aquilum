@@ -79,7 +79,14 @@ impl App {
                 let bytes = std::fs::metadata(file).map_or(0, |m| m.len());
                 self.reset_book_position();
                 let pages = if crate::reader::pdf::is_pdf(file) { String::new() } else { synthetic_pages(None, bytes) };
-                self.set_fields(root, &[(BOOK_FILE, relative), (PAGES, pages), (READER_POSITION, String::new()), (READ_PERCENT, "0".into())]);
+                let mut fields = vec![(BOOK_FILE, relative), (PAGES, pages), (READER_POSITION, String::new()), (READ_PERCENT, "0".into())];
+                // The book's own cover becomes its thumbnail; a book without one keeps the current thumbnail.
+                if let Some((bytes, extension)) = crate::reader::cover::of(file)
+                    && let Some(cover) = self.import_cover(Source::Bytes(&bytes, &format!("cover.{extension}")))
+                {
+                    fields.push((BOOK_COVER, cover));
+                }
+                self.set_fields(root, &fields);
             }
             Err(error) => report!("book not loaded: {error:?}"),
         }

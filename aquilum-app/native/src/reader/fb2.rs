@@ -166,3 +166,12 @@ pub fn sections(doc: &roxmltree::Document<'_>) -> Vec<Dom> {
 fn notes(dom: &mut Dom, body: NodeId) {
     dom.add_class(body, "notesBodyType");
 }
+
+/// The image named by `<coverpage>`, decoded from its `<binary>`.
+pub(super) fn cover(doc: &roxmltree::Document<'_>) -> Option<Vec<u8>> {
+    let page = doc.descendants().find(|n| n.is_element() && n.tag_name().name() == "coverpage")?;
+    let image = page.descendants().find(|n| n.is_element() && n.tag_name().name() == "image")?;
+    let href = image.attributes().find(|a| a.name() == "href")?.value().trim_start_matches('#');
+    let binary = doc.root_element().children().find(|c| c.is_element() && c.tag_name().name() == "binary" && c.attribute("id") == Some(href))?;
+    super::cover::decode_base64(binary.text()?)
+}

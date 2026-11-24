@@ -1,4 +1,5 @@
 mod cfi;
+pub mod cover;
 mod dom;
 mod epub;
 mod fb2;
