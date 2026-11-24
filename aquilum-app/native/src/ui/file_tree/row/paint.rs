@@ -87,6 +87,8 @@ pub fn paint(ctx: &mut PaintCtx<'_>, painter: &mut Painter<'_>, bounds: Rect, ro
         if row.expanded { icons::FOLDER_OPEN } else { icons::FOLDER }
     } else if aquilum_core::search::paths::is_canvas(&row.path) {
         icons::CANVAS
+    } else if row.book {
+        icons::BOOK_OPEN
     } else if aquilum_core::search::paths::is_note(&row.path) {
         icons::FILE_TEXT
     } else {

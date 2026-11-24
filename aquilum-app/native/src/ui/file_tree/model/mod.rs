@@ -1,3 +1,4 @@
+mod book;
 mod counts;
 mod edit;
 mod filter;
@@ -27,6 +28,8 @@ pub struct Row {
     pub path: PathBuf,
     pub name: String,
     pub folder: bool,
+    /// A note whose properties say `type: book`.
+    pub book: bool,
     pub depth: usize,
     pub expanded: bool,
     pub color: Option<&'static str>,
@@ -64,6 +67,7 @@ pub struct TreeModel {
     sort: Sort,
     times: HashMap<String, (i128, i128)>,
     counts: Counts,
+    books: book::Books,
     colors: BTreeMap<String, (PathBuf, &'static str)>,
 }
 
@@ -81,6 +85,15 @@ impl TreeModel {
 
     pub fn rows(&self) -> &[Row] {
         &self.rows
+    }
+
+    /// The text of these notes changed: refreshes the icon of those that became (or stopped being) books.
+    pub fn notes_edited(&mut self, paths: &[PathBuf]) -> bool {
+        let changed = book::recheck(&self.books, paths, comparable);
+        if changed {
+            self.rebuild();
+        }
+        changed
     }
 
     pub fn set_counts(&mut self, counts: Counts) {

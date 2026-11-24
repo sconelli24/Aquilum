@@ -90,6 +90,9 @@ impl App {
             self.tree.paths_changed(root, &changed);
             title |= self.close_missing_tabs(root, &changed);
         }
+        if !rescan && !edited.is_empty() {
+            self.tree.content_changed(root, &edited);
+        }
         for navigation in navigations {
             title |= match navigation {
                 Navigation::Note { path, disposition } => self.open_in(root, PathBuf::from(path), matches!(disposition, Disposition::NewTab)),

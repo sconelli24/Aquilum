@@ -104,10 +104,12 @@ impl TreeModel {
             let expanded = folder && if self.filter.is_some() { lists.contains_key(&key) } else { self.expanded.contains_key(&key) };
             let count = if folder && self.filter.is_none() { self.counts.total(&path) } else { None };
             let color = if folder { self.colors.get(&key).map(|(_, color)| *color) } else { None };
+            let book = !folder && super::book::is_book(&self.books, &path, &key);
             rows.push(Row {
                 path,
                 name: item.name.clone(),
                 folder,
+                book,
                 depth,
                 expanded,
                 color,

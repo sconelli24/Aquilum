@@ -141,6 +141,13 @@ impl FileTree {
         self.refresh(root);
     }
 
+    /// The text of notes changed: only their kind icon can be affected.
+    pub fn content_changed(&mut self, root: &mut RenderRoot, paths: &[PathBuf]) {
+        if self.model.notes_edited(paths) {
+            self.refresh(root);
+        }
+    }
+
     pub fn color(&self, path: &Path) -> Option<&'static str> {
         self.model.color(path)
     }
