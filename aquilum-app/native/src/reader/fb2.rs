@@ -175,3 +175,10 @@ pub(super) fn cover(doc: &roxmltree::Document<'_>) -> Option<Vec<u8>> {
     let binary = doc.root_element().children().find(|c| c.is_element() && c.tag_name().name() == "binary" && c.attribute("id") == Some(href))?;
     super::cover::decode_base64(binary.text()?)
 }
+
+/// `<book-title>` of the description.
+pub(super) fn title(doc: &roxmltree::Document<'_>) -> Option<String> {
+    let node = doc.descendants().find(|n| n.is_element() && n.tag_name().name() == "book-title")?;
+    let text = node.descendants().filter(|n| n.is_text()).filter_map(|n| n.text()).collect::<String>();
+    Some(text.split_whitespace().collect::<Vec<_>>().join(" ")).filter(|text| !text.is_empty())
+}

@@ -86,6 +86,11 @@ impl App {
         Some(crate::ui::settings::schema::templates_path(&self.tree.root()?, &self.workspace.core.settings.get_config().templates.folder))
     }
 
+    /// Names new notes get from their template: while a note still has one of them, its name was not chosen by the user.
+    pub(in crate::app) fn scan_templates_names(&self) -> Vec<String> {
+        self.scan_templates().into_iter().map(|template| template.name).collect()
+    }
+
     fn scan_templates(&self) -> Vec<NoteTemplate> {
         let Some(dir) = self.templates_dir() else { return Vec::new() };
         if !dir.is_dir() {

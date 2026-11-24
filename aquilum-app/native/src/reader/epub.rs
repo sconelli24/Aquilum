@@ -10,6 +10,8 @@ pub struct Epub {
     pub sections: Vec<(String, String)>,
     /// Path of the cover image inside the archive, as the package declares it.
     cover: Option<String>,
+    /// `dc:title` of the package.
+    pub title: Option<String>,
 }
 
 
@@ -79,7 +81,12 @@ impl Epub {
             .find(|&&item| opf.attr(item, "media-type").is_some_and(|kind| kind.starts_with("image/")) && [opf.attr(item, "id"), opf.attr(item, "href")].into_iter().flatten().any(|value| value.to_lowercase().contains("cover")))
             .and_then(|&item| opf.attr(item, "href"));
         let cover = by_property.or(declared).or(by_name).map(|href| join(&folder, href));
-        Some(Epub { zip, sections, cover })
+        let title = descendants(&opf, Dom::ROOT, "title")
+            .next()
+            .map(|node| opf.node(node).children.iter().filter_map(|&child| opf.text_of(child)).collect::<String>())
+            .map(|text| text.split_whitespace().collect::<Vec<_>>().join(" "))
+            .filter(|text| !text.is_empty());
+        Some(Epub { zip, sections, cover, title })
     }
 
     pub fn cover(&self) -> Option<Vec<u8>> {

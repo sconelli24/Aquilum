@@ -31,6 +31,17 @@ pub fn of(path: &Path) -> Option<(Vec<u8>, &'static str)> {
     Some((bytes, extension))
 }
 
+/// The title in the book's metadata (EPUB `dc:title`, FB2 `<book-title>`), if it has one.
+pub fn title(path: &Path) -> Option<String> {
+    let data = std::fs::read(path).ok()?;
+    let extension = path.extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase();
+    match extension.as_str() {
+        "mobi" | "azw3" | "azw" | "prc" | "pdf" => None,
+        "fb2" => fb2::title(&text::parse_xml(&text::decode(&data))?),
+        _ => epub::Epub::open(data)?.title,
+    }
+}
+
 pub(super) fn decode_base64(text: &str) -> Option<Vec<u8>> {
     let compact: String = text.chars().filter(|c| !c.is_whitespace()).collect();
     base64::engine::general_purpose::STANDARD.decode(compact).ok()
@@ -78,6 +89,27 @@ mod tests {
             let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/reader").join(name);
             if let Some((bytes, extension)) = of(&path) {
                 assert_eq!(image_extension(&bytes), Some(extension), "{name}");
+            }
+        }
+    }
+
+    #[test]
+    fn an_fb2_title_comes_from_its_description_with_the_spaces_tidied() {
+        let book = "<?xml version=\"1.0\" encoding=\"utf-8\"?><FictionBook xmlns=\"http://www.gribuser.ru/xml/fictionbook/2.0\"><description><title-info><book-title>  Дюна:
+   Мессия </book-title></title-info></description><body><section><p>text</p></section></body></FictionBook>";
+        let (_dir, file) = crate::reader::tests::book_file(book.to_owned());
+        assert_eq!(title(&file).as_deref(), Some("Дюна: Мессия"));
+        let (_dir, bare) = crate::reader::tests::book_file(crate::reader::tests::sample_fb2());
+        assert_eq!(title(&bare), None, "a book without a title");
+        assert_eq!(title(std::path::Path::new("no existe.epub")), None);
+    }
+
+    #[test]
+    fn an_epub_title_is_read_from_the_package_when_it_has_one() {
+        for name in ["sample.epub", "scroll-audit.epub"] {
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/reader").join(name);
+            if let Some(found) = title(&path) {
+                assert!(!found.is_empty() && found == found.trim() && !found.contains("  "), "{name}: {found:?}");
             }
         }
     }

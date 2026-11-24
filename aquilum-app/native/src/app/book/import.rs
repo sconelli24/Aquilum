@@ -72,6 +72,17 @@ impl App {
         }
     }
 
+    /// Gives the open note the book's title, but only while its name is still a placeholder (untitled, or the name of a template);
+    /// a name the user chose is left alone.
+    fn name_note_after_book(&mut self, root: &mut RenderRoot, title: &str) {
+        let Some(from) = self.note.as_ref().map(|n| n.path.clone()) else { return };
+        let mut placeholders: Vec<String> = self.scan_templates_names();
+        placeholders.push(crate::file_ops::untitled());
+        if let Some(to) = book_note_target(&from, title, &placeholders, |path| path.exists()) {
+            self.rename_file(root, from, to);
+        }
+    }
+
     fn import_book(&mut self, root: &mut RenderRoot, file: &Path) {
         let Some(workspace) = self.tree.root().map(Path::to_path_buf) else { return };
         match vault_files::import(&self.workspace.core, &workspace, Source::Path(file), "book", "epub") {
@@ -87,6 +98,9 @@ impl App {
                     fields.push((BOOK_COVER, cover));
                 }
                 self.set_fields(root, &fields);
+                if let Some(title) = crate::reader::cover::title(file) {
+                    self.name_note_after_book(root, &title);
+                }
             }
             Err(error) => report!("book not loaded: {error:?}"),
         }
@@ -147,6 +161,31 @@ impl App {
     }
 }
 
+/// `name` or `name 2`, `name (2)`: a placeholder name followed by the counter the app adds to avoid clashes.
+fn is_placeholder(stem: &str, placeholders: &[String]) -> bool {
+    placeholders.iter().any(|base| {
+        stem == base
+            || stem.strip_prefix(base.as_str()).and_then(|rest| rest.strip_prefix(' ')).is_some_and(|rest| {
+                let counter = rest.strip_prefix('(').and_then(|r| r.strip_suffix(')')).unwrap_or(rest);
+                !counter.is_empty() && counter.chars().all(|c| c.is_ascii_digit())
+            })
+    })
+}
+
+/// Where the note should move to take the book's title, or `None` to leave it where it is.
+fn book_note_target(from: &Path, title: &str, placeholders: &[String], exists: impl Fn(&Path) -> bool) -> Option<PathBuf> {
+    let stem = from.file_stem()?.to_string_lossy().into_owned();
+    if !is_placeholder(&stem, placeholders) {
+        return None;
+    }
+    let name = crate::file_ops::sanitize_file_name(title);
+    if name.is_empty() || name == stem {
+        return None;
+    }
+    let folder = from.parent()?;
+    (0..100).map(|i| folder.join(if i == 0 { format!("{name}.md") } else { format!("{name} {i}.md") })).find(|candidate| !exists(candidate))
+}
+
 #[cfg(test)]
 mod tests {
     use super::synthetic_pages;
@@ -158,5 +197,34 @@ mod tests {
         assert_eq!(synthetic_pages(Some("50/100"), 20 * 1024), "10/20");
         assert_eq!(synthetic_pages(Some("5/0"), 4 * 1024), "0/4");
         assert_eq!(synthetic_pages(Some("200/100"), 4 * 1024), "4/4");
+    }
+
+    use super::{book_note_target, is_placeholder};
+    use std::path::{Path, PathBuf};
+
+    fn names() -> Vec<String> {
+        vec!["Book".into(), "Untitled".into()]
+    }
+
+    #[test]
+    fn only_placeholder_names_count_as_not_chosen_yet() {
+        for stem in ["Book", "Book 1", "Book (2)", "Untitled", "Untitled 12"] {
+            assert!(is_placeholder(stem, &names()), "{stem}");
+        }
+        for stem in ["Dune", "Bookshelf", "Book club", "Book 1a", "Book ()", "My Book"] {
+            assert!(!is_placeholder(stem, &names()), "{stem}");
+        }
+    }
+
+    #[test]
+    fn a_placeholder_note_takes_the_book_title_and_never_overwrites_another_note() {
+        let free = |_: &Path| false;
+        let target = book_note_target(Path::new("/v/Book.md"), "Dune: Messiah", &names(), free);
+        assert_eq!(target, Some(PathBuf::from("/v/Dune Messiah.md")), "characters a file name cannot hold are replaced");
+        let taken = |path: &Path| path == Path::new("/v/Dune.md") || path == Path::new("/v/Dune 1.md");
+        assert_eq!(book_note_target(Path::new("/v/Book 3.md"), "Dune", &names(), taken), Some(PathBuf::from("/v/Dune 2.md")));
+        assert_eq!(book_note_target(Path::new("/v/My reading.md"), "Dune", &names(), free), None, "a name the user chose stays");
+        assert_eq!(book_note_target(Path::new("/v/Book.md"), "  ", &names(), free), None, "an empty title changes nothing");
+        assert_eq!(book_note_target(Path::new("/v/Dune.md"), "Dune", &names(), free), None);
     }
 }
