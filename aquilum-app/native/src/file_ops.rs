@@ -68,11 +68,22 @@ pub fn title_target(from: &Path, input: &str) -> Option<(PathBuf, String)> {
     rename_target(from, &format!("{}.{extension}", sanitize_file_name(input)))
 }
 
+/// New path for `from` named `input`. Notes keep `.md` and other files keep their extension (the rename field shows
+/// the name without it, so a `.canvas` or `.png` would otherwise stop being what it was); folders are renamed as typed.
 pub fn rename_target(from: &Path, input: &str) -> Option<(PathBuf, String)> {
     let note = is_markdown(from);
+    let extension = if note || from.is_dir() { None } else { from.extension().map(|e| e.to_string_lossy().into_owned()) };
     let current = if note { from.file_stem() } else { from.file_name() }.map(|n| n.to_string_lossy().into_owned());
-    let name = sanitize_file_name(input);
-    if name.is_empty() || Some(&name) == current.as_ref() {
+    let mut name = sanitize_file_name(input);
+    if name.is_empty() {
+        return None;
+    }
+    if let Some(extension) = &extension
+        && !name.to_lowercase().ends_with(&format!(".{}", extension.to_lowercase()))
+    {
+        name = format!("{name}.{extension}");
+    }
+    if Some(&name) == current.as_ref() {
         return None;
     }
     let to = from.with_file_name(if note { format!("{name}.md") } else { name.clone() });
@@ -161,6 +172,18 @@ mod tests {
         let (to, name) = rename_target(Path::new("/база/Проекты"), " Новые/старые: ").unwrap();
         assert_eq!((to, name.as_str()), (PathBuf::from("/база/Новые старые"), "Новые старые"));
         assert_eq!(rename_target(Path::new("/база/Проекты"), " Проекты "), None);
+    }
+
+    #[test]
+    fn renaming_a_canvas_or_any_other_file_keeps_its_extension() {
+        let (to, name) = rename_target(Path::new("/база/Canvas.canvas"), "Мой холст").unwrap();
+        assert_eq!((to, name.as_str()), (PathBuf::from("/база/Мой холст.canvas"), "Мой холст.canvas"));
+        assert_eq!(rename_target(Path::new("/база/Canvas.canvas"), "Canvas"), None, "confirming the untouched name changes nothing");
+        assert_eq!(rename_target(Path::new("/база/Canvas.canvas"), "Canvas.canvas"), None);
+        let (to, _) = rename_target(Path::new("/база/foto.PNG"), "otra.png").unwrap();
+        assert_eq!(to, PathBuf::from("/база/otra.png"), "an extension typed by the user is not doubled");
+        let (to, _) = rename_target(Path::new("/база/Заметка.md"), "Новая").unwrap();
+        assert_eq!(to, PathBuf::from("/база/Новая.md"));
     }
 
     #[test]
