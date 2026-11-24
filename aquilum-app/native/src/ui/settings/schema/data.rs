@@ -95,7 +95,26 @@ pub(super) fn shortcuts() -> Vec<Block> {
             title: t(&format!("settings.shortcuts.{group}")),
             rows: items
                 .into_iter()
-                .map(|(label, keys)| info(t(&format!("settings.shortcuts.{label}")), None, Control::Kbd(keys)))
+                .map(|(label, keys)| {
+                    let name = t(&format!("settings.shortcuts.{label}"));
+                    if !crate::ui::keymap::rebindable(label) {
+                        return info(name, None, Control::Kbd(keys));
+                    }
+                    let listening = crate::ui::keymap::capturing() == Some(label);
+                    let shown = if listening { t("settings.shortcuts.pressKeys") } else { keys };
+                    let note = listening.then(|| match crate::ui::keymap::conflict() {
+                        Some(other) => t_with("settings.shortcuts.conflict", &[("name", &t(&format!("settings.shortcuts.{other}")))]),
+                        None => t("settings.shortcuts.pressHint"),
+                    });
+                    info(
+                        name,
+                        note,
+                        Control::Buttons(vec![
+                            Button::new(shown, Action::Rebind(label.to_owned())),
+                            Button::new(t("settings.shortcuts.reset"), Action::ResetShortcut(label.to_owned())).enabled(crate::ui::keymap::customized(label)),
+                        ]),
+                    )
+                })
                 .collect(),
         })
         .collect()

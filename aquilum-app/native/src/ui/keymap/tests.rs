@@ -157,3 +157,81 @@ fn mac_navigation_chords() {
     assert_eq!(super::label(Scope::Navigation, Command::WordLeft), "⌥ + ←");
     assert_eq!(super::label(Scope::Navigation, Command::DocumentStart), "⌘ + ↑");
 }
+
+mod custom_shortcuts {
+    use masonry::core::keyboard::{Key, Modifiers, NamedKey};
+
+    use super::super::{Command, Scope, command, custom, label};
+
+    fn ctrl_shift_j() -> super::super::chord::Chord {
+        let mods = if cfg!(target_os = "macos") { Modifiers::META | Modifiers::SHIFT } else { Modifiers::CONTROL | Modifiers::SHIFT };
+        custom::chord_from(&Key::Character("j".into()), mods).expect("chord")
+    }
+
+    fn action_mod() -> Modifiers {
+        if cfg!(target_os = "macos") { Modifiers::META } else { Modifiers::CONTROL }
+    }
+
+    #[test]
+    fn a_changed_shortcut_replaces_the_default() {
+        custom::forget();
+        let global = [Scope::Global];
+        assert_eq!(command(&global, &Key::Character("n".into()), action_mod()), Some(Command::NewNote));
+        custom::assign("newNote", ctrl_shift_j());
+        let mods = action_mod() | Modifiers::SHIFT;
+        assert_eq!(command(&global, &Key::Character("j".into()), mods), Some(Command::NewNote));
+        assert_eq!(command(&global, &Key::Character("n".into()), action_mod()), None, "the old shortcut still works");
+        assert!(label(Scope::Global, Command::NewNote).contains('J'));
+        custom::reset("newNote");
+        assert_eq!(command(&global, &Key::Character("n".into()), action_mod()), Some(Command::NewNote));
+        assert!(!custom::customized("newNote"));
+    }
+
+    #[test]
+    fn shortcuts_already_in_use_are_refused() {
+        custom::forget();
+        let new_tab = custom::chord_from(&Key::Character("t".into()), action_mod()).unwrap();
+        assert_eq!(custom::conflicting("newNote", &new_tab), Some("newTab"));
+        let copy = custom::chord_from(&Key::Character("c".into()), action_mod()).unwrap();
+        assert_eq!(custom::conflicting("newNote", &copy), Some("copy"), "editing shortcuts also count");
+        assert_eq!(custom::conflicting("newNote", &ctrl_shift_j()), None);
+        assert_eq!(custom::conflicting("newTab", &new_tab), None, "a binding does not conflict with itself");
+    }
+
+    #[test]
+    fn plain_letters_and_lone_modifiers_cannot_be_shortcuts() {
+        assert!(custom::chord_from(&Key::Character("j".into()), Modifiers::empty()).is_none());
+        assert!(custom::chord_from(&Key::Character("J".into()), Modifiers::SHIFT).is_none());
+        assert!(custom::chord_from(&Key::Named(NamedKey::Control), Modifiers::CONTROL).is_none());
+        assert!(custom::chord_from(&Key::Named(NamedKey::F5), Modifiers::empty()).is_some(), "function keys work alone");
+    }
+
+    #[test]
+    fn chords_survive_encoding_and_a_restart() {
+        custom::forget();
+        let dir = crate::test_dir::tempdir();
+        custom::load(dir.path());
+        custom::assign("zoomIn", ctrl_shift_j());
+        custom::forget();
+        assert!(!custom::customized("zoomIn"));
+        custom::load(dir.path());
+        assert!(custom::customized("zoomIn"), "the change was not saved");
+        assert_eq!(command(&[Scope::Global], &Key::Character("j".into()), action_mod() | Modifiers::SHIFT), Some(Command::ZoomIn));
+        for text in ["action shift p", "alt ArrowLeft", "F12", "ctrl action +"] {
+            let chord = custom::decode(text).unwrap_or_else(|| panic!("cannot decode {text}"));
+            assert_eq!(custom::decode(&custom::encode(&chord)), Some(chord));
+        }
+        assert!(custom::decode("").is_none());
+        custom::forget();
+    }
+
+    #[test]
+    fn only_app_and_formatting_shortcuts_are_changeable() {
+        assert!(custom::rebindable("newNote") && custom::rebindable("bold"));
+        assert!(!custom::rebindable("copy") && !custom::rebindable("undo") && !custom::rebindable("nextCell"));
+        let mut seen = std::collections::HashSet::new();
+        for binding in super::super::table::BINDINGS.iter().filter(|b| custom::can_rebind(b)) {
+            assert!(seen.insert(binding.label), "two changeable shortcuts share the label {}", binding.label);
+        }
+    }
+}

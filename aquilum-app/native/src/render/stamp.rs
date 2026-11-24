@@ -67,6 +67,8 @@ pub fn covering(rect: masonry::kurbo::Rect) -> Area {
     Area { x: x0 as u32, y: y0 as u32, w: (r.x1 - x0).max(0.0) as u32, h: (r.y1 - y0).max(0.0) as u32 }
 }
 
+/// Only the debug overlay uses it; the installed build swaps that overlay for an empty one.
+#[cfg(not(feature = "installed"))]
 pub fn blend(under: u32, color: [f32; 4], coverage: f32) -> u32 {
     let under = super::in_canvas_order(under);
     let a = color[3] * coverage;

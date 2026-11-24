@@ -465,6 +465,11 @@
       "onDevice": "on device"
     },
     "shortcuts": {
+      "pressKeys": "Press keys…",
+      "pressHint": "Press the new shortcut, or Esc to cancel",
+      "reset": "Reset",
+      "conflict": "Already used by “{{name}}”. Try another, or Esc to cancel",
+      "commandPalette": "Command palette",
       "global": "Global",
       "newNote": "New note",
       "newTab": "New tab",
@@ -740,6 +745,13 @@
     "author": "Author",
     "filesFilter": "Books",
     "imagesFilter": "Images"
+  },
+  "palette": {
+    "title": "Command palette",
+    "find": "Type a command",
+    "empty": "No matching commands",
+    "openGraph": "Open graph view",
+    "openSettings": "Open settings"
   },
   "templateDialog": {
     "title": "Templates",

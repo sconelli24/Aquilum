@@ -27,6 +27,7 @@ mod root_ui;
 mod search;
 mod settings;
 mod tabs;
+mod palette;
 mod templates;
 mod widths;
 mod update;
@@ -80,6 +81,7 @@ pub(in crate::app) enum Popup {
     Reader(Box<reader::ReaderState>),
     Search(search::SearchState),
     Templates(templates::TemplatesState),
+    Palette(palette::PaletteState),
     Workspaces(workspaces::WorkspacesState),
     Confirm(DialogIds, confirm::Confirmed),
     CanvasMenu { layer: WidgetId, commands: Vec<canvas_page::CanvasCommand> },

@@ -21,6 +21,9 @@ impl App {
         if matches!(self.popup, Some(Popup::Templates(_))) {
             return self.on_templates_action(root, id, &action);
         }
+        if matches!(self.popup, Some(Popup::Palette(_))) {
+            return self.on_palette_action(root, id, &action);
+        }
         if matches!(self.popup, Some(Popup::Workspaces(_))) {
             return self.on_workspaces_action(root, id, &action);
         }

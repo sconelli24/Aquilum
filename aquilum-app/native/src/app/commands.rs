@@ -23,6 +23,10 @@ impl App {
                 self.open_search(root);
                 done
             }
+            Command::Palette => {
+                self.open_palette(root);
+                done
+            }
             Command::Templates => {
                 self.open_templates(root);
                 done

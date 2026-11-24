@@ -26,6 +26,13 @@ impl Host {
 
     fn shortcut(&mut self, key: &Key, repeat: bool) -> bool {
         let modifiers = self.modifiers;
+        if keymap::capturing().is_some()
+            && let Some(root) = &mut self.root
+            && let Some(outcome) = self.app.capture_key(root, key, modifiers)
+        {
+            self.apply(outcome);
+            return true;
+        }
         let command = keymap::command(&[Scope::Global], key, modifiers);
         #[cfg(not(feature = "installed"))]
         if command.is_some_and(|command| self.debug_command(command)) {
@@ -42,7 +49,7 @@ impl Host {
         if self.app.find_key(root, key, modifiers) {
             return true;
         }
-        let outcome = self.app.search_key(root, key, modifiers).or_else(|| self.app.templates_key(root, key, modifiers)).or_else(|| self.app.settings_key(root, key, modifiers));
+        let outcome = self.app.search_key(root, key, modifiers).or_else(|| self.app.templates_key(root, key, modifiers)).or_else(|| self.app.palette_key(root, key, modifiers)).or_else(|| self.app.settings_key(root, key, modifiers));
         let Some(outcome) = outcome else { return false };
         self.apply(outcome);
         true

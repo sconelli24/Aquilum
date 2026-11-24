@@ -1,4 +1,5 @@
 mod chord;
+mod custom;
 pub mod gesture;
 pub mod pointer;
 mod table;
@@ -8,6 +9,7 @@ mod tests;
 use masonry::core::keyboard::{Code, Key, Modifiers};
 
 pub use chord::{action, action_key, extend, typing};
+pub use custom::{assign, capturing, chord_from, conflict, conflicting, customized, load, rebindable, reset, set_conflict, start_capture, stop_capture};
 pub use gesture::Gesture;
 use table::BINDINGS;
 
@@ -74,6 +76,7 @@ pub enum Command {
     Forward,
     ContextMenu,
     QuickOpen,
+    Palette,
     Templates,
     FindInNote,
     FocusMode,
@@ -151,7 +154,7 @@ pub fn command(scopes: &[Scope], key: &Key, modifiers: Modifiers) -> Option<Comm
     BINDINGS
         .iter()
         .filter(|binding| scopes.contains(&binding.scope))
-        .find(|binding| binding.chords.iter().chain(binding.hidden).any(|chord| chord.matches(key, modifiers)))
+        .find(|binding| custom::matches(binding, key, modifiers) || binding.hidden.iter().any(|chord| chord.matches(key, modifiers)))
         .map(|binding| binding.command)
 }
 
@@ -163,14 +166,19 @@ pub fn gesture(scopes: &[Scope], gesture: Gesture) -> Option<Command> {
     BINDINGS.iter().filter(|binding| scopes.contains(&binding.scope)).find(|binding| binding.gestures.contains(&gesture)).map(|binding| binding.command)
 }
 
+/// Locale key suffix naming a command (`settings.shortcuts.<title>`).
+pub fn title(scope: Scope, command: Command) -> Option<&'static str> {
+    BINDINGS.iter().find(|b| b.scope == scope && b.command == command).map(|b| b.label)
+}
+
 pub fn label(scope: Scope, command: Command) -> String {
-    BINDINGS.iter().filter(|b| b.scope == scope && b.command == command).flat_map(|b| b.chords).filter(|c| c.here()).map(chord::Chord::label).collect::<Vec<_>>().join(" / ")
+    BINDINGS.iter().filter(|b| b.scope == scope && b.command == command).flat_map(custom::chords).filter(|c| c.here()).map(|c| c.label()).collect::<Vec<_>>().join(" / ")
 }
 
 pub fn groups() -> Vec<(&'static str, Vec<(&'static str, String)>)> {
     let mut groups: Vec<(&'static str, Vec<(&'static str, String)>)> = Vec::new();
     for binding in BINDINGS {
-        let chords: Vec<String> = binding.chords.iter().filter(|c| c.here()).map(chord::Chord::label).collect();
+        let chords: Vec<String> = custom::chords(binding).iter().filter(|c| c.here()).map(chord::Chord::label).collect();
         if chords.is_empty() {
             continue;
         }

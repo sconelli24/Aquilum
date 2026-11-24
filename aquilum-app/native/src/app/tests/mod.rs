@@ -15,6 +15,7 @@ mod memory;
 mod misc;
 mod navigation;
 mod notes;
+mod palette;
 mod panels;
 mod perf;
 mod reader;

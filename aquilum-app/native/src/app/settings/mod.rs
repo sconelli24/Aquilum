@@ -12,6 +12,7 @@ use crate::ui::editor::TextAction;
 
 use super::{App, Outcome, Popup};
 
+mod shortcuts;
 mod action;
 mod apply;
 mod bindings;
@@ -74,6 +75,7 @@ impl App {
     }
 
     pub(in crate::app) fn show_settings(&mut self, root: &mut RenderRoot, section: Section) {
+        keymap::stop_capture();
         let config = self.workspace.core.settings.get_config();
         let ctx = self.settings_context(None, 0);
         let (layer, dialog) = settings::dialog(&config, &ctx, section);

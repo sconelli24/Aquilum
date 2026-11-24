@@ -67,6 +67,8 @@ pub enum Action {
     CheckUpdates,
     InstallUpdate,
     ResetTheme,
+    Rebind(String),
+    ResetShortcut(String),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]

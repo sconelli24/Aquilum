@@ -1,6 +1,6 @@
 use masonry::core::keyboard::{Key, Modifiers, NamedKey};
 
-const MAC: bool = cfg!(target_os = "macos");
+pub(super) const MAC: bool = cfg!(target_os = "macos");
 
 pub fn action_key() -> &'static str {
     if MAC { "⌘" } else { "Ctrl" }

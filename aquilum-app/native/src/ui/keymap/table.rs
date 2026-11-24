@@ -37,6 +37,7 @@ pub const BINDINGS: &[Binding] = &[
     bind(Scope::Global, Forward, "forward", &[named(K::ArrowRight).alt().only(Os::Other), letter(']').action().only(Os::Mac)]).hidden(&[named(K::BrowserForward)]).on(&[Gesture::MouseForward]),
     bind(Scope::Global, ContextMenu, "contextMenu", &[]).on(&[Gesture::LongPress]),
     bind(Scope::Global, QuickOpen, "globalSearch", &[letter('o').action()]),
+    bind(Scope::Global, Palette, "commandPalette", &[letter('p').action()]),
     bind(Scope::Global, Templates, "newFromTemplate", &[letter('u').action()]),
     bind(Scope::Global, FindInNote, "pageSearch", &[letter('f').action()]),
     bind(Scope::Global, FocusMode, "focusMode", &[letter('f').action().shift()]),

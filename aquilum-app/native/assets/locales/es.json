@@ -465,6 +465,11 @@
       "onDevice": "en el dispositivo"
     },
     "shortcuts": {
+      "pressKeys": "Presioná las teclas…",
+      "pressHint": "Presioná el nuevo atajo, o Esc para cancelar",
+      "reset": "Restablecer",
+      "conflict": "Ya lo usa «{{name}}». Probá otro, o Esc para cancelar",
+      "commandPalette": "Paleta de comandos",
       "global": "Generales",
       "newNote": "Nota nueva",
       "newTab": "Pestaña nueva",
@@ -740,6 +745,13 @@
     "author": "Autor",
     "filesFilter": "Libros",
     "imagesFilter": "Imágenes"
+  },
+  "palette": {
+    "title": "Paleta de comandos",
+    "find": "Escribí un comando",
+    "empty": "Ningún comando coincide",
+    "openGraph": "Abrir la vista de grafo",
+    "openSettings": "Abrir ajustes"
   },
   "templateDialog": {
     "title": "Plantillas",

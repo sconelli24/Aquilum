@@ -187,7 +187,7 @@ impl App {
                     self.popup = Some(Popup::Viewer { layer });
                 }
             }
-            Some(popup @ (Popup::Settings { .. } | Popup::Search(_) | Popup::Templates(_) | Popup::Workspaces(_) | Popup::Reader(_))) => self.popup = Some(popup),
+            Some(popup @ (Popup::Settings { .. } | Popup::Search(_) | Popup::Templates(_) | Popup::Palette(_) | Popup::Workspaces(_) | Popup::Reader(_))) => self.popup = Some(popup),
             None => {}
         }
         Outcome::default()

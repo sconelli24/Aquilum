@@ -25,6 +25,7 @@ impl Popup {
             Popup::Workspaces(state) => state.cancel(),
             Popup::Search(state) => dialog(state.layer),
             Popup::Templates(state) => dialog(state.layer),
+            Popup::Palette(state) => dialog(state.layer),
             Popup::Reader(state) => (state.layer, Box::new(ReaderAction::Close)),
             Popup::Viewer { layer } => (*layer, Box::new(ViewerClosed)),
         }

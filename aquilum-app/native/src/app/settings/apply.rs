@@ -81,6 +81,15 @@ impl App {
                 self.updater.install();
                 Effect::Content
             }
+            Action::Rebind(label) => {
+                crate::ui::keymap::start_capture(&label);
+                Effect::Content
+            }
+            Action::ResetShortcut(label) => {
+                crate::ui::keymap::reset(&label);
+                crate::ui::keymap::stop_capture();
+                Effect::Content
+            }
             Action::NewToken => self.apply(Setter::Config(|c, _| c.mcp.token = schema::new_token()), Value::Bool(true)),
             Action::ResetTheme => {
                 let id = theme::active().id;
