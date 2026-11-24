@@ -19,7 +19,7 @@ fn numbers_parse_clamp_step_and_format() {
 fn setters_write_config() {
     let mut config = AppConfig::default();
     let ctx = Context::new(1.0);
-    let theme = ui(&config, &ctx).remove(0).rows.remove(1);
+    let theme = mode_rows(&config).remove(0);
     let Some(Setter::Config(set)) = theme.setter else { panic!("the theme is written to the settings") };
     set(&mut config, &Value::Index(2));
     assert_eq!(config.ui.theme, "dark");

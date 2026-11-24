@@ -153,12 +153,7 @@
   "theme": {
     "light": "Claro",
     "dark": "Oscuro",
-    "night": "Nocturno",
     "system": "Sistema"
-  },
-  "night": {
-    "red": "Rojo",
-    "warm": "Cálido"
   },
   "common": {
     "decrease": "Reducir",
@@ -209,7 +204,6 @@
       "scale": "Escala de la interfaz, %",
       "scaleHint": "{{mod}} + rueda del mouse; {{reset}} vuelve al 100 %",
       "theme": "Tema",
-      "night": "Tema nocturno",
       "language": "Idioma",
       "homePage": "Página de inicio",
       "homePageHint": "Nota del botón de inicio en esta base de conocimiento; vacío — sin botón",
@@ -222,7 +216,7 @@
       "light": "Tema claro",
       "lightHint": "Se usa en el modo claro",
       "dark": "Tema oscuro",
-      "darkHint": "Se usa en los modos oscuro y nocturno",
+      "darkHint": "Se usa en el modo oscuro",
       "colors": "Colores de {{theme}}",
       "reset": "Restablecer el tema",
       "resetHint": "Vuelve a los colores y títulos originales de {{theme}}",
@@ -232,14 +226,14 @@
       "headingSize": "Tamaño, %",
       "headingSizeHint": "Respecto del texto de la nota",
       "headingWeight": "Grosor",
-        "calendar-bg": "Fondo del calendario",
-        "calendar-accent": "Calendario: día de hoy y marcas",
       "weightBold": "Negrita",
       "weightHeavy": "Extra negrita",
       "color": {
         "bg-canvas": "Fondo de la ventana",
         "sidebar-bg": "Fondo del panel lateral",
         "tabs-bg": "Fondo de la barra de pestañas",
+        "calendar-bg": "Fondo del calendario",
+        "calendar-accent": "Calendario: día de hoy y marcas",
         "editor-bg": "Fondo de las notas",
         "text-primary": "Texto",
         "text-secondary": "Texto secundario",

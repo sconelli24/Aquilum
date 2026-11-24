@@ -62,10 +62,12 @@ pub(super) fn themes(config: &AppConfig) -> Vec<Block> {
     let mut blocks = vec![
         Block {
             title: t("settings.themes.section"),
-            rows: vec![
-                chooser(false, &ui.light_theme, |c, v| c.ui.light_theme = pick(false, v)),
-                chooser(true, &ui.dark_theme, |c, v| c.ui.dark_theme = pick(true, v)),
-            ],
+            rows: {
+                let mut rows = mode_rows(config);
+                rows.push(chooser(false, &ui.light_theme, |c, v| c.ui.light_theme = pick(false, v)));
+                rows.push(chooser(true, &ui.dark_theme, |c, v| c.ui.dark_theme = pick(true, v)));
+                rows
+            },
         },
         Block { title: t_with("settings.themes.colors", &[("theme", active.name)]), rows: colors },
     ];

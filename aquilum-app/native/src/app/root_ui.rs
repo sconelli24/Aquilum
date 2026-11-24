@@ -12,7 +12,7 @@ impl App {
         if self.system_dark == dark { return; }
         self.system_dark = dark;
         let config = self.workspace.core.settings.get_config();
-        if !matches!(config.ui.theme.as_str(), "light" | "dark" | "night") {
+        if !matches!(config.ui.theme.as_str(), "light" | "dark") {
             self.restyle(root, false, None);
         }
     }
@@ -56,7 +56,6 @@ impl App {
         };
         theme::set_choice(theme::Choice { light: config.ui.light_theme.clone(), dark: config.ui.dark_theme.clone(), overrides });
         theme::apply_setting(&config.ui.theme, self.system_dark, primary.unwrap_or(&config.ui.primary_color));
-        crate::render::night::apply(&config.ui.theme, &config.ui.night);
         crate::ui::motion::set(config.ui.animations);
         i18n::set_language(&config.ui.language);
         theme::set_ui_font(UiFont {

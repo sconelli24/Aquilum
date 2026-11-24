@@ -163,7 +163,7 @@ fn pick(dark: bool, choice: Option<&Choice>) -> usize {
 
 pub fn apply_setting(setting: &str, system_dark: bool, primary: &str) {
     let dark = match setting {
-        "dark" | "night" => true,
+        "dark" => true,
         "light" => false,
         _ => system_dark,
     };

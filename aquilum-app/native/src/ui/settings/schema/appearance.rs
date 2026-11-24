@@ -1,7 +1,20 @@
 use super::*;
 use crate::i18n::Language;
-use crate::render::night;
 use crate::ui::keymap;
+
+/// Mode of the interface (system, light, dark): shown at the top of the Themes section.
+pub(super) fn mode_rows(config: &AppConfig) -> Vec<Row> {
+    let theme = row(
+        t("settings.ui.theme"),
+        None,
+        Control::Segmented {
+            options: THEMES.iter().map(|theme| t(&format!("theme.{theme}"))).collect(),
+            selected: position(&THEMES, &config.ui.theme.as_str()),
+        },
+        |c, v| c.ui.theme = THEMES[index(v).min(THEMES.len() - 1)].to_owned(),
+    );
+    vec![theme]
+}
 
 pub(super) fn ui(config: &AppConfig, ctx: &Context) -> Vec<Block> {
     let scale = ctx.scale;
@@ -19,15 +32,6 @@ pub(super) fn ui(config: &AppConfig, ctx: &Context) -> Vec<Block> {
         }),
         Setter::Scale,
     );
-    let theme = row(
-        t("settings.ui.theme"),
-        None,
-        Control::Segmented {
-            options: THEMES.iter().map(|theme| t(&format!("theme.{theme}"))).collect(),
-            selected: position(&THEMES, &config.ui.theme.as_str()),
-        },
-        |c, v| c.ui.theme = THEMES[index(v).min(THEMES.len() - 1)].to_owned(),
-    );
     let language = row(
         t("settings.ui.language"),
         None,
@@ -41,15 +45,7 @@ pub(super) fn ui(config: &AppConfig, ctx: &Context) -> Vec<Block> {
         |c, v| c.ui.font.font_weight = WEIGHTS[index(v).min(4)],
         |c, v| c.ui.font.font_size_base = font_size(v, 14),
     );
-    let mut display = vec![scale_row, theme];
-    if config.ui.theme == "night" {
-        display.push(row(
-            t("settings.ui.night"),
-            None,
-            Control::Dropdown { options: night::VARIANTS.iter().map(|v| t(&format!("night.{v}"))).collect(), selected: position(&night::VARIANTS, &config.ui.night.as_str()) },
-            |c, v| c.ui.night = night::VARIANTS[index(v).min(night::VARIANTS.len() - 1)].to_owned(),
-        ));
-    }
+    let mut display = vec![scale_row];
     display.push(language);
     if ctx.workspace.is_some() {
         let page = Control::Text { value: ctx.home_page.clone(), commit: false };

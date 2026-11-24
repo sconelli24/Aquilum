@@ -153,12 +153,7 @@
   "theme": {
     "light": "Light",
     "dark": "Dark",
-    "night": "Night",
     "system": "System"
-  },
-  "night": {
-    "red": "Red",
-    "warm": "Warm"
   },
   "common": {
     "decrease": "Decrease",
@@ -209,7 +204,6 @@
       "scale": "Interface scale, %",
       "scaleHint": "{{mod}} + mouse wheel, {{reset}} resets to 100%",
       "theme": "Theme",
-      "night": "Night theme",
       "language": "Language",
       "homePage": "Home page",
       "homePageHint": "Note for the home button in this knowledge base; empty — no button",
@@ -222,7 +216,7 @@
       "light": "Light theme",
       "lightHint": "Used in light mode",
       "dark": "Dark theme",
-      "darkHint": "Used in dark and night modes",
+      "darkHint": "Used in dark mode",
       "colors": "{{theme}} colors",
       "reset": "Reset the theme",
       "resetHint": "Restores the original colors and headings of {{theme}}",
@@ -232,14 +226,14 @@
       "headingSize": "Size, %",
       "headingSizeHint": "Relative to the note text",
       "headingWeight": "Weight",
-        "calendar-bg": "Calendar background",
-        "calendar-accent": "Calendar today and marks",
       "weightBold": "Bold",
       "weightHeavy": "Extra bold",
       "color": {
         "bg-canvas": "Window background",
         "sidebar-bg": "Sidebar background",
         "tabs-bg": "Tab bar background",
+        "calendar-bg": "Calendar background",
+        "calendar-accent": "Calendar today and marks",
         "editor-bg": "Note background",
         "text-primary": "Text",
         "text-secondary": "Secondary text",

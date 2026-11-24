@@ -7,14 +7,17 @@ fn settings_dialog_applies_changes() {
     let mut h = Harness::new();
     h.click(242.0, 578.0);
     assert_eq!(h.section(), Some(Section::Ui));
+    h.open_section(Section::Themes);
+    assert_eq!(h.section(), Some(Section::Themes), "the interface theme lives with the other themes");
 
     let themes = h.binding("theme switch", |b| matches!(b, Binding::Choice(_)));
     let widget = h.root.get_widget(themes).unwrap();
     let light = widget.downcast::<crate::ui::settings::controls::Segmented>().unwrap().inner().segment(1).unwrap().center() + widget.ctx().bounding_box().origin().to_vec2();
     h.click(light.x, light.y);
     assert_eq!(h.config().ui.theme, "light");
-    assert_eq!(h.section(), Some(Section::Ui));
+    assert_eq!(h.section(), Some(Section::Themes));
 
+    h.open_section(Section::Ui);
     let outcome = h.click(893.0, 173.0);
     assert!(outcome.rescale);
     assert_eq!(h.app.interface.scale(), 1.05);

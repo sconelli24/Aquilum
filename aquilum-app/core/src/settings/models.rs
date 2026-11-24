@@ -150,10 +150,9 @@ impl Default for ReaderSettings {
 #[serde(rename_all = "camelCase", default)]
 pub struct UiSettings {
     pub theme: String,
-    pub night: String,
     /// Light mode theme (id of a built-in theme).
     pub light_theme: String,
-    /// Theme for the dark and night modes.
+    /// Theme for the dark mode.
     pub dark_theme: String,
     /// User overrides on top of the themes: theme id -> token -> "#rrggbb" or a number.
     pub theme_overrides: BTreeMap<String, BTreeMap<String, String>>,
@@ -168,7 +167,6 @@ impl Default for UiSettings {
     fn default() -> Self {
         Self {
             theme: "system".to_string(),
-            night: "red".to_string(),
             light_theme: "light".to_string(),
             dark_theme: "dark".to_string(),
             theme_overrides: BTreeMap::new(),

@@ -36,7 +36,7 @@ impl Host {
         let scale = window.scale_factor() * self.app.scale();
         window.pre_present_notify();
         let background = ui::theme::background();
-        let shown = crate::render::night::color(background);
+        let shown = background;
         let recolored = self.background != Some(shown);
         if recolored {
             self.background = Some(shown);

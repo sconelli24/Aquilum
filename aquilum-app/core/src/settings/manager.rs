@@ -63,8 +63,9 @@ fn parse(content: &str) -> Result<AppConfig, serde_json::Error> {
     let mut merged = serde_json::to_value(AppConfig::default())?;
     overlay(&mut merged, serde_json::from_str(content)?);
     let mut config: AppConfig = serde_json::from_value(merged)?;
-    if config.ui.theme == "red" {
-        config.ui.theme = "night".into();
+    // The red theme of 0.3.23 and the night mode no longer exist: both open as the dark theme.
+    if matches!(config.ui.theme.as_str(), "red" | "night") {
+        config.ui.theme = "dark".into();
     }
     Ok(config)
 }
@@ -111,13 +112,15 @@ mod tests {
     }
 
     #[test]
-    fn the_red_theme_of_0_3_23_opens_as_the_red_night_theme() {
-        let dir = tempfile::tempdir().unwrap();
-        std::fs::write(dir.path().join("settings.json"), r#"{"ui":{"theme":"red"}}"#).unwrap();
+    fn the_removed_red_and_night_themes_open_as_the_dark_theme() {
+        for old in ["red", "night"] {
+            let dir = tempfile::tempdir().unwrap();
+            std::fs::write(dir.path().join("settings.json"), format!(r#"{{"ui":{{"theme":"{old}","night":"warm"}}}}"#)).unwrap();
 
-        let config = SettingsManager::new(dir.path()).get_config();
+            let config = SettingsManager::new(dir.path()).get_config();
 
-        assert_eq!((config.ui.theme.as_str(), config.ui.night.as_str()), ("night", "red"));
+            assert_eq!(config.ui.theme, "dark");
+        }
     }
 
     #[test]

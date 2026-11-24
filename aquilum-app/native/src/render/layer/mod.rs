@@ -143,7 +143,6 @@ impl Renderer {
                         }
                     }
                 }
-                super::night::canvas(pixels, stride, layer.area);
             });
             self.caches.insert(layer.id, cache);
             self.frames.insert(layer.id, index);

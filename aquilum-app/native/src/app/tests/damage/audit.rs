@@ -38,7 +38,7 @@ fn settings_scroll_matches_full_frames_on_desktop_and_phone_scroll_audit() {
         let mut h = sized(spec, None);
         h.app.open_settings(&mut h.root);
         h.settle();
-        for section in [Section::Ui, Section::Editor] {
+        for section in [Section::Themes, Section::Editor] {
             h.act(h.nav(section), crate::ui::widgets::Pressed);
             h.settle();
             assert_eq!(h.section(), Some(section));

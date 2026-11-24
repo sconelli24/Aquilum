@@ -45,7 +45,7 @@ fn system_appearance_updates_live_without_rebuilding_the_editor() {
 #[test]
 fn explicit_themes_ignore_desktop_changes_but_remember_the_latest_preference() {
     let mut h = Harness::new();
-    for setting in ["light", "dark", "night"] {
+    for setting in ["light", "dark"] {
         let mut config = h.config();
         config.ui.theme = setting.into();
         h.app.workspace.core.settings.update_config(config).unwrap();
@@ -77,37 +77,19 @@ fn primary_color_typed_into_field() {
 }
 
 #[test]
-fn the_night_theme_offers_its_own_list_and_remembers_the_choice() {
-    use crate::ui::settings::controls::{Changed, Segmented};
+fn the_theme_mode_has_three_choices_and_lives_with_the_themes() {
+    use crate::ui::settings::controls::Segmented;
     let mut h = Harness::new();
     h.click(242.0, 578.0);
-    let segment = |h: &mut Harness, index: usize| {
-        let themes = h.binding("theme switch", |b| matches!(b, Binding::Choice(_)));
-        let widget = h.root.get_widget(themes).unwrap();
-        let at = widget.downcast::<Segmented>().unwrap().inner().segment(index).unwrap().center() + widget.ctx().bounding_box().origin().to_vec2();
-        h.click(at.x, at.y);
-    };
-    let nights = |h: &Harness| match &h.app.popup {
-        Some(Popup::Settings { dialog, .. }) => dialog.bindings.iter().find_map(|(id, b)| matches!(b, Binding::Dropdown { options, .. } if options.contains(&"Тёплая".to_owned())).then_some(*id)),
-        _ => None,
-    };
-    assert!(nights(&h).is_none(), "night theme list visible before a night theme is chosen");
-
-    segment(&mut h, 3);
-    assert_eq!(h.config().ui.theme, "night");
+    h.open_section(Section::Themes);
     let themes = h.binding("theme switch", |b| matches!(b, Binding::Choice(_)));
-    let travel = h.root.get_widget(themes).unwrap().downcast::<Segmented>().unwrap().inner().travel();
-    assert!(travel < 3.0, "theme selection jumped instead of animating: {travel}");
-    let list = nights(&h).expect("night theme list under the theme");
-    h.act(list, Changed::OpenMenu(masonry::kurbo::Rect::new(700.0, 300.0, 900.0, 330.0)));
-    h.choose(1);
-    assert_eq!(h.config().ui.night, "warm");
-
-    segment(&mut h, 2);
-    assert!(nights(&h).is_none(), "night theme list remained for the dark theme");
-    segment(&mut h, 3);
-    let Some(Popup::Settings { dialog, .. }) = &h.app.popup else { panic!("settings closed") };
-    assert!(matches!(dialog.bindings.get(&nights(&h).unwrap()), Some(Binding::Dropdown { selected: 1, .. })), "night theme forgot the warm variant");
+    let widget = h.root.get_widget(themes).unwrap();
+    let segmented = widget.downcast::<Segmented>().unwrap().inner();
+    assert!(segmented.segment(2).is_some(), "system, light and dark");
+    assert!(segmented.segment(3).is_none(), "there is no night mode any more");
+    let dark = segmented.segment(2).unwrap().center() + widget.ctx().bounding_box().origin().to_vec2();
+    h.click(dark.x, dark.y);
+    assert_eq!(h.config().ui.theme, "dark");
 }
 
 #[test]
