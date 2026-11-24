@@ -571,18 +571,6 @@
     "hideRightSidebar": "Ocultar el panel lateral derecho",
     "showRightSidebar": "Mostrar el panel lateral derecho"
   },
-  "palette": {
-    "color": "Color",
-    "none": "Sin color",
-    "red": "Rojo",
-    "amber": "Naranja",
-    "green": "Verde",
-    "teal": "Verde azulado",
-    "blue": "Azul",
-    "purple": "Morado",
-    "pink": "Rosa",
-    "gray": "Gris"
-  },
   "fileTree": {
     "renameAria": "Nuevo nombre del archivo",
     "filter": "Buscar",
@@ -768,6 +756,16 @@
     "imagesFilter": "Imágenes"
   },
   "palette": {
+    "color": "Color",
+    "none": "Sin color",
+    "red": "Rojo",
+    "amber": "Naranja",
+    "green": "Verde",
+    "teal": "Verde azulado",
+    "blue": "Azul",
+    "purple": "Morado",
+    "pink": "Rosa",
+    "gray": "Gris",
     "title": "Paleta de comandos",
     "find": "Escribí un comando",
     "empty": "Ningún comando coincide",

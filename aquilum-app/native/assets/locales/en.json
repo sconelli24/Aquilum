@@ -571,18 +571,6 @@
     "hideRightSidebar": "Hide the right sidebar",
     "showRightSidebar": "Show the right sidebar"
   },
-  "palette": {
-    "color": "Color",
-    "none": "No color",
-    "red": "Red",
-    "amber": "Orange",
-    "green": "Green",
-    "teal": "Teal",
-    "blue": "Blue",
-    "purple": "Purple",
-    "pink": "Pink",
-    "gray": "Gray"
-  },
   "fileTree": {
     "renameAria": "New file name",
     "filter": "Search",
@@ -768,6 +756,16 @@
     "imagesFilter": "Images"
   },
   "palette": {
+    "color": "Color",
+    "none": "No color",
+    "red": "Red",
+    "amber": "Orange",
+    "green": "Green",
+    "teal": "Teal",
+    "blue": "Blue",
+    "purple": "Purple",
+    "pink": "Pink",
+    "gray": "Gray",
     "title": "Command palette",
     "find": "Type a command",
     "empty": "No matching commands",

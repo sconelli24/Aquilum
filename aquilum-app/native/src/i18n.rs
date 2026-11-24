@@ -208,4 +208,84 @@ mod tests {
             }
         }
     }
+
+    /// `serde_json::Value` keeps only the last of two equal keys, so a second "palette" block silently hid the first
+    /// one and the color menu showed raw keys. Parsing with this seed fails on any repeated key at any level.
+    struct Strict;
+
+    impl<'de> serde::de::DeserializeSeed<'de> for Strict {
+        type Value = ();
+
+        fn deserialize<D: serde::Deserializer<'de>>(self, deserializer: D) -> Result<(), D::Error> {
+            deserializer.deserialize_any(self)
+        }
+    }
+
+    impl<'de> serde::de::Visitor<'de> for Strict {
+        type Value = ();
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            formatter.write_str("JSON")
+        }
+
+        fn visit_map<A: serde::de::MapAccess<'de>>(self, mut map: A) -> Result<(), A::Error> {
+            let mut seen = std::collections::HashSet::new();
+            while let Some(key) = map.next_key::<String>()? {
+                if !seen.insert(key.clone()) {
+                    return Err(serde::de::Error::custom(format!("duplicate key {key:?}")));
+                }
+                map.next_value_seed(Strict)?;
+            }
+            Ok(())
+        }
+
+        fn visit_seq<A: serde::de::SeqAccess<'de>>(self, mut seq: A) -> Result<(), A::Error> {
+            while seq.next_element_seed(Strict)?.is_some() {}
+            Ok(())
+        }
+
+        fn visit_bool<E>(self, _: bool) -> Result<(), E> {
+            Ok(())
+        }
+
+        fn visit_i64<E>(self, _: i64) -> Result<(), E> {
+            Ok(())
+        }
+
+        fn visit_u64<E>(self, _: u64) -> Result<(), E> {
+            Ok(())
+        }
+
+        fn visit_f64<E>(self, _: f64) -> Result<(), E> {
+            Ok(())
+        }
+
+        fn visit_str<E>(self, _: &str) -> Result<(), E> {
+            Ok(())
+        }
+
+        fn visit_unit<E>(self) -> Result<(), E> {
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn no_locale_repeats_a_key() {
+        use serde::de::DeserializeSeed;
+        for language in Language::ALL {
+            let mut parser = serde_json::Deserializer::from_str(language.source());
+            if let Err(error) = Strict.deserialize(&mut parser) {
+                panic!("{}: {error}", language.code());
+            }
+        }
+    }
+
+    #[test]
+    fn the_color_menu_strings_are_found_in_every_language() {
+        for language in Language::ALL {
+            for key in ["palette.color", "palette.none", "palette.red", "palette.gray", "palette.title"] {
+                assert!(translate_in(language, key).is_some(), "{}: {key}", language.code());
+            }
+        }
+    }
 }
