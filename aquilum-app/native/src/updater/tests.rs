@@ -112,3 +112,14 @@ fn verifies_real_release_signature() {
     data[100] ^= 1;
     assert!(verify(&data, platform["signature"].as_str().unwrap(), PUBLIC_KEY).is_err());
 }
+
+/// A payload signed with this fork's updater key (see scripts/release.ps1). It fails if the
+/// embedded PUBLIC_KEY is ever swapped for a key whose private half is not ours, which would
+/// silently stop updates from installing.
+#[test]
+fn the_embedded_key_accepts_this_forks_signature_and_rejects_tampering() {
+    const PAYLOAD: &[u8] = b"apus update test payload";
+    const SIGNATURE: &str = "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkKUlVUSnRnM1VyTkJ6OTVVbUdMRm9GRk5TUEY3aHNxZHVFVk5vZWNIaTdhakhZNlhnM0ZRL0thalZtR2xKYUNmbnk1TzdKT1o4c1loVlNzVFRjVjRMbkx3VGRlTjVrYzdCdHdVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1NDgxNjczCWZpbGU6cGF5bG9hZC5iaW4KSDRIcFFKZHBLWStlbGN5cU9EeGZYbkhTNHpCTjhUTXQyeU5TaXYxd0htNzNiVHcvT3dIejVjajhyS203cGhNeUNiOHpmS1Rvb0tEUGJnNjQ2TVBuQkE9PQo=";
+    verify(PAYLOAD, SIGNATURE, PUBLIC_KEY).expect("the signature made with the updater key verifies");
+    assert!(verify(b"apus update test payload!", SIGNATURE, PUBLIC_KEY).is_err(), "a changed payload is rejected");
+}

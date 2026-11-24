@@ -100,6 +100,26 @@ cargo packager -p aquilum-native --release --formats nsis --out-dir ..\.artifact
 
 More build notes are in [DEVELOPMENT.md](DEVELOPMENT.md) and [aquilum-app/README.md](aquilum-app/README.md).
 
+## Publishing a release
+
+Installed copies of Apus check `releases/latest/download/latest.json` in this repository when they start. If it lists a newer version, they download the installer, verify its signature against the public key built into the app (`PUBLIC_KEY` in `aquilum-app/native/src/updater/release.rs`), install it and restart.
+
+One-time setup:
+
+```powershell
+cargo packager signer generate --path "$HOME\.apus\updater.key"   # choose a password, keep both safe
+winget install GitHub.cli ; gh auth login
+```
+
+For each release: raise the version in `aquilum-app/core/Cargo.toml` and `aquilum-app/native/Cargo.toml` (the same number), commit and push to `main`, then run:
+
+```powershell
+.\scripts\release.ps1 -Notes "What changed"   # asks for the key password
+.\scripts\release.ps1 -DryRun                  # builds and signs, publishes nothing
+```
+
+The script builds, signs, writes `latest.json`, tags the commit and creates the GitHub release with both files. If the private key or its password is lost, the key has to be replaced and everyone must reinstall once by hand.
+
 ## Privacy and data locations
 
 - Notes are `.md` files in the vault folder you selected; attachments and books live there too.

@@ -14,6 +14,10 @@ node_modules/
 
 # All build outputs (dev + release Cargo caches, Vite dist, packaged releases)
 /.artifacts/
+/aquilum-app/.artifacts/
+# Updater signing keys live outside the repo (~/.apus); never commit one
+updater.key
+*.key
 
 # Safety net: old locations before .artifacts layout (must never return to git)
 /aquilum-app/dist/

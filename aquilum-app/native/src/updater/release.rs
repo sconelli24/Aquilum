@@ -1,7 +1,7 @@
 use base64::Engine;
 
 pub(super) const ENDPOINT: &str = "https://github.com/sconelli24/Aquilum/releases/latest/download/latest.json";
-pub(super) const PUBLIC_KEY: &str = "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEI4QTY0MzM1MDczQUNDMTQKUldRVXpEb0hOVU9tdUFCWnVMRWlBVTRGWmlFOW0wd2VteVlXd3luMFAyMmczWktQbkRvVmhTQSsK";
+pub(super) const PUBLIC_KEY: &str = "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY3NzNEMEFDRDQwREI2QzkKUldUSnRnM1VyTkJ6OTc3bHBMUjBrNzN2MjF3RnN6QjdwbnRrSk11d1g4RkhFY1Vvb2NtSnJOMlYK";
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Release {
