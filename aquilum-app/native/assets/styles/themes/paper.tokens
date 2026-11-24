@@ -31,6 +31,7 @@
     --q-pp-base: #fbf6e6;
     --q-pp-mantle: #f1ead3;
     --q-pp-crust: #e6dec2;
+    --q-pp-accent: #2c55a0;
     --q-calendar-bg: #fffdf4;
     --q-calendar-accent: var(--q-pp-red);
 }
@@ -64,6 +65,7 @@
     --q-pp-base: #f9ec9e;
     --q-pp-mantle: #f0df86;
     --q-pp-crust: #e4d26c;
+    --q-pp-accent: #1f4e96;
     --q-calendar-bg: #fff9cf;
     --q-calendar-accent: var(--q-pp-red);
 }
@@ -97,6 +99,7 @@
     --q-pp-base: #e9d6b4;
     --q-pp-mantle: #dcc29b;
     --q-pp-crust: #cdb083;
+    --q-pp-accent: #a8532a;
     --q-calendar-bg: #f3e6cd;
     --q-calendar-accent: var(--q-pp-red);
 }
@@ -130,6 +133,7 @@
     --q-pp-base: #f4f4ec;
     --q-pp-mantle: #eaebe0;
     --q-pp-crust: #dde0d1;
+    --q-pp-accent: #26796c;
     --q-calendar-bg: #fbfbf7;
     --q-calendar-accent: var(--q-pp-teal);
 }
@@ -163,6 +167,7 @@
     --q-pp-base: #fff8ef;
     --q-pp-mantle: #fdeedd;
     --q-pp-crust: #f8e0c9;
+    --q-pp-accent: #c9561f;
     --q-calendar-bg: #fffdf8;
     --q-calendar-accent: var(--q-pp-peach);
 }
@@ -196,6 +201,7 @@
     --q-pp-base: #2d3b36;
     --q-pp-mantle: #25312d;
     --q-pp-crust: #1d2723;
+    --q-pp-accent: #efd98a;
     --q-calendar-bg: #33453f;
     --q-calendar-accent: var(--q-pp-yellow);
 }
@@ -229,6 +235,7 @@
     --q-pp-base: #2a2724;
     --q-pp-mantle: #211f1c;
     --q-pp-crust: #171513;
+    --q-pp-accent: #e6c06a;
     --q-calendar-bg: #2a2724;
     --q-calendar-accent: var(--q-pp-yellow);
 }
@@ -287,18 +294,18 @@
     --q-teal-800: var(--q-pp-teal);
     --q-teal-900: var(--q-pp-teal);
     --q-teal-950: var(--q-pp-teal);
-    --q-blue-alpha-main: var(--q-pp-blue);
-    --q-blue-50: var(--q-pp-blue);
-    --q-blue-100: var(--q-pp-blue);
-    --q-blue-200: var(--q-pp-blue);
-    --q-blue-300: var(--q-pp-blue);
-    --q-blue-400: var(--q-pp-blue);
-    --q-blue-500: var(--q-pp-blue);
-    --q-blue-600: var(--q-pp-blue);
-    --q-blue-700: var(--q-pp-blue);
-    --q-blue-800: var(--q-pp-blue);
-    --q-blue-900: var(--q-pp-blue);
-    --q-blue-950: var(--q-pp-blue);
+    --q-blue-alpha-main: var(--q-pp-accent);
+    --q-blue-50: var(--q-pp-accent);
+    --q-blue-100: var(--q-pp-accent);
+    --q-blue-200: var(--q-pp-accent);
+    --q-blue-300: var(--q-pp-accent);
+    --q-blue-400: var(--q-pp-accent);
+    --q-blue-500: var(--q-pp-accent);
+    --q-blue-600: color-mix(in srgb, var(--q-pp-accent) 85%, var(--q-pp-crust));
+    --q-blue-700: var(--q-pp-accent);
+    --q-blue-800: var(--q-pp-accent);
+    --q-blue-900: var(--q-pp-accent);
+    --q-blue-950: var(--q-pp-accent);
     --q-purple-alpha-main: var(--q-pp-mauve);
     --q-purple-50: var(--q-pp-mauve);
     --q-purple-100: var(--q-pp-mauve);
@@ -331,7 +338,7 @@
     --q-sidebar-bg: var(--q-pp-mantle);
     --q-editor-bg: var(--q-pp-base);
     --q-editor-code-bg: var(--q-pp-crust);
-    --q-accent-preset-1: var(--q-pp-blue);
+    --q-accent-preset-1: var(--q-pp-accent);
     --q-accent-preset-2: var(--q-pp-mauve);
     --q-accent-preset-3: var(--q-pp-pink);
     --q-accent-preset-4: var(--q-pp-peach);
@@ -429,18 +436,18 @@
     --q-teal-800: var(--q-pp-teal);
     --q-teal-900: var(--q-pp-teal);
     --q-teal-950: var(--q-pp-teal);
-    --q-blue-alpha-main: var(--q-pp-blue);
-    --q-blue-50: var(--q-pp-blue);
-    --q-blue-100: var(--q-pp-blue);
-    --q-blue-200: var(--q-pp-blue);
-    --q-blue-300: var(--q-pp-blue);
-    --q-blue-400: var(--q-pp-blue);
-    --q-blue-500: var(--q-pp-blue);
-    --q-blue-600: var(--q-pp-blue);
-    --q-blue-700: var(--q-pp-blue);
-    --q-blue-800: var(--q-pp-blue);
-    --q-blue-900: var(--q-pp-blue);
-    --q-blue-950: var(--q-pp-blue);
+    --q-blue-alpha-main: var(--q-pp-accent);
+    --q-blue-50: var(--q-pp-accent);
+    --q-blue-100: var(--q-pp-accent);
+    --q-blue-200: var(--q-pp-accent);
+    --q-blue-300: var(--q-pp-accent);
+    --q-blue-400: var(--q-pp-accent);
+    --q-blue-500: var(--q-pp-accent);
+    --q-blue-600: color-mix(in srgb, var(--q-pp-accent) 85%, var(--q-pp-crust));
+    --q-blue-700: var(--q-pp-accent);
+    --q-blue-800: var(--q-pp-accent);
+    --q-blue-900: var(--q-pp-accent);
+    --q-blue-950: var(--q-pp-accent);
     --q-purple-alpha-main: var(--q-pp-mauve);
     --q-purple-50: var(--q-pp-mauve);
     --q-purple-100: var(--q-pp-mauve);
@@ -473,7 +480,7 @@
     --q-sidebar-bg: var(--q-pp-mantle);
     --q-editor-bg: var(--q-pp-base);
     --q-editor-code-bg: var(--q-pp-crust);
-    --q-accent-preset-1: var(--q-pp-blue);
+    --q-accent-preset-1: var(--q-pp-accent);
     --q-accent-preset-2: var(--q-pp-mauve);
     --q-accent-preset-3: var(--q-pp-pink);
     --q-accent-preset-4: var(--q-pp-peach);

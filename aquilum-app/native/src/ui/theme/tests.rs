@@ -229,3 +229,16 @@ fn the_calendar_has_its_own_color_that_follows_the_sidebar_unless_the_theme_sets
     assert_eq!(rgba(theme.calendar_bg), [255, 0, 0, 255]);
     assert_eq!(rgba(theme.sidebar_bg), rgba(latte.theme.sidebar_bg), "editing the calendar leaves the sidebar alone");
 }
+
+#[test]
+fn every_paper_theme_brings_its_own_accent() {
+    let accent = |id: &str| rgba(builtin(id).1.theme.bg_accent);
+    assert_eq!(accent("paper-pastel"), [0xc9, 0x56, 0x1f, 0xff]);
+    assert_eq!(accent("paper-chalkboard"), [0xef, 0xd9, 0x8a, 0xff]);
+    assert_eq!(accent("paper-moleskine"), [0xe6, 0xc0, 0x6a, 0xff]);
+    let ids = ["paper-notebook", "paper-legal", "paper-kraft", "paper-washi", "paper-pastel", "paper-chalkboard", "paper-moleskine"];
+    let colors: Vec<[u8; 4]> = ids.iter().map(|id| accent(id)).collect();
+    assert!(colors.iter().enumerate().all(|(i, c)| !colors[..i].contains(c)), "two paper themes share an accent: {colors:?}");
+    let pastel = builtin("paper-pastel").1.theme;
+    assert_eq!(rgba(pastel.text_link)[..3], rgba(pastel.bg_accent)[..3], "links use the theme accent");
+}
