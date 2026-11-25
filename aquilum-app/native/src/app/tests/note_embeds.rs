@@ -379,6 +379,12 @@ fn identifiers_do_not_show_inside_an_embedded_note() {
     assert_eq!(cards(&h)[0].0, tall, "the card of the note with identifiers is as tall as the one of the same note without them");
 }
 
+/// A window wide enough for the two columns of a Cornell note.
+fn widen(h: &mut Harness) {
+    h.root.handle_window_event(masonry::core::WindowEvent::Resize(PhysicalSize::new(1800, 800)));
+    h.app.window_resized(&mut h.root, Size::new(1800.0, 800.0));
+}
+
 /// Run with `AQ_OUT=<folder>` to write a picture of a Cornell note.
 #[test]
 fn snapshot_of_a_cornell_note() {
@@ -388,4 +394,33 @@ fn snapshot_of_a_cornell_note() {
     h.open(note);
     h.settle();
     dump("cornell.png", &h.frame(1600, 800, 1.0));
+}
+
+#[test]
+fn clicking_a_cue_in_the_left_column_puts_the_caret_in_it_and_typing_edits_it() {
+    let mut h = Harness::new();
+    widen(&mut h);
+    let note = h.write_note("Clase.md", "---
+type: cornell
+---
+
+# Tema
+
+> [!question] ¿Qué es?
+
+Una nota
+");
+    h.open(note);
+    h.settle();
+    h.focus_editor();
+    let editor = h.root.get_widget(h.app.editor_id().unwrap()).unwrap();
+    let origin = editor.ctx().bounding_box().origin();
+    let (point, line_start) = editor.downcast::<TextEditor>().unwrap().inner().cue_point().expect("the note has a cue in the left column");
+    h.click(origin.x + point.x, origin.y + point.y);
+    h.settle();
+    let at = super::support::caret(&h);
+    assert!((line_start..line_start + "> [!question] ¿Qué es?".len()).contains(&at), "the caret is in the cue line: {at} vs {line_start}");
+    h.type_text("X");
+    h.settle();
+    assert!(h.app.note_ids.as_ref().unwrap().body.get(&h.root).unwrap().inner().text().contains("X"), "typing went into the note");
 }

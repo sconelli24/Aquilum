@@ -41,7 +41,13 @@ impl TextEditor {
                 let kind = &panel::KINDS[index];
                 let close = view(end);
                 let lift = f64::from((k - 1 + close.closes).saturating_sub(close.panels)) * panel::PAD;
-                let rect = Rect::new(x + self.doc.lane_x(top) + view(top).shell(self.doc.line(top), k, fonts), self.doc.top(top), right - f64::from(k - 1) * panel::PAD, self.doc.bottom(end) - lift);
+                let left = x + self.doc.lane_x(top) + view(top).shell(self.doc.line(top), k, fonts);
+                let rect = if k == 1 && self.doc.lane(top) == crate::ui::editor::document::Lane::Cue {
+                    // A cue hangs in the left column, beside its notes, and takes no height of its own in the page.
+                    Rect::new(left, self.doc.top(top), x + f64::from(self.doc.cue_width()), self.doc.top(top) + self.doc.text_height(top, end))
+                } else {
+                    Rect::new(left, self.doc.top(top), right - f64::from(k - 1) * panel::PAD, self.doc.bottom(end) - lift)
+                };
                 panel::paint(painter, rect, kind.tone, Some(Header { height: panel::header(fonts.line), icon: Some(kind.icon), button: None }));
             }
         }

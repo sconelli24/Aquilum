@@ -32,6 +32,13 @@ impl TextEditor {
 
 impl TextEditor {
     /// Height and click targets of every card drawn in place of one or more lines (dataview, books, notes shown inside the note).
+    /// A point inside the first line of the first cue, in the editor, with the start of the line in the text.
+    pub fn cue_point(&self) -> Option<(Point, usize)> {
+        let i = (0..self.doc.line_count()).find(|&i| self.doc.lane(i) == crate::ui::editor::document::Lane::Cue)?;
+        let at = self.doc.origin(i) + self.shift();
+        Some((Point::new(at.x + 40.0, at.y + 6.0), self.doc.paragraph(i).start))
+    }
+
     pub fn cards(&self) -> Vec<(f64, Vec<String>)> {
         self.card_places().into_iter().map(|(_, height, links)| (height, links)).collect()
     }

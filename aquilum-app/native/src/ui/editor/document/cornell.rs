@@ -10,7 +10,7 @@ const MIN_WIDTH: f32 = 700.0;
 const GUTTER: f32 = 20.0;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Lane {
+pub enum Lane {
     /// Properties, headings, the summary: the whole width.
     Full,
     /// A question in the left column.
@@ -28,16 +28,16 @@ impl Document {
         }
     }
 
-    pub(super) fn is_cornell(&self) -> bool {
+    pub fn is_cornell(&self) -> bool {
         (if self.front > 0 { self.cornell } else { self.told }) && self.width.is_some_and(|width| width >= MIN_WIDTH)
     }
 
     /// Width of the left column, without the gutter.
-    pub(super) fn cue_width(&self) -> f32 {
+    pub fn cue_width(&self) -> f32 {
         self.width.map_or(0.0, |width| (width * 0.27).clamp(180.0, 280.0))
     }
 
-    pub(super) fn lane(&self, line: usize) -> Lane {
+    pub fn lane(&self, line: usize) -> Lane {
         if !self.is_cornell() || self.start(line) < self.front {
             return Lane::Full;
         }
@@ -77,8 +77,99 @@ impl Document {
                 let room = self.cue_width() + GUTTER;
                 (f64::from(room), self.width.map(|width| (width - room).max(0.0)))
             }
-            // Until cues have their own column they keep the whole width.
-            Lane::Full | Lane::Cue => (0.0, self.width),
+            Lane::Cue => (0.0, Some(self.cue_width())),
+            Lane::Full => (0.0, self.width),
+        }
+    }
+}
+
+/// Cues take no room in the flow of the page: they hang in the left column beside their notes. These are the rows that make
+/// that work: a row is a cue and the lines up to the next cue or the next line that takes the whole width.
+impl Document {
+    pub(super) fn is_cue_head(&self, line: usize) -> bool {
+        self.lane(line) == Lane::Cue && matches!(self.block(line), Block::Callout { .. })
+    }
+
+    /// The first line of the row `line` is in, or `line` itself when no cue opens it.
+    pub(super) fn row_start(&self, line: usize) -> usize {
+        if !self.is_cornell() {
+            return line;
+        }
+        let mut j = line;
+        loop {
+            match self.lane(j) {
+                Lane::Full => return line,
+                Lane::Cue if self.is_cue_head(j) => return j,
+                _ => {}
+            }
+            if j == 0 {
+                return line;
+            }
+            j -= 1;
+        }
+    }
+
+    /// The last line of the row `line` is in.
+    pub(super) fn row_end(&self, line: usize) -> usize {
+        let mut j = line;
+        while self.is_cornell() && j + 1 < self.lines.count() && self.lane(j + 1) != Lane::Full && !self.is_cue_head(j + 1) {
+            j += 1;
+        }
+        j
+    }
+
+    /// The last line of the cue that starts at `head`.
+    pub(super) fn cue_end(&self, head: usize) -> usize {
+        let mut j = head;
+        while j + 1 < self.lines.count() && self.lane(j + 1) == Lane::Cue && !self.is_cue_head(j + 1) {
+            j += 1;
+        }
+        j
+    }
+
+    /// How far below the top of its row a cue line hangs: the cue lines before it take the room.
+    pub(super) fn cue_lift(&self, line: usize) -> f64 {
+        if self.lane(line) != Lane::Cue {
+            return 0.0;
+        }
+        let mut lift = 0.0;
+        let mut j = line;
+        while j > 0 && self.lane(j - 1) == Lane::Cue {
+            j -= 1;
+            lift += self.heights.text(j);
+        }
+        lift
+    }
+
+    /// The room the text of lines `first..=last` takes, one under the other.
+    pub fn text_height(&self, first: usize, last: usize) -> f64 {
+        (first..=last).map(|k| self.heights.text(k)).sum()
+    }
+
+    /// The cue line at a point of the left column (`x` from the left edge of the text), if there is one.
+    pub fn cue_at(&self, x: f64, y: f64) -> Option<usize> {
+        if !self.is_cornell() || x < 0.0 || x >= f64::from(self.cue_width()) {
+            return None;
+        }
+        let mut j = self.at_y(y);
+        loop {
+            match self.lane(j) {
+                Lane::Full => return None,
+                Lane::Cue => {
+                    let top = self.top(j) + self.cue_lift(j);
+                    if (top..top + self.heights.text(j)).contains(&y) {
+                        return Some(j);
+                    }
+                    if self.is_cue_head(j) {
+                        return None;
+                    }
+                }
+                Lane::Notes => {}
+            }
+            if j == 0 {
+                return None;
+            }
+            j -= 1;
         }
     }
 }

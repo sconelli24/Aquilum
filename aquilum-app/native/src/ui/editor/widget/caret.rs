@@ -78,7 +78,7 @@ impl TextEditor {
         if point.y >= self.doc.height() && !self.single_line {
             return (self.doc.len(), Affinity::Downstream);
         }
-        let i = self.doc.at_y(point.y.clamp(0.0, self.doc.height()));
+        let i = self.doc.cue_at(point.x, point.y).unwrap_or_else(|| self.doc.at_y(point.y.clamp(0.0, self.doc.height())));
         let p = self.doc.paragraph(i);
         if matches!(p.fold, Fold::Head | Fold::Member) {
             let head = (0..=i).rev().find(|&j| self.doc.paragraph(j).fold == Fold::Head).unwrap_or(i);

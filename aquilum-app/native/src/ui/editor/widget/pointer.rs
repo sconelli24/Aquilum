@@ -3,7 +3,7 @@ use crate::ui::editor::embed::View;
 
 impl TextEditor {
     pub(super) fn index_at(&self, point: Point) -> Option<usize> {
-        (self.doc.markdown.is_some() && self.laid_out()).then(|| self.doc.at_y(point.y.max(0.0)))
+        (self.doc.markdown.is_some() && self.laid_out()).then(|| self.doc.cue_at(point.x - self.shift().x, point.y).unwrap_or_else(|| self.doc.at_y(point.y.max(0.0))))
     }
 
     pub(super) fn embed_x(&self, i: usize) -> f64 {
