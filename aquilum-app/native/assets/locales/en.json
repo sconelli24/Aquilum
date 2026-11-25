@@ -783,7 +783,10 @@
     "createFolder": "Create the templates folder",
     "close": "close",
     "starterLinks": "Links:",
-    "starterBookTag": "book"
+    "starterBookTag": "book",
+    "starterCornellTag": "cornell",
+    "starterCornellCue": "Key question",
+    "starterCornellSummary": "Summary"
   },
   "workspaces": {
     "title": "Knowledge bases",

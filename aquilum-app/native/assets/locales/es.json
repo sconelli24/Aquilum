@@ -783,7 +783,10 @@
     "createFolder": "Crear la carpeta de plantillas",
     "close": "cerrar",
     "starterLinks": "Enlaces:",
-    "starterBookTag": "libro"
+    "starterBookTag": "libro",
+    "starterCornellTag": "cornell",
+    "starterCornellCue": "Pregunta clave",
+    "starterCornellSummary": "Resumen"
   },
   "workspaces": {
     "title": "Bases de conocimiento",

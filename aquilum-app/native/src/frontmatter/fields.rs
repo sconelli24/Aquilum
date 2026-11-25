@@ -3,7 +3,7 @@ use std::ops::Range;
 use aquilum_core::search::analyzer::frontmatter::{bounds, set as set_head};
 use aquilum_core::search::fields::{Field, FieldKind, note_fields};
 
-use super::{BOOK_TYPE, COVER, TYPE, is_key, names};
+use super::{BOOK_TYPE, CORNELL_TYPE, COVER, TYPE, is_key, names};
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Fields(Vec<Field>);
@@ -22,6 +22,10 @@ impl Fields {
 
     pub fn is_book(&self) -> bool {
         self.text(TYPE) == Some(BOOK_TYPE)
+    }
+
+    pub fn is_cornell(&self) -> bool {
+        self.text(TYPE) == Some(CORNELL_TYPE)
     }
 }
 

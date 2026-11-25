@@ -795,7 +795,10 @@
     "createFolder": "Создать папку с шаблонами",
     "close": "закрыть",
     "starterLinks": "Ссылки:",
-    "starterBookTag": "книга"
+    "starterBookTag": "книга",
+    "starterCornellTag": "корнелл",
+    "starterCornellCue": "Ключевой вопрос",
+    "starterCornellSummary": "Резюме"
   },
   "workspaces": {
     "title": "Базы знаний",

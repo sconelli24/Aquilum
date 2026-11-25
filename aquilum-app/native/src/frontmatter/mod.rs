@@ -14,6 +14,7 @@ pub const PAGE_COVER_POSITION: &str = "page_cover_position";
 pub const COVER: &str = "cover";
 pub const TYPE: &str = "type";
 pub const BOOK_TYPE: &str = "book";
+pub const CORNELL_TYPE: &str = "cornell";
 pub const PAGES: &str = "pages";
 pub const AUTHOR: &str = "author";
 pub const CREATED: &str = "created";

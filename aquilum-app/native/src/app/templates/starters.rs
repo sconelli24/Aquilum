@@ -6,7 +6,7 @@ use aquilum_core::files::gate;
 use aquilum_core::history::Source;
 
 use super::apply_placeholders;
-use crate::frontmatter::{self, AUTHOR, BOOK_COVER, BOOK_FILE, BOOK_TYPE, COVER, CREATED, PAGE_COVER, PAGES, RATING, READ_PERCENT, READER_POSITION, STATUS, TAGS, TYPE};
+use crate::frontmatter::{self, AUTHOR, BOOK_COVER, BOOK_FILE, BOOK_TYPE, CORNELL_TYPE, COVER, CREATED, PAGE_COVER, PAGES, RATING, READ_PERCENT, READER_POSITION, STATUS, TAGS, TYPE};
 use crate::i18n::{self, Language, t_in};
 
 const CREATED_PLACEHOLDER: &str = "{{date:DD-MM-YYYY}} | ({{time:HH:mm}})";
@@ -41,6 +41,23 @@ fn book_starter(language: Language) -> String {
     frontmatter::template(&fields) + &tail(language, 3)
 }
 
+/// Cornell notes: a cue (a question) opens each block of notes and a summary closes the page.
+fn cornell_starter(language: Language) -> String {
+    let tags = format!("[{}, ]", t_in(language, "templateDialog.starterCornellTag"));
+    let fields = [(CREATED, CREATED_PLACEHOLDER), (TYPE, CORNELL_TYPE), (TAGS, tags.as_str())];
+    let cue = t_in(language, "templateDialog.starterCornellCue");
+    let summary = t_in(language, "templateDialog.starterCornellSummary");
+    format!("{}
+> [!question] {cue}
+> 
+
+
+
+> [!summary] {summary}
+> 
+", frontmatter::template(&fields))
+}
+
 pub fn template_text(path: &Path) -> String {
     apply_placeholders(&read_text(path).unwrap_or_default())
 }
@@ -57,7 +74,7 @@ pub fn write_starters(core: &Core, folder: &Path) -> Vec<PathBuf> {
     }
     let mut created = Vec::new();
     let language = i18n::language();
-    for (name, content) in [("Note.md", note_starter(language)), ("Book.md", book_starter(language))] {
+    for (name, content) in [("Note.md", note_starter(language)), ("Book.md", book_starter(language)), ("Cornell.md", cornell_starter(language))] {
         let path = folder.join(name);
         if path.exists() {
             continue;
@@ -81,6 +98,17 @@ mod tests {
         assert_eq!(book, "---\ncreated: {{date:DD-MM-YYYY}} | ({{time:HH:mm}})\ncover: true\ntype: book\nauthor: \nstatus: to-read\npages: \ntags: [книга, ]\nrating: 0\nBook_cover: \nPage_cover: pattern:dotgrid\nbook_file: \nreader_position: \nread_percent: \n---\n\n\n\n***\n\nСсылки:\n- [[]]\n");
         assert!(frontmatter::end(&book).is_some_and(|end| book[end..].starts_with("\n\n\n\n***")));
         assert!(frontmatter::parse(&book).is_some_and(|fields| fields.is_book() && fields.has_page_cover()));
+    }
+
+    #[test]
+    fn the_cornell_starter_has_a_cue_and_a_summary() {
+        let text = cornell_starter(Language::Es);
+        assert!(frontmatter::parse(&text).is_some_and(|fields| fields.is_cornell() && !fields.is_book()));
+        assert!(text.contains("tags: [cornell, ]") && text.contains("> [!question] Pregunta clave
+> 
+") && text.ends_with("> [!summary] Resumen
+> 
+"));
     }
 
     #[test]
