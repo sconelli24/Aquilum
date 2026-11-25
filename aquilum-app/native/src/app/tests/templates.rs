@@ -18,6 +18,13 @@ fn fill_templates(h: &Harness, names: &[&str]) {
     }
 }
 
+/// The app has already offered its starter templates: opening the window adds none.
+fn starters_offered(h: &Harness) {
+    let mut config = h.config();
+    config.templates.starters = 1;
+    h.app.workspace.core.settings.update_config(config).unwrap();
+}
+
 fn state_cards(h: &Harness) -> Vec<WidgetId> {
     match &h.app.popup {
         Some(Popup::Templates(state)) => state.cards.clone(),
@@ -35,6 +42,7 @@ fn field_top(h: &Harness) -> f64 {
 #[test]
 fn the_templates_window_is_a_compact_list_that_stays_where_the_search_window_starts() {
     let mut h = Harness::new();
+    starters_offered(&h);
     fill_templates(&h, &["Книга.md", "Обычная заметка.md", "проекты/План.md"]);
     h.app.open_search(&mut h.root);
     h.settle();
@@ -135,4 +143,32 @@ fn a_note_created_from_a_template_keeps_the_template_text_and_saves_it() {
     crate::disk::wait();
     let saved = std::fs::read_to_string(&note).unwrap();
     assert!(saved.contains("Заготовка Книга.md"), "the file on disk is missing the template text: {saved:?}");
+}
+
+#[test]
+fn a_templates_folder_that_already_exists_gets_the_cornell_template_once() {
+    let mut h = Harness::new();
+    fill_templates(&h, &["Book.md", "Note.md"]);
+    let cornell = h.app.templates_dir().unwrap().join("Cornell.md");
+    assert!(!cornell.exists());
+    h.app.open_templates(&mut h.root);
+    h.settle();
+    assert!(cornell.exists(), "the Cornell template was not added");
+    let text = std::fs::read_to_string(&cornell).unwrap();
+    assert!(text.contains("type: cornell") && text.contains("::question") && text.contains("::summary"));
+    assert_eq!(h.config().templates.starters, 1, "the app remembers it offered it");
+    // Deleted on purpose, it does not come back.
+    h.app.close_templates(&mut h.root);
+    std::fs::remove_file(&cornell).unwrap();
+    h.app.open_templates(&mut h.root);
+    h.settle();
+    assert!(!cornell.exists(), "a deleted template came back");
+}
+
+#[test]
+fn opening_the_templates_without_a_folder_creates_nothing() {
+    let mut h = Harness::new();
+    h.app.open_templates(&mut h.root);
+    h.settle();
+    assert!(!h.app.templates_dir().unwrap().exists());
 }

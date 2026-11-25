@@ -271,11 +271,13 @@ impl Default for CalendarSettings {
 #[serde(rename_all = "camelCase", default)]
 pub struct TemplateSettings {
     pub folder: String,
+    /// The set of starter templates the app has already put in the folder (see the starters of the native app).
+    pub starters: u32,
 }
 
 impl Default for TemplateSettings {
     fn default() -> Self {
-        Self { folder: "Templates".to_string() }
+        Self { folder: "Templates".to_string(), starters: 0 }
     }
 }
 

@@ -59,14 +59,25 @@ pub fn template_text_on(path: &Path, date: chrono::NaiveDate) -> String {
     super::placeholders::apply_placeholders_on(&read_text(path).unwrap_or_default(), date)
 }
 
+/// The set of starter templates the app offers: 1 added Cornell notes.
+pub const STARTERS: u32 = 1;
+
 pub fn write_starters(core: &Core, folder: &Path) -> Vec<PathBuf> {
+    write_starters_since(core, folder, None)
+}
+
+/// The starters that are not in the folder yet; with `seen`, only those added to the app after that set, so a template that was deleted on
+/// purpose does not come back.
+pub fn write_starters_since(core: &Core, folder: &Path, seen: Option<u32>) -> Vec<PathBuf> {
     if let Err(error) = std::fs::create_dir_all(folder) {
         report!("templates folder not created: {error}");
         return Vec::new();
     }
     let mut created = Vec::new();
     let language = i18n::language();
-    for (name, content) in [("Note.md", note_starter(language)), ("Book.md", book_starter(language)), ("Cornell.md", cornell_starter(language))] {
+    // Each starter with the set that brought it.
+    let all = [("Note.md", note_starter(language), 0), ("Book.md", book_starter(language), 0), ("Cornell.md", cornell_starter(language), 1)];
+    for (name, content, _) in all.into_iter().filter(|(_, _, since)| seen.is_none_or(|seen| *since > seen)) {
         let path = folder.join(name);
         if path.exists() {
             continue;

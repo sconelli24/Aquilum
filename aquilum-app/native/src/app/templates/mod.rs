@@ -25,6 +25,7 @@ use crate::ui::widgets::Slot;
 pub use placeholders::apply_placeholders;
 pub use scan::NoteTemplate;
 pub use starters::{template_text_on, write_starters};
+use starters::{STARTERS, write_starters_since};
 use starters::template_text;
 
 pub struct TemplatesState {
@@ -42,10 +43,27 @@ pub struct TemplatesState {
 }
 
 impl App {
+    /// Puts the starter templates added since the app last did in a templates folder that already exists, once.
+    fn offer_new_starters(&mut self, root: &mut RenderRoot) {
+        let core = &self.workspace.core;
+        let mut config = core.settings.get_config();
+        if config.templates.starters >= STARTERS {
+            return;
+        }
+        let Some(dir) = self.templates_dir().filter(|dir| dir.is_dir()) else { return };
+        let created = write_starters_since(core, &dir, Some(config.templates.starters));
+        self.tree.paths_changed(root, &created);
+        config.templates.starters = STARTERS;
+        if let Err(error) = self.workspace.core.settings.update_config(config) {
+            report!("templates not recorded: {error:?}");
+        }
+    }
+
     pub fn open_templates(&mut self, root: &mut RenderRoot) {
         if matches!(self.popup, Some(Popup::Templates(_))) {
             return;
         }
+        self.offer_new_starters(root);
         let search_box = search::find_box(t("templateDialog.find"));
         let body = Slot::fit(NewWidget::new(Flex::column()).erased());
         let body_handle = Handle::of(&body);
