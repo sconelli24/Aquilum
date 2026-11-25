@@ -5,7 +5,7 @@ use super::cornell::Lane;
 use super::tests::markdown;
 use super::Document;
 
-const NOTE: &str = "---\ntype: cornell\n---\n\n# Tema\n\n> [!question] ¿Qué es?\n> sigue\n\nUna nota\n\n> cita común\n\n> [!summary] Resumen\n> final\n";
+const NOTE: &str = "---\ntype: cornell\n---\n\n# Tema\n\n::question ¿Qué es?\ncontinúa\n\nUna nota\n\n> cita común\n\n::summary Resumen final\nsigue\n";
 
 fn laid(text: &str, width: f32) -> Document {
     let mut doc = markdown(text);
@@ -21,10 +21,10 @@ fn lanes(doc: &Document) -> Vec<Lane> {
 
 #[test]
 fn cornell_notes_split_cues_notes_and_the_summary() {
-    use Lane::{Cue, Full, Notes};
+    use Lane::{Cue, Full, Notes, Summary};
     let doc = laid(NOTE, 900.0);
     // properties (3 lines), blank, heading, blank, question x2, blank, note, blank, quote, blank, summary x2, blank
-    assert_eq!(lanes(&doc), [Full, Full, Full, Notes, Full, Notes, Cue, Cue, Notes, Notes, Notes, Notes, Notes, Full, Full, Notes]);
+    assert_eq!(lanes(&doc), [Full, Full, Full, Notes, Full, Notes, Cue, Cue, Notes, Notes, Notes, Notes, Notes, Summary, Summary, Notes]);
 }
 
 #[test]
@@ -47,7 +47,7 @@ fn a_narrow_window_and_other_notes_stay_in_one_column() {
 }
 
 fn long_cue() -> String {
-    format!("---\ntype: cornell\n---\n\n> [!question] {}\n\nNota corta\n\n> [!question] Segunda\n\nOtra\n", "palabra ".repeat(40))
+    format!("---\ntype: cornell\n---\n\n::question {}\n\nNota corta\n\n::question Segunda\n\nOtra\n", "palabra ".repeat(40))
 }
 
 #[test]
@@ -65,7 +65,7 @@ fn a_cue_takes_no_height_but_its_row_is_as_tall_as_the_cue() {
 #[test]
 fn a_tall_row_of_notes_is_not_stretched_by_a_short_cue() {
     let notes = "linea\n\n".repeat(12);
-    let doc = laid(&format!("---\ntype: cornell\n---\n\n> [!question] Corta\n\n{notes}> [!question] Otra\n"), 900.0);
+    let doc = laid(&format!("---\ntype: cornell\n---\n\n::question Corta\n\n{notes}::question Otra\n"), 900.0);
     let (first, second) = (4, doc.line_count() - 2);
     let row: f64 = (first + 1..second).map(|k| doc.heights.text(k)).sum();
     assert!((doc.top(second) - doc.top(first) - row).abs() < 1.0, "a row of notes taller than its cue keeps its own height");
@@ -80,4 +80,30 @@ fn the_left_column_answers_to_clicks_by_cue_line() {
     assert_eq!(doc.cue_at(5.0, second_line), Some(4), "the lines of a wrapped cue are one paragraph");
     assert_eq!(doc.cue_at(f64::from(doc.cue_width()) + 30.0, y), None, "the notes column is not the cues");
     assert_eq!(doc.cue_at(5.0, doc.top(8) + doc.heights.text(8) + 40.0), None, "below the cue there is nothing to hit");
+}
+
+#[test]
+fn callouts_and_code_are_left_alone_in_a_cornell_note() {
+    let doc = laid("---\ntype: cornell\n---\n\n> [!question] Un callout\n> sigue\n\n```\n::question dentro del código\n```\n\n> [!summary] Otro callout\n", 900.0);
+    // 0-2 properties, 3 blank, 4-5 callout, 6 blank, 7-9 code, 10 blank, 11 callout
+    for line in [4, 5, 7, 8, 9, 11] {
+        assert_eq!(doc.lane(line), Lane::Notes, "line {line} is plain notes");
+    }
+    assert!(doc.paragraph(4).decor().x >= f64::from(doc.cue_width()), "a callout goes in the notes column like any other block");
+}
+
+#[test]
+fn a_cue_shows_without_its_marker_until_the_caret_is_in_it() {
+    let mut doc = markdown("---\ntype: cornell\n---\n\n::question ¿Qué es?\n\nNota\n");
+    doc.keep = (0.0, 10_000.0);
+    let (mut fcx, mut lcx, styles) = (FontContext::default(), LayoutContext::new(), StyleSet::new(16.0));
+    let mut width = |doc: &mut Document, caret: Option<usize>| {
+        doc.layout(&mut fcx, &mut lcx, &styles, Some(900.0), None, caret.map(|c| c..c));
+        doc.paragraph(4).layout().width()
+    };
+    let away = width(&mut doc, None);
+    let start = doc.paragraph(4).start;
+    let inside = width(&mut doc, Some(start + 3));
+    assert!(inside > away + 20.0, "with the caret in it the marker is shown: {inside} against {away}");
+    assert!((width(&mut doc, None) - away).abs() < 0.5, "and hidden again when the caret leaves");
 }

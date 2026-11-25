@@ -23,7 +23,7 @@ impl Document {
             let range = self.span(i);
             let composing = compose.filter(|(at, _)| range.contains(at) || *at == range.end);
             let moved = near && self.markdown.is_some() && self.laid.get(i).is_some_and(|laid| laid.decor.reveal_changes(self.local_selection(i, selection).as_ref()));
-            let current = composing.is_none() && !moved;
+            let current = composing.is_none() && !moved && self.laid.get(i).is_none_or(|laid| laid.key == self.lane_key(i));
             let wrap = if rebreak { self.lane_box(i).1 } else { None };
             match self.laid.get_mut(i).filter(|_| current) {
                 Some(laid) => {

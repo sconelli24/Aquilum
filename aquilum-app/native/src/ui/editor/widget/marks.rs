@@ -7,6 +7,8 @@ const CALLOUT_RADIUS: f64 = 4.0;
 const CALLOUT_ALPHA: f32 = 0.12;
 const CHECKBOX: f64 = markdown::CHECKBOX as f64;
 const RULE: f64 = 2.0;
+/// The lines of a Cornell note: between the columns, under each row and over the summary.
+const CORNELL_LINE: f64 = 3.0;
 
 impl TextEditor {
     fn runs(&self, first: usize, last: usize, same: impl Fn(usize) -> bool, starts: impl Fn(usize) -> bool) -> Vec<(usize, usize)> {
@@ -42,12 +44,7 @@ impl TextEditor {
                 let close = view(end);
                 let lift = f64::from((k - 1 + close.closes).saturating_sub(close.panels)) * panel::PAD;
                 let left = x + self.doc.lane_x(top) + view(top).shell(self.doc.line(top), k, fonts);
-                let rect = if k == 1 && self.doc.lane(top) == crate::ui::editor::document::Lane::Cue {
-                    // A cue hangs in the left column, beside its notes, and takes no height of its own in the page.
-                    Rect::new(left, self.doc.cue_top(top), x + f64::from(self.doc.cue_width()), self.doc.cue_top(top) + self.doc.text_height(top, end))
-                } else {
-                    Rect::new(left, self.doc.top(top), right - f64::from(k - 1) * panel::PAD, self.doc.bottom(end) - lift)
-                };
+                let rect = Rect::new(left, self.doc.top(top), right - f64::from(k - 1) * panel::PAD, self.doc.bottom(end) - lift);
                 panel::paint(painter, rect, kind.tone, Some(Header { height: panel::header(fonts.line), icon: Some(kind.icon), button: None }));
             }
         }
@@ -63,8 +60,12 @@ impl TextEditor {
             let (y0, y1) = (self.doc.top(head), self.doc.bottom(end));
             let line = tm.block_divider;
             let divide = x + self.doc.divider_x();
-            painter.fill(Rect::new(divide - 0.5, y0, divide + 0.5, y1), line).draw();
-            painter.fill(Rect::new(x, y1 - 0.5, right, y1 + 0.5), line).draw();
+            painter.fill(Rect::new(divide - CORNELL_LINE / 2.0, y0, divide + CORNELL_LINE / 2.0, y1), line).draw();
+            painter.fill(Rect::new(x, y1 - CORNELL_LINE / 2.0, right, y1 + CORNELL_LINE / 2.0), line).draw();
+        }
+        for head in self.doc.summaries(first, last) {
+            let y = self.doc.top(head);
+            painter.fill(Rect::new(x, y - CORNELL_LINE / 2.0, right, y + CORNELL_LINE / 2.0), tm.block_divider).draw();
         }
         self.paint_outline_guides(painter, first, last, fonts);
         clips

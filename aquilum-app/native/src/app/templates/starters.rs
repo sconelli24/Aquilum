@@ -41,21 +41,13 @@ fn book_starter(language: Language) -> String {
     frontmatter::template(&fields) + &tail(language, 3)
 }
 
-/// Cornell notes: a cue (a question) opens each block of notes and a summary closes the page.
+/// Cornell notes: a cue (a question) opens each block of notes and a summary closes the page (`::question` and `::summary`).
 fn cornell_starter(language: Language) -> String {
     let tags = format!("[{}, ]", t_in(language, "templateDialog.starterCornellTag"));
     let fields = [(CREATED, CREATED_PLACEHOLDER), (TYPE, CORNELL_TYPE), (TAGS, tags.as_str())];
     let cue = t_in(language, "templateDialog.starterCornellCue");
     let summary = t_in(language, "templateDialog.starterCornellSummary");
-    format!("{}
-> [!question] {cue}
-> 
-
-
-
-> [!summary] {summary}
-> 
-", frontmatter::template(&fields))
+    format!("{}\n::question {cue}\n\n\n\n::summary {summary}\n", frontmatter::template(&fields))
 }
 
 pub fn template_text(path: &Path) -> String {
@@ -104,11 +96,7 @@ mod tests {
     fn the_cornell_starter_has_a_cue_and_a_summary() {
         let text = cornell_starter(Language::Es);
         assert!(frontmatter::parse(&text).is_some_and(|fields| fields.is_cornell() && !fields.is_book()));
-        assert!(text.contains("tags: [cornell, ]") && text.contains("> [!question] Pregunta clave
-> 
-") && text.ends_with("> [!summary] Resumen
-> 
-"));
+        assert!(text.contains("tags: [cornell, ]") && text.contains("\n::question Pregunta clave\n") && text.ends_with("\n::summary Resumen\n"));
     }
 
     #[test]

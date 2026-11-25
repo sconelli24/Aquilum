@@ -52,7 +52,7 @@ impl Document {
             let Some((first, last)) = from else { continue };
             for i in self.at_offset(first)..=self.at_offset(last) {
                 let kept = to.is_some_and(|(a, b)| (a..=b).contains(&self.start(i)));
-                if !kept && (frame(i).panels > 0 || matches!(block(i), Block::Code { fence: true, .. } | Block::Underline)) {
+                if !kept && (frame(i).panels > 0 || matches!(block(i), Block::Code { fence: true, .. } | Block::Underline) || self.is_marker_line(i)) {
                     stale.push(i);
                 }
             }

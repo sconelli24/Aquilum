@@ -33,7 +33,7 @@ impl Document {
         // A cue hangs in the left column and takes no room: the lines of its row must be as high as it is (cue height, row top).
         let mut row: Option<(f64, f64)> = None;
         while i < until {
-            if self.is_cornell() && (self.lane(i) == Lane::Full || self.is_cue_head(i)) {
+            if self.is_cornell() && (matches!(self.lane(i), Lane::Full | Lane::Summary) || self.is_cue_head(i)) {
                 Self::close_row(self, &mut row, &mut top, i, &put);
             }
             if self.is_cornell() && self.is_cue_head(i) {

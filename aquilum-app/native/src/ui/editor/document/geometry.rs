@@ -26,7 +26,11 @@ impl Document {
 
     pub fn view(&self, line: usize) -> Frame {
         let frame = self.blocks.get(line).0;
-        if self.inside(line) { frame.plain() } else { frame }
+        if self.inside(line) {
+            frame.plain()
+        } else {
+            frame
+        }
     }
 
     pub fn scroll_of(&self, offset: usize) -> f64 {

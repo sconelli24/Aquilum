@@ -364,7 +364,7 @@ fn identifiers_do_not_show_inside_an_embedded_note() {
     let host = h.write_note("Principal.md", "![[Fuente]]
 ");
     h.open(host);
-    assert!(h.wait_for(|h| cards(h).first().is_some_and(|card| card.0 > 60.0)));
+    assert!(h.wait_for(|h| cards(h).first().is_some_and(|card| card.0 > 100.0)), "the card never got its text");
     // The card is laid out from the text without identifiers: a source of exactly that text is as tall as the card.
     let tall = cards(&h)[0].0;
     let plain = h.write_note("Igual.md", "Un párrafo con id
@@ -374,7 +374,7 @@ fn identifiers_do_not_show_inside_an_embedded_note() {
     let twin = h.write_note("Gemela.md", "![[Igual]]
 ");
     h.open(twin);
-    assert!(h.wait_for(|h| cards(h).first().is_some_and(|card| card.0 > 60.0)));
+    assert!(h.wait_for(|h| cards(h).first().is_some_and(|card| card.0 > 100.0)), "the card never got its text");
     let _ = plain;
     assert_eq!(cards(&h)[0].0, tall, "the card of the note with identifiers is as tall as the one of the same note without them");
 }
@@ -390,7 +390,7 @@ fn widen(h: &mut Harness) {
 fn snapshot_of_a_cornell_note() {
     let Some(_) = std::env::var_os("AQ_OUT") else { return };
     let mut h = Harness::new();
-    let note = h.write_note("Clase.md", "---\ntype: cornell\ntags: [cornell]\n---\n\n# Fotosíntesis\n\n> [!question] ¿Qué es la fotosíntesis?\n\nProceso por el cual las plantas convierten luz en energía química.\n\n- Ocurre en los cloroplastos\n- Usa agua y dióxido de carbono\n\n> una cita común\n\n```rust\nlet x = 1;\n```\n\n> [!summary] Resumen\n> Las plantas fabrican su alimento con luz.\n");
+    let note = h.write_note("Clase.md", "---\ntype: cornell\ntags: [cornell]\n---\n\n# Fotosíntesis\n\n::question ¿Qué es la fotosíntesis?\n\nProceso por el cual las plantas convierten luz en energía química.\n\n- Ocurre en los cloroplastos\n- Usa agua y dióxido de carbono\n\n> una cita común\n\n```rust\nlet x = 1;\n```\n\n::summary Resumen: las plantas fabrican su alimento con luz.\n");
     h.open(note);
     h.settle();
     dump("cornell.png", &h.frame(1600, 800, 1.0));
@@ -400,16 +400,7 @@ fn snapshot_of_a_cornell_note() {
 fn clicking_a_cue_in_the_left_column_puts_the_caret_in_it_and_typing_edits_it() {
     let mut h = Harness::new();
     widen(&mut h);
-    let note = h.write_note("Clase.md", "---
-type: cornell
----
-
-# Tema
-
-> [!question] ¿Qué es?
-
-Una nota
-");
+    let note = h.write_note("Clase.md", "---\ntype: cornell\n---\n\n# Tema\n\n::question ¿Qué es?\n\nUna nota\n");
     h.open(note);
     h.settle();
     h.focus_editor();
@@ -419,7 +410,7 @@ Una nota
     h.click(origin.x + point.x, origin.y + point.y);
     h.settle();
     let at = super::support::caret(&h);
-    assert!((line_start..line_start + "> [!question] ¿Qué es?".len()).contains(&at), "the caret is in the cue line: {at} vs {line_start}");
+    assert!((line_start..line_start + "::question ¿Qué es?".len()).contains(&at), "the caret is in the cue line: {at} vs {line_start}");
     h.type_text("X");
     h.settle();
     assert!(h.app.note_ids.as_ref().unwrap().body.get(&h.root).unwrap().inner().text().contains("X"), "typing went into the note");

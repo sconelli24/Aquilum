@@ -11,6 +11,7 @@ mod style;
 #[cfg(test)]
 mod tests;
 
+pub use style::Bare;
 pub use blocks::{Block, Callout, Frame, Item, State};
 #[cfg(test)]
 pub use blocks::classify;

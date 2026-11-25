@@ -14,6 +14,8 @@ pub(super) static PLAIN: Decor = Decor { x: 0.0, inset: 0.0, pad: (0.0, 0.0), ha
 pub(super) struct Laid {
     pub(super) layout: Layout<BrushIndex>,
     pub(super) decor: Decor,
+    /// The lane and marker state it was laid for.
+    pub(super) key: u8,
 }
 
 impl Laid {
@@ -24,7 +26,7 @@ impl Laid {
 
 impl Document {
     pub(super) fn context<'a>(&'a self, fonts: &'a Fonts) -> markdown::Context<'a> {
-        markdown::Context { fonts, unresolved: &self.unresolved.0, resolver: self.resolver.as_deref(), inside: false, gutter: 0, print: self.print }
+        markdown::Context { fonts, unresolved: &self.unresolved.0, resolver: self.resolver.as_deref(), inside: false, gutter: 0, print: self.print, bare: None }
     }
 
     pub(super) fn local_selection(&self, line: usize, selection: Option<&Range<usize>>) -> Option<Range<usize>> {
@@ -60,12 +62,13 @@ impl Document {
         };
         let inside = self.inside(line);
         let gutter = self.gutter(line);
-        let context = self.markdown.as_ref().map(|fonts| markdown::Context { inside, gutter, ..self.context(fonts) });
+        let bare = self.bare(line);
+        let context = self.markdown.as_ref().map(|fonts| markdown::Context { inside, gutter, bare, ..self.context(fonts) });
         let (frame, block) = (self.view(line), &self.blocks.get(line).1);
         let markdown = context.as_ref().map(|context| (context, &frame, block, self.local_selection(line, selection)));
         let (x, width) = self.lane_box(line);
         let (layout, mut decor) = text::build(fcx, lcx, styles, &text, underline, width, Alignment::Start, markdown);
         decor.x += x;
-        Laid { layout, decor }
+        Laid { layout, decor, key: self.lane_key(line) }
     }
 }

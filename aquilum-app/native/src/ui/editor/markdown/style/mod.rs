@@ -27,6 +27,13 @@ use spans::style_spans;
 
 pub use builder::push;
 
+/// A line shown as plain text on the page without its marker: the cue and the summary of Cornell notes.
+#[derive(Clone, Copy)]
+pub struct Bare {
+    /// How much of the line is the marker (`::question `): it is hidden.
+    pub cut: usize,
+}
+
 pub struct Context<'a> {
     pub fonts: &'a Fonts,
     pub unresolved: &'a HashSet<String>,
@@ -34,6 +41,7 @@ pub struct Context<'a> {
     pub inside: bool,
     pub gutter: usize,
     pub print: bool,
+    pub bare: Option<Bare>,
 }
 
 fn indent(builder: &mut RangedBuilder<'_, BrushIndex>, frame: &Frame, by: f64, decor: &mut Decor) {
@@ -65,6 +73,10 @@ pub fn style(builder: &mut RangedBuilder<'_, BrushIndex>, frame: &Frame, block: 
     style_frame(builder, frame, text, fonts, &mut decor);
     let spaces = text.len() - text.trim_start().len();
     let content = block.content(frame).max(spaces).min(text.len());
+    let content = context.bare.map_or(content, |bare| {
+        hide(builder, 0..bare.cut.min(text.len()), 0.0);
+        bare.cut.min(text.len())
+    });
     let empty = text[content..].trim().is_empty();
     match block {
         Block::Text | Block::Table { .. } => {}
