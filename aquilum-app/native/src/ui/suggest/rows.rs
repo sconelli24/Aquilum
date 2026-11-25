@@ -12,8 +12,14 @@ use crate::ui::text::{Line, Style};
 use crate::ui::theme;
 use crate::ui::tokens::{number, size};
 
-/// Room kept at the end of a row for its tag (H1 to H6).
+/// Room kept at the end of a row for its tag when it is as short as H1 to H6.
 const TAG_WIDTH: f64 = 28.0;
+
+/// Room for the longest tag: an identifier (^k3x9ab) is wider than a level.
+fn tag_width(hints: &[String]) -> f64 {
+    let longest = hints.iter().map(|h| h.chars().count()).max().unwrap_or(0);
+    (longest as f64 * f64::from(theme::ui_font_settings().size) * 0.6).clamp(TAG_WIDTH, 120.0)
+}
 
 #[derive(Debug)]
 pub struct SuggestPicked(pub usize);
@@ -50,7 +56,7 @@ impl Rows {
     pub(super) fn size_for(items: &[String], hints: &[String]) -> Size {
         let font = theme::ui_font_settings();
         let text = items.iter().map(|t| t.chars().count() as f64 * f64::from(font.size) * 0.6).fold(0.0, f64::max);
-        let tag = if hints.iter().any(|h| !h.is_empty()) { TAG_WIDTH + size::GAP_XS } else { 0.0 };
+        let tag = if hints.iter().any(|h| !h.is_empty()) { tag_width(hints) + size::GAP_XS } else { 0.0 };
         let width = text + tag + size::PADDING_XS * 2.0 + size::GAP_XS * 2.0;
         Size::new(width.clamp(size::SUGGEST_MIN_WIDTH, size::SUGGEST_MAX_WIDTH).round(), items.len() as f64 * size::SUGGEST_ROW_HEIGHT + size::GAP_XS * 2.0)
     }
@@ -124,7 +130,7 @@ impl Widget for Rows {
             if let Some(color) = background {
                 painter.fill(RoundedRect::from_rect(row, size::RADIUS_LG), color).draw();
             }
-            let room = if tagged { TAG_WIDTH + size::GAP_XS } else { 0.0 };
+            let room = if tagged { tag_width(&self.hints) + size::GAP_XS } else { 0.0 };
             let width = (row.width() - size::PADDING_XS * 2.0 - room).max(1.0);
             let layout = cache.layout(ctx, title, width, style);
             let origin = Point::new(row.x0 + size::PADDING_XS, row.y0 + ((row.height() - line) / 2.0).round());
@@ -136,7 +142,7 @@ impl Widget for Rows {
             }
             render_text(painter, Affine::translate(origin.to_vec2()), layout, &[tm.text_primary.into()], true);
             if let Some(hint) = self.hints.get(i).filter(|h| !h.is_empty()) {
-                let tag = self.tags[i].layout(ctx, hint, TAG_WIDTH, style);
+                let tag = self.tags[i].layout(ctx, hint, tag_width(&self.hints), style);
                 let at = Point::new(row.x1 - size::PADDING_XS - f64::from(tag.width()), origin.y);
                 render_text(painter, Affine::translate(at.to_vec2()), tag, &[tm.text_tertiary.into()], true);
             }

@@ -4,7 +4,7 @@ use aquilum_core::search::headings::headings;
 
 use super::Inner;
 use super::note::locate;
-use crate::ui::editor::resolve::Fetch;
+use crate::ui::editor::resolve::{BlockList, Fetch};
 
 /// Level (1 to 6) and title of every heading, in the order they appear.
 pub(super) fn outline(source: &str) -> Vec<(u8, String)> {
@@ -19,6 +19,18 @@ pub(super) fn load(inner: &Inner, target: &str) -> Fetch<Vec<(u8, String)>> {
     };
     match crate::note::read(&path) {
         Ok(loaded) => Fetch::Ready(outline(&loaded.text.to_string())),
+        Err(error) => Fetch::Missing(error.to_string()),
+    }
+}
+
+pub(super) fn load_blocks(inner: &Inner, target: &str) -> Fetch<BlockList> {
+    let path = match locate(inner, target) {
+        Ok(path) => path,
+        Err(None) => return Fetch::Pending,
+        Err(Some(reason)) => return Fetch::Missing(reason),
+    };
+    match crate::note::read(&path) {
+        Ok(loaded) => Fetch::Ready((path, aquilum_core::search::blocks::blocks(&loaded.text.to_string()))),
         Err(error) => Fetch::Missing(error.to_string()),
     }
 }

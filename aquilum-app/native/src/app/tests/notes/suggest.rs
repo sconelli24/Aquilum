@@ -201,3 +201,122 @@ fn snapshot_of_the_list_of_headings() {
     assert!(h.app.suggest_layer.is_some(), "the list is not on screen");
     dump("heading-suggestions.png", &h.frame(900, 700, 1.0));
 }
+
+fn new_id_in(text: &str) -> String {
+    let at = text.find('^').expect("a link with an identifier");
+    text[at + 1..].chars().take_while(|c| c.is_ascii_alphanumeric()).collect()
+}
+
+fn wait_for_file(h: &mut Harness, path: &std::path::Path, wanted: impl Fn(&str) -> bool) -> String {
+    let path = path.to_path_buf();
+    if !h.wait_for(|_| std::fs::read_to_string(&path).is_ok_and(|text| wanted(&text))) {
+        panic!("the note on disk never became what it should: {:?}", std::fs::read_to_string(&path));
+    }
+    std::fs::read_to_string(&path).unwrap()
+}
+
+#[test]
+fn typing_caret_after_the_hash_lists_the_blocks_of_the_note_and_shows_the_identifiers_they_have() {
+    let mut h = Harness::new();
+    h.write_note("Fuente.md", "---\ntipo: nota\n---\n\n# Título\n\nPrimer párrafo.\n\nSegundo con id ^seg\n\n- punto uno\n\n```\ncódigo\n```\n");
+    open_empty_note(&mut h);
+    h.type_text("[[Fuente#^");
+    let (items, hints) = wait_for_suggestions(&mut h, |(items, _)| items.len() == 3);
+    assert_eq!(items, ["Primer párrafo.", "Segundo con id", "punto uno"], "headings, properties and code are not blocks");
+    assert_eq!(hints, ["", "^seg", ""], "a block that has an identifier shows it");
+    h.type_text("seg");
+    let (items, _) = wait_for_suggestions(&mut h, |(items, _)| items.len() == 1);
+    assert_eq!(items, ["Segundo con id"], "the list narrows by the text, or by the identifier");
+}
+
+#[test]
+fn choosing_a_block_without_identifier_gives_it_one_in_the_note_it_is_in() {
+    let mut h = Harness::new();
+    let source = h.write_note("Fuente.md", "Primer párrafo.\n\nSegundo con id ^seg\n");
+    open_empty_note(&mut h);
+    h.type_text("![[Fuente#^");
+    wait_for_suggestions(&mut h, |(items, _)| items.len() == 2);
+    h.key(Key::Named(NamedKey::Enter), Modifiers::empty());
+    let _ = h.root.redraw();
+    let body = h.body_text();
+    let id = new_id_in(&body);
+    assert_eq!(id.len(), 6, "{body:?}");
+    assert_eq!(body, format!("![[Fuente#^{id}]]"), "the link is written and the brackets closed");
+    let written = wait_for_file(&mut h, &source, |text| text.contains('^') && text.contains("Primer"));
+    assert_eq!(written, format!("Primer párrafo. ^{id}\n\nSegundo con id ^seg\n"), "the identifier went to the end of that paragraph");
+}
+
+#[test]
+fn choosing_a_block_that_already_has_an_identifier_uses_it_and_leaves_the_note_alone() {
+    let mut h = Harness::new();
+    let source = h.write_note("Fuente.md", "Primer párrafo.\n\nSegundo con id ^seg\n");
+    open_empty_note(&mut h);
+    h.type_text("[[Fuente#^");
+    wait_for_suggestions(&mut h, |(items, _)| items.len() == 2);
+    h.type_text("segundo");
+    wait_for_suggestions(&mut h, |(items, _)| items.len() == 1);
+    h.key(Key::Named(NamedKey::Enter), Modifiers::empty());
+    let _ = h.root.redraw();
+    assert_eq!(h.body_text(), "[[Fuente#^seg]]");
+    for _ in 0..20 {
+        h.app.on_core_events(&mut h.root);
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+    assert_eq!(std::fs::read_to_string(&source).unwrap(), "Primer párrafo.\n\nSegundo con id ^seg\n");
+}
+
+#[test]
+fn a_quote_or_callout_gets_its_identifier_on_a_line_of_its_own() {
+    let mut h = Harness::new();
+    let source = h.write_note("Fuente.md", "> [!tip] Un consejo\n> con cuerpo\n\nfin\n");
+    open_empty_note(&mut h);
+    h.type_text("[[Fuente#^");
+    let (items, _) = wait_for_suggestions(&mut h, |(items, _)| items.len() == 2);
+    assert_eq!(items[0], "Un consejo", "a callout shows its title");
+    h.key(Key::Named(NamedKey::Enter), Modifiers::empty());
+    let id = new_id_in(&h.body_text());
+    let written = wait_for_file(&mut h, &source, |text| text.contains('^'));
+    assert_eq!(written, format!("> [!tip] Un consejo\n> con cuerpo\n\n^{id}\n\nfin\n"));
+}
+
+#[test]
+fn a_block_of_the_note_being_written_gets_its_identifier_in_the_same_edit() {
+    let mut h = Harness::new();
+    let note = h.write_note("Principal.md", "Texto uno\n\nTexto dos\n\n");
+    h.open(note);
+    let _ = h.root.redraw();
+    h.focus_editor();
+    h.key(Key::Named(NamedKey::End), Modifiers::CONTROL);
+    h.type_text("[[#^");
+    wait_for_suggestions(&mut h, |(items, _)| items.len() >= 2);
+    h.key(Key::Named(NamedKey::ArrowDown), Modifiers::empty());
+    h.key(Key::Named(NamedKey::Enter), Modifiers::empty());
+    let _ = h.root.redraw();
+    let body = h.body_text();
+    let id = new_id_in(&body);
+    assert_eq!(id.len(), 6, "{body:?}");
+    assert_eq!(body, format!("Texto uno\n\nTexto dos ^{id}\n\n[[#^{id}]]"), "one edit: the identifier on the block, the link where it was typed");
+    h.key(Key::Character("z".into()), crate::test_dir::command());
+    assert_eq!(h.body_text(), "Texto uno
+
+Texto dos
+
+[[#^]]", "a single undo takes both away: the identifier and the link");
+}
+
+/// Run with `AQ_OUT=<folder>` to write a picture of the list of blocks, to look at it.
+#[test]
+fn snapshot_of_the_list_of_blocks() {
+    if std::env::var_os("AQ_OUT").is_none() {
+        return;
+    }
+    let mut h = Harness::new();
+    h.write_note("Reunión.md", "# Reunión\n\nAcordamos entregar el informe el viernes por la mañana a primera hora. ^entrega\n\nRevisar el presupuesto con contabilidad.\n\n- [ ] enviar el acta a todos\n- [x] reservar la sala ^sala\n\n> [!warning] Riesgo de retraso\n> depende del proveedor\n");
+    open_empty_note(&mut h);
+    h.type_text("Ver ![[Reunión#^");
+    wait_for_suggestions(&mut h, |(items, _)| items.len() == 5);
+    h.app.on_core_events(&mut h.root);
+    h.settle();
+    assert!(h.app.suggest_layer.is_some(), "the list is not on screen");
+    dump("block-suggestions.png", &h.frame(900, 700, 1.0));
+}

@@ -19,6 +19,9 @@ impl App {
             Request::Suggest(view) => self.show_suggest(root, view),
             Request::Read { file, page, title } => self.open_reader(root, super::reader::Opening { file, page, title, initial: None, peek: false }),
             Request::ToggleTask { target, line } => self.toggle_task_in_file(root, &target, line),
+            Request::AddBlockId { path, block, id } => {
+                self.change_note(root, &path, aquilum_core::history::Source::Me, |text| block_id_change(text, &block, &id));
+            }
             Request::View(image, path) => {
                 let sharp = path.and_then(|p| std::fs::read(p).ok()).and_then(|bytes| crate::images::decode(&bytes));
                 self.open_viewer(root, sharp.unwrap_or(image));
@@ -84,6 +87,20 @@ impl App {
             root.reposition_layer(layer, at);
         }
     }
+}
+
+/// The edit that gives `block` the identifier `id`. The note is read again to find the block, in case it moved or changed since the list was made.
+fn block_id_change(text: &dyn aquilum_core::text::content::Content, block: &aquilum_core::search::blocks::Block, id: &str) -> super::note_page::text::Change {
+    let mut bytes = Vec::with_capacity(text.byte_len());
+    text.read(0..text.byte_len(), &mut |chunk| {
+        bytes.extend_from_slice(chunk);
+        Ok(())
+    })
+    .ok()?;
+    let source = String::from_utf8(bytes).ok()?;
+    let found = aquilum_core::search::blocks::blocks(&source).into_iter().find(|b| b.id.is_none() && b.line == block.line && b.preview == block.preview)?;
+    let (at, insert) = found.id_edit(id);
+    Some((at..at, insert))
 }
 
 fn toggle_task_line(text: &dyn aquilum_core::text::content::Content, line: usize) -> super::note_page::text::Change {

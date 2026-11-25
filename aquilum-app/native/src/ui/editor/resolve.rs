@@ -64,6 +64,9 @@ pub enum Blocked {
     Depth,
 }
 
+/// The blocks of a note and the file that holds them.
+pub type BlockList = (std::path::PathBuf, Vec<aquilum_core::search::blocks::Block>);
+
 /// A note, or part of one, shown inside another note.
 #[derive(Clone, Debug, PartialEq)]
 pub struct NoteText {
@@ -82,6 +85,8 @@ pub enum Request {
     TableMenu { at: Point, commands: Vec<(Command, bool)> },
     Open { target: String, wiki: bool, new_tab: bool },
     View(ImageBrush, Option<std::path::PathBuf>),
+    /// Write the identifier `id` on `block` of the note at `path`, where a link to it was just typed.
+    AddBlockId { path: std::path::PathBuf, block: aquilum_core::search::blocks::Block, id: String },
     ToggleTask { target: String, line: usize },
     Read { file: std::path::PathBuf, page: Option<std::path::PathBuf>, title: String },
     Suggest(Option<Suggestions>),
@@ -109,6 +114,10 @@ pub trait Resolver: Send + Sync {
     }
     /// What resolves the embeds of a note that is itself shown inside this one: one level deeper, aware of the notes above.
     fn nested(&self, _note: &std::path::Path) -> Option<Arc<dyn Resolver>> {
+        None
+    }
+    /// The blocks of a note, in order; `None` while they are being read.
+    fn blocks(&self, _target: &str) -> Option<BlockList> {
         None
     }
     /// The headings of a note, in order, as (level, title); `None` while they are being read.

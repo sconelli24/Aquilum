@@ -3,7 +3,7 @@ use std::sync::Arc;
 use std::sync::atomic::Ordering;
 
 use super::{Embeds, Entry, book, claim, dataview, links, media, note, outline, refresh_after};
-use crate::ui::editor::resolve::{Book, Fetch, Grid, Media, NoteText, Request, Resolver};
+use crate::ui::editor::resolve::{BlockList, Book, Fetch, Grid, Media, NoteText, Request, Resolver};
 
 const SUGGESTIONS: usize = 12;
 
@@ -65,6 +65,16 @@ impl Resolver for Embeds {
             _ => 0,
         };
         (fetched, stamp.wrapping_mul(1_000_003).wrapping_add(inside))
+    }
+
+    fn blocks(&self, target: &str) -> Option<BlockList> {
+        let key = target.to_owned();
+        let wanted = key.clone();
+        match self.fetch(|i| &i.block_lists, &key, move |inner| outline::load_blocks(inner, &wanted)).0 {
+            Fetch::Ready(list) => Some(list),
+            Fetch::Missing(_) => Some((std::path::PathBuf::new(), Vec::new())),
+            Fetch::Pending => None,
+        }
     }
 
     fn headings(&self, target: &str) -> Option<Vec<(u8, String)>> {

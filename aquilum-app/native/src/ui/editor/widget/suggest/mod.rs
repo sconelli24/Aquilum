@@ -16,6 +16,8 @@ enum Source {
     Link { wrap: bool, close: bool },
     /// A heading of a note: `[[Note#Heading`.
     Heading { close: bool },
+    /// A block of a note: `[[Note#^`.
+    Block { close: bool },
     Key,
     Value,
     /// The whole text of a note-name field.
@@ -31,7 +33,7 @@ impl Source {
     }
 
     fn local(self) -> bool {
-        !matches!(self, Source::Link { .. } | Source::Heading { .. } | Source::Name)
+        !matches!(self, Source::Link { .. } | Source::Heading { .. } | Source::Block { .. } | Source::Name)
     }
 }
 
@@ -45,8 +47,18 @@ pub(super) struct Suggest {
     hints: Vec<String>,
     selected: usize,
     source: Source,
-    /// The note whose headings are listed, to ask again when they arrive.
+    /// The note whose headings or blocks are listed, to ask again when they arrive.
     note: Option<String>,
+    blocks: Option<Blocks>,
+}
+
+/// The blocks behind a list of blocks: all of them (to pick an identifier nobody has), the ones shown, and the file they are in
+/// (`None` is the note being edited).
+#[derive(Clone, Debug, PartialEq)]
+struct Blocks {
+    all: Vec<aquilum_core::search::blocks::Block>,
+    shown: Vec<usize>,
+    path: Option<std::path::PathBuf>,
 }
 
 impl TextEditor {
@@ -71,7 +83,7 @@ impl TextEditor {
                 None => self.suggest.as_ref().map(|s| s.items.clone()).unwrap_or_default(),
             };
             let selected = self.keep_selected(&query, &items);
-            self.suggest = Some(Suggest { from: 0, to: self.doc.len(), query, items, hints: Vec::new(), selected, source: Source::Name, note: None });
+            self.suggest = Some(Suggest { from: 0, to: self.doc.len(), query, items, hints: Vec::new(), selected, source: Source::Name, note: None, blocks: None });
             return self.publish_suggest(id);
         }
         let Some(resolver) = self.doc.resolver.clone() else { return };
@@ -85,7 +97,17 @@ impl TextEditor {
                 None => self.suggest.as_ref().map(|s| (s.items.clone(), s.hints.clone())).unwrap_or_default(),
             };
             let selected = self.keep_selected(&query, &items);
-            self.suggest = Some(Suggest { from, to, query, items, hints, selected, source, note });
+            self.suggest = Some(Suggest { from, to, query, items, hints, selected, source, note, blocks: None });
+            return self.publish_suggest(id);
+        }
+        if let (Source::Block { .. }, Some(target)) = (source, note.as_deref()) {
+            // The blocks of the note, each shown by its first words; one that has an identifier shows it.
+            let (items, hints, blocks) = match self.block_items(&resolver, target, &query) {
+                Some(found) => found,
+                None => self.suggest.as_ref().map(|s| (s.items.clone(), s.hints.clone(), s.blocks.clone().unwrap_or(Blocks { all: Vec::new(), shown: Vec::new(), path: None }))).unwrap_or_else(|| (Vec::new(), Vec::new(), Blocks { all: Vec::new(), shown: Vec::new(), path: None })),
+            };
+            let selected = self.keep_selected(&query, &items);
+            self.suggest = Some(Suggest { from, to, query, items, hints, selected, source, note, blocks: Some(blocks) });
             return self.publish_suggest(id);
         }
         if query.chars().count() < min {
@@ -96,7 +118,7 @@ impl TextEditor {
             None => self.suggest.as_ref().map(|s| s.items.clone()).unwrap_or_default(),
         };
         let selected = self.keep_selected(&query, &items);
-        self.suggest = Some(Suggest { from, to, query, items, hints: Vec::new(), selected, source, note: None });
+        self.suggest = Some(Suggest { from, to, query, items, hints: Vec::new(), selected, source, note: None, blocks: None });
         self.publish_suggest(id);
     }
 
@@ -116,9 +138,35 @@ impl TextEditor {
         Some((items, hints))
     }
 
+    /// The blocks of `target` whose text or identifier matches `query`, as items, tags (the identifier, if any) and the data behind them.
+    fn block_items(&self, resolver: &std::sync::Arc<dyn crate::ui::editor::resolve::Resolver>, target: &str, query: &str) -> Option<(Vec<String>, Vec<String>, Blocks)> {
+        let (path, all) = if target.trim().is_empty() { (None, aquilum_core::search::blocks::blocks(&self.doc.whole())) } else { resolver.blocks(target.trim()).map(|(path, all)| (Some(path), all))? };
+        let matcher = Matcher::new(query.trim(), IGNORE_CASE);
+        let (mut items, mut hints, mut shown) = (Vec::new(), Vec::new(), Vec::new());
+        for (index, block) in all.iter().enumerate() {
+            let wanted = query.trim().is_empty() || matcher.first(&block.preview).is_some() || block.id.as_deref().is_some_and(|id| matcher.first(id).is_some());
+            if wanted {
+                items.push(block.preview.clone());
+                hints.push(block.id.as_ref().map_or_else(String::new, |id| format!("^{id}")));
+                shown.push(index);
+            }
+        }
+        Some((items, hints, Blocks { all, shown, path }))
+    }
+
     pub(super) fn poll_suggest(&mut self, id: WidgetId) {
         let Some(current) = self.suggest.as_ref().filter(|s| !s.source.local()) else { return };
         let Some(resolver) = self.doc.resolver.clone() else { return };
+        if let (Source::Block { .. }, Some(target)) = (current.source, current.note.as_deref()) {
+            let Some((items, hints, blocks)) = self.block_items(&resolver, target, &current.query) else { return };
+            if items != current.items || hints != current.hints {
+                if let Some(s) = &mut self.suggest {
+                    (s.items, s.hints, s.blocks, s.selected) = (items, hints, Some(blocks), 0);
+                }
+                self.publish_suggest(id);
+            }
+            return;
+        }
         let (items, hints) = match (current.source, current.note.as_deref()) {
             (Source::Heading { .. }, Some(target)) => match self.heading_items(&resolver, target, &current.query) {
                 Some(found) => found,
@@ -207,12 +255,51 @@ impl TextEditor {
         Some(false)
     }
 
+    /// A block was chosen: the link to it, and its identifier if it has none yet (written in the same edit when the block is in
+    /// the note being edited, asked of the app when it is in another note).
+    fn accept_block(&mut self, s: &Suggest, index: usize, close: bool) -> bool {
+        let Some(blocks) = &s.blocks else { return false };
+        let Some(block) = blocks.shown.get(index).and_then(|&at| blocks.all.get(at)).cloned() else { return false };
+        let (id, fresh) = match &block.id {
+            Some(id) => (id.clone(), false),
+            None => (aquilum_core::search::blocks::new_id(&blocks.all), true),
+        };
+        let insert = format!("^{id}{}", if close { CLOSE } else { "" });
+        let skip = !close && self.doc.after(s.to).starts_with(CLOSE);
+        let mut caret = s.from + insert.len() + if skip { CLOSE.len() } else { 0 };
+        let mut edits = vec![(s.from..s.to, insert)];
+        if fresh {
+            match &blocks.path {
+                None => {
+                    let (at, text) = block.id_edit(&id);
+                    if at <= s.from {
+                        caret += text.len();
+                    }
+                    edits.push((at..at, text));
+                }
+                Some(path) => {
+                    if let Some(resolver) = &self.doc.resolver {
+                        resolver.request(Request::AddBlockId { path: path.clone(), block, id });
+                    }
+                }
+            }
+        }
+        self.dispatch(edits, Some((caret, caret)), Kind::Other);
+        self.close_suggest();
+        true
+    }
+
     pub(super) fn accept_suggest(&mut self, index: usize) -> bool {
         let Some(s) = self.suggest.clone() else { return false };
+        if let Source::Block { close } = s.source {
+            return self.accept_block(&s, index, close);
+        }
         let Some(title) = s.items.get(index) else { return false };
         let insert = match s.source {
             Source::Link { wrap, close } => format!("{}{title}{}", if wrap { OPEN } else { "" }, if close { CLOSE } else { "" }),
             Source::Heading { close } => format!("{}{}", aquilum_core::search::headings::link_text(title), if close { CLOSE } else { "" }),
+            // Blocks are handled above: they also write an identifier.
+            Source::Block { .. } => String::new(),
             Source::Key => format!("{title}: "),
             Source::Value | Source::Name => title.clone(),
         };

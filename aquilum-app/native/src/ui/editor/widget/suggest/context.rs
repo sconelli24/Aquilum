@@ -35,7 +35,7 @@ impl TextEditor {
                 (from, caret, crate::frontmatter::suggest_keys(key), Source::Key)
             }
         };
-        Some(Suggest { from, to, query: self.doc.slice(from..caret).to_owned(), items, hints: Vec::new(), selected: 0, source, note: None })
+        Some(Suggest { from, to, query: self.doc.slice(from..caret).to_owned(), items, hints: Vec::new(), selected: 0, source, note: None, blocks: None })
     }
 
     pub(super) fn suggest_context(&self) -> Option<Context> {
@@ -64,11 +64,13 @@ impl TextEditor {
                     // `[[Note#Part`: the headings of that note, from the moment the # is typed. `[[#` is the note itself.
                     let last = query.rfind('#').unwrap_or(first);
                     let heading = &query[last + 1..];
-                    if heading.starts_with('^') {
-                        return None;
-                    }
                     let stop = after.char_indices().find(|&(at, c)| c == '|' || after[at..].starts_with(CLOSE)).map(|(at, _)| at);
-                    return Some(Context { from: base + last + 1, to: caret + stop.unwrap_or(0), query: heading.to_owned(), source: Source::Heading { close: stop.is_none() }, note: Some(query[..first].to_owned()) });
+                    let close = stop.is_none();
+                    // `[[Note#^` lists the blocks of the note instead; the ^ is part of what gets replaced.
+                    return Some(match heading.strip_prefix('^') {
+                        Some(block) => Context { from: base + last + 1, to: caret + stop.unwrap_or(0), query: block.to_owned(), source: Source::Block { close }, note: Some(query[..first].to_owned()) },
+                        None => Context { from: base + last + 1, to: caret + stop.unwrap_or(0), query: heading.to_owned(), source: Source::Heading { close }, note: Some(query[..first].to_owned()) },
+                    });
                 }
                 let stop = after.char_indices().find(|&(at, c)| matches!(c, '|' | '#') || after[at..].starts_with(CLOSE)).map(|(at, _)| at);
                 return Some(Context { from: base, to: caret + stop.unwrap_or(0), query: query.to_owned(), source: Source::Link { wrap: false, close: stop.is_none() }, note: None });
