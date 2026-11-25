@@ -60,11 +60,19 @@ pub fn heading_near(page: &str, at: usize, previous: impl FnOnce() -> Option<Str
     heading_at(page, at).or_else(|| previous().and_then(|text| heading_at(&text, text.len())))
 }
 
+/// A heading as a link spells it: the characters that mean something inside a link (`# | ^ : % [ ]`) become spaces and runs of
+/// spaces become one, as in Obsidian.
+pub fn link_text(title: &str) -> String {
+    let spaced: String = title.chars().map(|c| if matches!(c, '#' | '|' | '^' | ':' | '%' | '[' | ']') { ' ' } else { c }).collect();
+    spaced.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+/// The headings a link names: the title as written or as the link spells it, whatever the case.
 pub fn matching<'a>(headings: &'a [Heading], wanted: &str) -> Vec<&'a Heading> {
-    let needle = wanted.trim().trim_start_matches('#').trim().to_lowercase();
+    let needle = link_text(wanted).to_lowercase();
     headings
         .iter()
-        .filter(|heading| heading.title.to_lowercase() == needle)
+        .filter(|heading| heading.title.to_lowercase() == wanted.trim().trim_start_matches('#').trim().to_lowercase() || link_text(&heading.title).to_lowercase() == needle)
         .collect()
 }
 

@@ -1,4 +1,4 @@
-use super::{heading_at, headings, matching, Heading};
+use super::{heading_at, headings, link_text, matching, Heading};
 
 const NOTE: &str = "# Один\n\nтекст\n\n## Два\n\nещё\n\n### Три\n\nглубже\n\n## Два\n\nдубль\n";
 
@@ -60,4 +60,18 @@ fn reports_every_heading_with_the_same_title() {
     assert_eq!(matching(&list, "## Два").len(), 2);
     assert_eq!(matching(&list, "три").len(), 1);
     assert!(matching(&list, "Нет такого").is_empty());
+}
+
+#[test]
+fn a_link_finds_a_heading_that_has_characters_of_link_syntax() {
+    let list = headings("# Plan: fase #1 | 50%
+
+texto
+
+## Otro
+");
+    assert_eq!(link_text("Plan: fase #1 | 50%"), "Plan fase 1 50");
+    assert_eq!(matching(&list, "Plan fase 1 50").len(), 1, "as the link spells it");
+    assert_eq!(matching(&list, "plan:  fase #1 | 50%").len(), 1, "as the heading is written, whatever the case");
+    assert!(matching(&list, "Plan fase").is_empty());
 }
