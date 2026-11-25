@@ -6,6 +6,7 @@ pub mod error;
 pub mod guest;
 pub mod fields;
 pub mod graph;
+pub mod blocks;
 pub mod headings;
 pub mod hits;
 pub mod index;
