@@ -62,6 +62,10 @@ impl TextEditor {
             let divide = x + self.doc.divider_x();
             painter.fill(Rect::new(divide - CORNELL_LINE / 2.0, y0, divide + CORNELL_LINE / 2.0, y1), tm.bg_accent.multiply_alpha(0.55)).draw();
             painter.fill(Rect::new(x, y1 - CORNELL_LINE / 2.0, right, y1 + CORNELL_LINE / 2.0), line).draw();
+            if self.doc.header_row() == Some(head) {
+                // The line under the headers of the columns.
+                painter.fill(Rect::new(x, y0 + super::super::document::HEADER - 8.0, right, y0 + super::super::document::HEADER - 7.0), line).draw();
+            }
         }
         for head in self.doc.summaries(first, last) {
             let y = self.doc.top(head);

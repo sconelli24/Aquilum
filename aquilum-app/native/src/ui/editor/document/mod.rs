@@ -1,7 +1,7 @@
 mod checkpoints;
 mod classify;
 mod cornell;
-pub use cornell::Lane;
+pub use cornell::{HEADER, Lane};
 #[cfg(test)]
 mod cornell_tests;
 mod edges;
@@ -101,6 +101,7 @@ pub struct Document {
     front: usize,
     cornell: bool,
     told: bool,
+    header_row: Option<usize>,
     dirty: Option<Range<usize>>,
     pub rebroke: bool,
     placed: bool,
@@ -159,6 +160,7 @@ impl Document {
             front: 0,
             cornell: false,
             told: false,
+            header_row: None,
             dirty: None,
             rebroke: false,
             placed: false,

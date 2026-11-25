@@ -47,6 +47,9 @@
     "cornellQuestion": "Pregunta clave",
     "cornellSummary": "Resumen",
     "cornellRow": "Nueva fila Cornell",
+    "cornellKeyPoints": "Puntos clave",
+    "cornellNotes": "Notas",
+    "cornellSummaryHint": "Escribí lo esencial en pocas líneas",
     "table": {
       "menuAria": "Acciones de la tabla",
       "copy": "Copiar tabla",

@@ -68,7 +68,7 @@ fn a_tall_row_of_notes_is_not_stretched_by_a_short_cue() {
     let doc = laid(&format!("---\ntype: cornell\n---\n\n::question Corta\n\n{notes}::question Otra\n"), 900.0);
     let (first, second) = (4, doc.line_count() - 2);
     let row: f64 = (first + 1..second).map(|k| doc.heights.text(k)).sum();
-    assert!((doc.top(second) - doc.top(first) - row - super::cornell::ROW_PAD).abs() < 1.0, "a row of notes taller than its cue is as tall as its notes and the air under them");
+    assert!((doc.top(second) - doc.top(first) - row - super::cornell::ROW_PAD - super::cornell::HEADER).abs() < 1.0, "a row of notes taller than its cue is as tall as its notes, the headers over the first row and the air under them");
 }
 
 #[test]
@@ -117,4 +117,30 @@ fn an_empty_cue_or_summary_asks_for_a_hint_until_it_has_text_or_the_caret() {
     assert_eq!(doc.placeholder(6), None);
     let filled = laid("---\ntype: cornell\n---\n\n::question Algo\n", 900.0);
     assert_eq!(filled.placeholder(4), None);
+}
+
+#[test]
+fn the_first_row_has_the_column_headers_over_it_and_the_summary_has_its_title() {
+    use super::cornell::HEADER;
+    let doc = laid(NOTE, 900.0);
+    // 6-7 cue, 8 blank, 9 note, 13-14 summary
+    assert_eq!(doc.header_row(), Some(6), "the headers are over the first cue");
+    assert!(doc.top(9) - doc.top(6) >= HEADER, "the notes of the first row start below the headers");
+    assert!(doc.cue_top(6) - doc.top(6) >= HEADER, "and so does its cue");
+    assert!(doc.origin(13).y - doc.top(13) >= HEADER, "the text of the summary hangs below its title");
+    assert!(doc.heights.get(13) >= doc.heights.text(13) + HEADER, "and the title has its own room");
+    let other = laid(&NOTE.replace("cornell", "book"), 900.0);
+    assert_eq!(other.header_row(), None);
+}
+
+#[test]
+fn the_headers_move_to_the_next_row_when_the_first_cue_goes() {
+    let mut doc = laid(&long_cue(), 900.0);
+    assert_eq!(doc.header_row(), Some(4));
+    let at = doc.paragraph(4).start;
+    doc.replace(at..at + "::question".len(), "");
+    let (mut fcx, mut lcx, styles) = (FontContext::default(), LayoutContext::new(), StyleSet::new(16.0));
+    doc.layout(&mut fcx, &mut lcx, &styles, Some(900.0), None, None);
+    assert_eq!(doc.header_row(), Some(8), "the second cue is the first now");
+    assert!(doc.top(10) - doc.top(8) >= super::cornell::HEADER, "its notes start below the headers");
 }

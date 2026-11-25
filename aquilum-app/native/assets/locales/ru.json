@@ -47,6 +47,9 @@
     "cornellQuestion": "Ключевой вопрос",
     "cornellSummary": "Резюме",
     "cornellRow": "Новая строка Корнелла",
+    "cornellKeyPoints": "Ключевые моменты",
+    "cornellNotes": "Заметки",
+    "cornellSummaryHint": "Напишите главное в нескольких строках",
     "table": {
       "menuAria": "Действия с таблицей",
       "copy": "Копировать таблицу",

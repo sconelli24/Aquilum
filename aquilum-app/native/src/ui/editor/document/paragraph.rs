@@ -62,7 +62,7 @@ impl Document {
             frame,
             fold: self.heights.fold(line),
             embed: self.embeds.get(line),
-            lift: self.heights.lift(line) + self.cue_lift(line),
+            lift: self.heights.lift(line) + self.cue_lift(line) + self.summary_lift(line),
             scroll: if matches!(block, Block::Code { fence: false, .. }) { self.scroll_of(range.start) } else { 0.0 },
             laid: self.laid.get(line),
         }

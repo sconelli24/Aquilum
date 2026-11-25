@@ -47,6 +47,9 @@
     "cornellQuestion": "Key question",
     "cornellSummary": "Summary",
     "cornellRow": "New Cornell row",
+    "cornellKeyPoints": "Key points",
+    "cornellNotes": "Notes",
+    "cornellSummaryHint": "Write what matters in a few lines",
     "table": {
       "menuAria": "Table actions",
       "copy": "Copy table",

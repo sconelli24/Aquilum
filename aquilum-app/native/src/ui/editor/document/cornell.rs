@@ -11,6 +11,9 @@ use super::{Document, text};
 /// Narrower windows keep the usual single column.
 const MIN_WIDTH: f32 = 700.0;
 const GUTTER: f32 = 44.0;
+/// Room for the column headers over the first row, and for the title of the summary over its text.
+pub const HEADER: f64 = 44.0;
+
 /// Air under the last line of a row, before the line that closes it.
 pub(super) const ROW_PAD: f64 = 16.0;
 
@@ -117,6 +120,11 @@ impl Document {
         lane * 2 + u8::from(self.bare(line).is_some())
     }
 
+    /// Where the notes column starts, from the left edge of the text.
+    pub fn notes_x(&self) -> f64 {
+        f64::from(self.cue_width() + GUTTER)
+    }
+
     /// How far a line is moved right to make room for the cues.
     pub fn lane_x(&self, line: usize) -> f64 {
         self.lane_box(line).0
@@ -207,6 +215,35 @@ impl Document {
         lift + self.cue_offset(head)
     }
 
+    /// The line of the first cue: the column headers (Key points, Notes) are over it.
+    pub fn header_row(&self) -> Option<usize> {
+        self.header_row.filter(|_| self.is_cornell())
+    }
+
+    /// The first line that opens a cue, if the note has one (and is laid out whole).
+    pub(super) fn first_cue(&self) -> Option<usize> {
+        if !self.is_cornell() || self.base != 0 {
+            return None;
+        }
+        (0..self.lines.count()).find(|&line| self.start(line) >= self.front && self.is_cue_head(line))
+    }
+
+    /// The blank line after the first cue, which carries the room of the column headers: the notes start below them.
+    pub(super) fn header_carrier(&self) -> Option<usize> {
+        let line = self.cue_end(self.header_row?) + 1;
+        (line < self.lines.count() && self.line(line).trim().is_empty()).then_some(line)
+    }
+
+    /// Room a line takes besides its text: the column headers, or the title of the summary, which hangs from the line (`summary_lift`).
+    pub(super) fn extra_height(&self, line: usize, carrier: Option<usize>) -> f64 {
+        if Some(line) == carrier || self.summary_lift(line) > 0.0 { HEADER } else { 0.0 }
+    }
+
+    /// How far the text of the line that opens the summary is moved down, to leave room for the title over it.
+    pub(super) fn summary_lift(&self, line: usize) -> f64 {
+        if self.is_cornell() && matches!(self.marker_of(line), Some((Lane::Summary, _))) { HEADER } else { 0.0 }
+    }
+
     /// The blank lines between a cue and the first text of its notes: the cue is level with that text.
     pub(super) fn cue_offset(&self, head: usize) -> f64 {
         let mut blanks = 0.0;
@@ -215,9 +252,9 @@ impl Document {
             blanks += self.heights.text(k);
             k += 1;
         }
-        // Only when the row has text of its own is the cue level with it; an empty row keeps it at the top.
+        // Only when the row has text of its own is the cue level with it; an empty row keeps it at the top. The first row starts below the headers.
         let has_text = k < self.lines.count() && self.lane(k) == Lane::Notes;
-        if has_text { blanks } else { 0.0 }
+        (if has_text { blanks } else { 0.0 }) + if self.header_row == Some(head) { HEADER } else { 0.0 }
     }
 
     /// The rows from `first` to `last` (a cue and the lines up to the next cue), as first and last line.

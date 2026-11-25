@@ -80,9 +80,20 @@ impl TextEditor {
             // A cue or a summary with no text yet shows what it is for, in gray, where its text will go.
             let hint = [masonry::peniko::Brush::Solid(tm.icon_muted)];
             let (fcx, lcx) = ctx.text_contexts();
+            // The headers of the columns over the first row, and the title of the summary over its text.
+            let mut titles: Vec<(&str, f64, f64)> = Vec::new();
+            if let Some(head) = self.doc.header_row().filter(|&head| self.doc.top(head) < self.painted.1 && self.doc.top(head) + super::super::document::HEADER > self.painted.0) {
+                titles.push(("editor.cornellKeyPoints", 0.0, self.doc.top(head)));
+                titles.push(("editor.cornellNotes", self.doc.notes_x(), self.doc.top(head)));
+            }
+            titles.extend(self.doc.summaries(first, last).into_iter().map(|line| ("editor.cornellSummary", 0.0, self.doc.top(line))));
+            for (key, x, y) in titles {
+                let layout = self.doc.hint(fcx, lcx, &self.styles, &crate::i18n::t(key));
+                render_text(painter, Affine::translate(self.shift() + masonry::kurbo::Vec2::new(x, y + 8.0)), &layout, &hint, true);
+            }
             for i in first..=last {
                 let Some(lane) = self.doc.placeholder(i) else { continue };
-                let key = if lane == super::super::document::Lane::Cue { "editor.cornellQuestion" } else { "editor.cornellSummary" };
+                let key = if lane == super::super::document::Lane::Cue { "editor.cornellQuestion" } else { "editor.cornellSummaryHint" };
                 let layout = self.doc.hint(fcx, lcx, &self.styles, &format!("{}…", crate::i18n::t(key)));
                 render_text(painter, Affine::translate(self.shift() + self.doc.origin(i)), &layout, &hint, true);
             }

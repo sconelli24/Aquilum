@@ -11,6 +11,13 @@ use super::super::{Document, Fold};
 impl Document {
     #[allow(clippy::too_many_arguments)]
     pub(super) fn place(&mut self, from: usize, until: usize, fcx: &mut FontContext, lcx: &mut LayoutContext<BrushIndex>, styles: &StyleSet, width: Option<f32>, selection: Option<&Range<usize>>) {
+        // The column headers hang over the first row: when another row becomes the first, everything is placed again.
+        let first = self.first_cue();
+        if self.header_row != first {
+            self.header_row = first;
+            self.placed = false;
+        }
+        let carrier = self.header_carrier();
         let all = !self.placed;
         let len = self.lines.count();
         let (mut i, mut until) = if all { (0, len) } else { (from.min(len.saturating_sub(1)), until.min(len)) };
@@ -89,7 +96,7 @@ impl Document {
                     continue;
                 }
             }
-            let height = self.heights.text(i);
+            let height = self.heights.text(i) + self.extra_height(i, carrier);
             put(self, i, height, Fold::None);
             top += height;
             i += 1;
