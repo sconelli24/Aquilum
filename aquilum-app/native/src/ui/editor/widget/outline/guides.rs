@@ -12,7 +12,7 @@ impl TextEditor {
         }
         let view = self.doc.view(j);
         let origin_x = view.origin(self.doc.line(j), fonts) + LIST_START + LIST_LEVEL * item.level() as f64;
-        self.shift().x + origin_x - self.doc.scroll_of(p.start) + f64::from(fonts.ch) / 2.0
+        self.shift().x + self.doc.lane_x(j) + origin_x - self.doc.scroll_of(p.start) + f64::from(fonts.ch) / 2.0
     }
 
     fn item_middle_y(&self, j: usize, fonts: &Fonts) -> f64 {

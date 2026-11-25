@@ -1,5 +1,8 @@
 mod checkpoints;
 mod classify;
+mod cornell;
+#[cfg(test)]
+mod cornell_tests;
 mod edges;
 mod edit;
 #[cfg(test)]
@@ -95,6 +98,8 @@ pub struct Document {
     pub scrolls: Vec<(usize, usize, f64)>,
     gutters: std::cell::Cell<(usize, usize, usize)>,
     front: usize,
+    cornell: bool,
+    told: bool,
     dirty: Option<Range<usize>>,
     pub rebroke: bool,
     placed: bool,
@@ -151,6 +156,8 @@ impl Document {
             scrolls: Vec::new(),
             gutters: std::cell::Cell::new(NO_RUN),
             front: 0,
+            cornell: false,
+            told: false,
             dirty: None,
             rebroke: false,
             placed: false,

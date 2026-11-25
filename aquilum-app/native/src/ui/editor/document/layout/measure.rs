@@ -24,10 +24,11 @@ impl Document {
             let composing = compose.filter(|(at, _)| range.contains(at) || *at == range.end);
             let moved = near && self.markdown.is_some() && self.laid.get(i).is_some_and(|laid| laid.decor.reveal_changes(self.local_selection(i, selection).as_ref()));
             let current = composing.is_none() && !moved;
+            let wrap = if rebreak { self.lane_box(i).1 } else { None };
             match self.laid.get_mut(i).filter(|_| current) {
                 Some(laid) => {
                     if rebreak {
-                        laid.layout.break_all_lines(laid.decor.wrap(self.width));
+                        laid.layout.break_all_lines(laid.decor.wrap(wrap));
                         laid.layout.align(Alignment::Start, AlignmentOptions::default());
                         self.heights.set_text(i, laid.height());
                     }

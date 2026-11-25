@@ -130,7 +130,16 @@ impl Document {
         let count = self.lines.count();
         let front = if self.base == 0 { crate::frontmatter::end(&self.text).unwrap_or(0) } else { 0 };
         let (from, until) = if front == self.front { (from, until) } else { (0, count) };
+        let earlier = self.front;
         self.front = front;
+        if self.base == 0 && (front != earlier || self.lines.start(from) < front) {
+            let cornell = front > 0 && crate::frontmatter::parse(&self.text[..front]).is_some_and(|fields| fields.is_cornell());
+            if cornell != self.cornell {
+                self.cornell = cornell;
+                self.laid.clear();
+                self.rebroke = true;
+            }
+        }
         let mut state = from.checked_sub(1).and_then(|i| self.blocks.state(i)).unwrap_or(self.entry);
         for j in from..count {
             let line = &self.text[self.lines.range(j)];

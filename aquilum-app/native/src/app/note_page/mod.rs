@@ -24,6 +24,11 @@ impl App {
         Some(self.note.as_ref().is_some_and(|n| self.interface.metadata_expanded(&n.path)))
     }
 
+    /// Whether the properties of the note say `type: cornell`.
+    pub(in crate::app) fn is_cornell(&self) -> bool {
+        frontmatter::parse(&frontmatter::head(&crate::rope::Text(&self.text))).is_some_and(|fields| fields.is_cornell())
+    }
+
     pub(in crate::app) fn hidden_len(&self) -> usize {
         match self.metadata_state() {
             Some(false) => frontmatter::bounds_of(&crate::rope::Text(&self.text)).map_or(0, |found| found.body),
@@ -48,6 +53,7 @@ impl App {
             focus_mode: self.interface.focus_mode(),
             compact: self.compact(),
             wide: self.interface.wide(),
+            cornell: self.is_cornell(),
             hero: self.hero_view(),
             smart: crate::ui::editor::Smart::from_config(&self.workspace.core.settings.get_config()),
             wake: std::sync::Arc::clone(&self.workspace.wake),

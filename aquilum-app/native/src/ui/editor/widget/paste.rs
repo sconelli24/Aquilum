@@ -45,6 +45,11 @@ impl TextEditor {
         self
     }
 
+    pub fn with_cornell(mut self, cornell: bool) -> Self {
+        self.doc.set_cornell(cornell);
+        self
+    }
+
     pub fn set_smart(this: &mut WidgetMut<'_, Self>, smart: Smart) {
         if this.widget.smart != smart {
             this.widget.smart = smart;

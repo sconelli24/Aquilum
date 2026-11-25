@@ -63,7 +63,9 @@ impl Document {
         let context = self.markdown.as_ref().map(|fonts| markdown::Context { inside, gutter, ..self.context(fonts) });
         let (frame, block) = (self.view(line), &self.blocks.get(line).1);
         let markdown = context.as_ref().map(|context| (context, &frame, block, self.local_selection(line, selection)));
-        let (layout, decor) = text::build(fcx, lcx, styles, &text, underline, self.width, Alignment::Start, markdown);
+        let (x, width) = self.lane_box(line);
+        let (layout, mut decor) = text::build(fcx, lcx, styles, &text, underline, width, Alignment::Start, markdown);
+        decor.x += x;
         Laid { layout, decor }
     }
 }

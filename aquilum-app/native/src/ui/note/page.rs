@@ -26,6 +26,8 @@ pub struct NoteView<'a> {
     pub focus_mode: bool,
     pub compact: bool,
     pub wide: bool,
+    /// Cornell notes: the notes go in a column at the right of the cues, and need the width for it.
+    pub cornell: bool,
     pub hero: crate::ui::book::HeroView,
     pub resolver: Option<std::sync::Arc<dyn crate::ui::editor::resolve::Resolver>>,
     pub smart: crate::ui::editor::Smart,
@@ -118,7 +120,8 @@ pub fn page(view: NoteView<'_>) -> (NewWidget<Flex>, NoteIds) {
         .past_end(size::EDITOR_PADDING_Y + size::EDITOR_SCROLL_PAST_END)
         .with_resolver(view.resolver.clone())
         .with_wake(std::sync::Arc::clone(&view.wake))
-        .with_smart(view.smart);
+        .with_smart(view.smart)
+        .with_cornell(view.cornell);
     let body_area = NewWidget::new(body_area).with_class(style::EDITOR_TEXT);
     let body = Handle::of(&body_area);
 
@@ -134,7 +137,7 @@ pub fn page(view: NoteView<'_>) -> (NewWidget<Flex>, NoteIds) {
     let hero_slot_handle = Handle::of(&hero_slot);
     let spacer = NewWidget::new(SizedBox::empty().height(Length::px(parts.top)));
     let spacer_handle = Handle::of(&spacer);
-    let column = EditorColumn::new(NewWidget::new(content), parts.inset, view.wide);
+    let column = EditorColumn::new(NewWidget::new(content), parts.inset, view.wide || view.cornell);
     let column_handle = Handle::of(&column);
     let (pad_left, pad_right) = if view.compact {
         (size::SPACE_12, size::SPACE_4)

@@ -91,6 +91,7 @@ impl Document {
             Block::Callout { .. } => frame.bar(line, frame.quote, fonts),
             _ => frame.x(line, fonts),
         };
+        let x = x + self.lane_x(first);
         let available = (f64::from(width?) - x - frame.right()).max(0.0);
         let start = self.start(first);
         let source = &self.text[self.lines.start(first)..self.lines.end(last)];

@@ -378,3 +378,14 @@ fn identifiers_do_not_show_inside_an_embedded_note() {
     let _ = plain;
     assert_eq!(cards(&h)[0].0, tall, "the card of the note with identifiers is as tall as the one of the same note without them");
 }
+
+/// Run with `AQ_OUT=<folder>` to write a picture of a Cornell note.
+#[test]
+fn snapshot_of_a_cornell_note() {
+    let Some(_) = std::env::var_os("AQ_OUT") else { return };
+    let mut h = Harness::new();
+    let note = h.write_note("Clase.md", "---\ntype: cornell\ntags: [cornell]\n---\n\n# Fotosíntesis\n\n> [!question] ¿Qué es la fotosíntesis?\n\nProceso por el cual las plantas convierten luz en energía química.\n\n- Ocurre en los cloroplastos\n- Usa agua y dióxido de carbono\n\n> una cita común\n\n```rust\nlet x = 1;\n```\n\n> [!summary] Resumen\n> Las plantas fabrican su alimento con luz.\n");
+    h.open(note);
+    h.settle();
+    dump("cornell.png", &h.frame(1600, 800, 1.0));
+}

@@ -41,7 +41,7 @@ impl TextEditor {
                 let kind = &panel::KINDS[index];
                 let close = view(end);
                 let lift = f64::from((k - 1 + close.closes).saturating_sub(close.panels)) * panel::PAD;
-                let rect = Rect::new(x + view(top).shell(self.doc.line(top), k, fonts), self.doc.top(top), right - f64::from(k - 1) * panel::PAD, self.doc.bottom(end) - lift);
+                let rect = Rect::new(x + self.doc.lane_x(top) + view(top).shell(self.doc.line(top), k, fonts), self.doc.top(top), right - f64::from(k - 1) * panel::PAD, self.doc.bottom(end) - lift);
                 panel::paint(painter, rect, kind.tone, Some(Header { height: panel::header(fonts.line), icon: Some(kind.icon), button: None }));
             }
         }
@@ -50,7 +50,7 @@ impl TextEditor {
             let book = |j: usize| matches!(block(j), Block::Callout { kind: Callout::Book, .. });
             for (from, to) in self.runs(first, last, bare, book).into_iter().filter(|&(from, _)| !(book(from) && view(from).quote == level)) {
                 let dx = view(from).bar(self.doc.line(from), level, fonts);
-                painter.fill(RoundedRect::new(x + dx, self.doc.top(from) + QUOTE_INSET, x + dx + QUOTE_BAR, self.doc.bottom(to) - QUOTE_INSET, QUOTE_BAR / 2.0), tm.bg_accent).draw();
+                painter.fill(RoundedRect::new(x + self.doc.lane_x(from) + dx, self.doc.top(from) + QUOTE_INSET, x + self.doc.lane_x(from) + dx + QUOTE_BAR, self.doc.bottom(to) - QUOTE_INSET, QUOTE_BAR / 2.0), tm.bg_accent).draw();
             }
         }
         self.paint_outline_guides(painter, first, last, fonts);
@@ -77,7 +77,7 @@ impl TextEditor {
         if matches!(p.block, Block::Rule) && !Part::Rule.shown(selection, &(p.frame.lead..p.len as usize)) {
             let (x, y, view) = (self.shift().x, (self.doc.top(i) + self.doc.bottom(i)) / 2.0, self.doc.view(i));
             let left = self.doc.markdown.as_ref().map_or(0.0, |fonts| view.x(self.doc.line(i), fonts));
-            painter.fill(Rect::new(x + left, y - RULE / 2.0, x + self.inner_width() - view.right(), y + RULE / 2.0), theme::current().icon_quiet).draw();
+            painter.fill(Rect::new(x + self.doc.lane_x(i) + left, y - RULE / 2.0, x + self.inner_width() - view.right(), y + RULE / 2.0), theme::current().icon_quiet).draw();
         }
         if let Some(item) = p.block.item() {
             let marker = item.marker();

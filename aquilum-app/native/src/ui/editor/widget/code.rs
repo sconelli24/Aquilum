@@ -29,7 +29,7 @@ impl TextEditor {
         let math = matches!(block(first), Block::Code { lang: Some(Lang::Math), .. });
         let header = !math && matches!(block(first), Block::Code { first: true, fence: true, .. });
         let frame = self.doc.view(first);
-        let x = self.shift().x + frame.x(self.doc.line(first), fonts);
+        let x = self.shift().x + self.doc.lane_x(first) + frame.x(self.doc.line(first), fonts);
         let bottom = self.doc.bottom(last) - f64::from(self.doc.view(last).closes) * PAD;
         let panel = Rect::new(x, self.doc.top(first), self.shift().x + self.inner_width() - frame.right(), bottom);
         let digits = if body.is_empty() || math { 0 } else { panel::digits(body.end() - body.start() + 1) };
