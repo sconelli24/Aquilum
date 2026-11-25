@@ -57,9 +57,9 @@ fn a_cue_takes_no_height_but_its_row_is_as_tall_as_the_cue() {
     let cue = doc.heights.text(4);
     assert_eq!(doc.heights.get(4), 0.0, "a cue takes no room of its own");
     assert!(cue > doc.heights.text(6) * 3.0, "the cue wraps in its narrow column: {cue}");
-    assert!(doc.top(8) - doc.top(4) >= cue - 0.5, "the next row starts {} below the first, the cue is {cue} tall", doc.top(8) - doc.top(4));
-    assert!(doc.top(8) - doc.top(4) <= cue + 1.0, "the row is no taller than it needs");
-    assert!(doc.top(4) == doc.top(5) && (doc.top(4)..doc.top(4) + 20.0).contains(&doc.origin(4).y), "a cue starts at the top of its row");
+    assert!(doc.top(8) - doc.top(4) >= cue + doc.cue_offset(4) - 0.5, "the next row starts {} below the first, the cue is {cue} tall", doc.top(8) - doc.top(4));
+    assert!(doc.top(8) - doc.top(4) <= cue + doc.cue_offset(4) + 1.0, "the row is no taller than it needs");
+    assert!(doc.top(4) == doc.top(5) && (doc.cue_top(4)..doc.cue_top(4) + 40.0).contains(&doc.origin(4).y), "a cue hangs from the top of its row");
 }
 
 #[test]
@@ -74,9 +74,9 @@ fn a_tall_row_of_notes_is_not_stretched_by_a_short_cue() {
 #[test]
 fn the_left_column_answers_to_clicks_by_cue_line() {
     let doc = laid(&long_cue(), 900.0);
-    let y = doc.top(4) + 5.0;
+    let y = doc.cue_top(4) + 5.0;
     assert_eq!(doc.cue_at(5.0, y), Some(4));
-    let second_line = doc.top(4) + doc.heights.text(4) - 5.0;
+    let second_line = doc.cue_top(4) + doc.heights.text(4) - 5.0;
     assert_eq!(doc.cue_at(5.0, second_line), Some(4), "the lines of a wrapped cue are one paragraph");
     assert_eq!(doc.cue_at(f64::from(doc.cue_width()) + 30.0, y), None, "the notes column is not the cues");
     assert_eq!(doc.cue_at(5.0, doc.top(8) + doc.heights.text(8) + 40.0), None, "below the cue there is nothing to hit");

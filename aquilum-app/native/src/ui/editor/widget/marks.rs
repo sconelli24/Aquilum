@@ -44,7 +44,7 @@ impl TextEditor {
                 let left = x + self.doc.lane_x(top) + view(top).shell(self.doc.line(top), k, fonts);
                 let rect = if k == 1 && self.doc.lane(top) == crate::ui::editor::document::Lane::Cue {
                     // A cue hangs in the left column, beside its notes, and takes no height of its own in the page.
-                    Rect::new(left, self.doc.top(top), x + f64::from(self.doc.cue_width()), self.doc.top(top) + self.doc.text_height(top, end))
+                    Rect::new(left, self.doc.cue_top(top), x + f64::from(self.doc.cue_width()), self.doc.cue_top(top) + self.doc.text_height(top, end))
                 } else {
                     Rect::new(left, self.doc.top(top), right - f64::from(k - 1) * panel::PAD, self.doc.bottom(end) - lift)
                 };
@@ -58,6 +58,13 @@ impl TextEditor {
                 let dx = view(from).bar(self.doc.line(from), level, fonts);
                 painter.fill(RoundedRect::new(x + self.doc.lane_x(from) + dx, self.doc.top(from) + QUOTE_INSET, x + self.doc.lane_x(from) + dx + QUOTE_BAR, self.doc.bottom(to) - QUOTE_INSET, QUOTE_BAR / 2.0), tm.bg_accent).draw();
             }
+        }
+        for (head, end) in self.doc.rows(first, last) {
+            let (y0, y1) = (self.doc.top(head), self.doc.bottom(end));
+            let line = tm.block_divider;
+            let divide = x + self.doc.divider_x();
+            painter.fill(Rect::new(divide - 0.5, y0, divide + 0.5, y1), line).draw();
+            painter.fill(Rect::new(x, y1 - 0.5, right, y1 + 0.5), line).draw();
         }
         self.paint_outline_guides(painter, first, last, fonts);
         clips

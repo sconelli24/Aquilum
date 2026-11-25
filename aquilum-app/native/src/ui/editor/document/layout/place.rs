@@ -38,7 +38,7 @@ impl Document {
             }
             if self.is_cornell() && self.is_cue_head(i) {
                 let end = self.cue_end(i);
-                row = Some(((i..=end).map(|k| self.heights.text(k)).sum(), top));
+                row = Some(((i..=end).map(|k| self.heights.text(k)).sum::<f64>() + self.cue_offset(i), top));
                 for k in i..=end {
                     put(self, k, 0.0, Fold::None);
                 }

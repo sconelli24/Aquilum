@@ -8,6 +8,8 @@ use crate::ui::editor::embed::panel;
 /// Narrower windows keep the usual single column.
 const MIN_WIDTH: f32 = 700.0;
 const GUTTER: f32 = 20.0;
+/// Air between the line that closes a row and the cue of the next one.
+const ROW_AIR: f64 = 8.0;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Lane {
@@ -138,7 +140,52 @@ impl Document {
             j -= 1;
             lift += self.heights.text(j);
         }
-        lift
+        // The cue is level with the first text of its notes, not with the blank line that often sits between them.
+        let mut head = j;
+        while !self.is_cue_head(head) && head > 0 {
+            head -= 1;
+        }
+        lift + self.cue_offset(head)
+    }
+
+    /// Air under the line that closes the row above, and the blank lines between the cue and the first text of its notes.
+    pub(super) fn cue_offset(&self, head: usize) -> f64 {
+        let mut offset = ROW_AIR;
+        let mut k = self.cue_end(head) + 1;
+        while k < self.lines.count() && self.lane(k) == Lane::Notes && self.line(k).trim().is_empty() {
+            offset += self.heights.text(k);
+            k += 1;
+        }
+        offset
+    }
+
+    /// The rows from `first` to `last` (a cue and the lines up to the next cue), as first and last line.
+    pub fn rows(&self, first: usize, last: usize) -> Vec<(usize, usize)> {
+        let mut rows = Vec::new();
+        if !self.is_cornell() {
+            return rows;
+        }
+        let mut k = self.row_start(first);
+        while k <= last && k < self.lines.count() {
+            if self.is_cue_head(k) {
+                let end = self.row_end(k);
+                rows.push((k, end));
+                k = end + 1;
+            } else {
+                k += 1;
+            }
+        }
+        rows
+    }
+
+    /// Where the line between the columns is, from the left edge of the text.
+    pub fn divider_x(&self) -> f64 {
+        f64::from(self.cue_width() + GUTTER / 2.0)
+    }
+
+    /// Where a cue panel starts: its row top, and the offset that puts it level with the first text of its notes.
+    pub fn cue_top(&self, head: usize) -> f64 {
+        self.top(head) + self.cue_offset(head)
     }
 
     /// The room the text of lines `first..=last` takes, one under the other.
