@@ -179,3 +179,13 @@ fn pdf_export_finishes_with_embedded_notes_even_when_they_loop() {
     assert!(pdf.starts_with(b"%PDF"), "not a PDF");
     assert!(started.elapsed() < std::time::Duration::from_secs(20), "the export dragged on: {:?}", started.elapsed());
 }
+
+#[test]
+fn a_heading_with_characters_of_link_syntax_can_be_embedded_by_the_name_a_link_gives_it() {
+    let mut h = Harness::new();
+    h.write_note("Fuente.md", "# Tareas: fase #1\n\ncontenido de la fase uno\n\n## Otra\n\nfuera\n");
+    let host = h.write_note("Principal.md", "![[Fuente#Tareas fase 1]]\n");
+    h.open(host);
+    assert!(h.wait_for(|h| cards(h).len() == 1), "the embed by the name a link gives the heading was not drawn");
+    assert_eq!(titles(&h), vec!["Fuente#Tareas fase 1".to_owned()]);
+}

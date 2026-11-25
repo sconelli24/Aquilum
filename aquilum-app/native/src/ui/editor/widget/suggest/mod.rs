@@ -1,10 +1,12 @@
 mod context;
+use context::Context;
 
 use super::*;
 use crate::ui::editor::resolve::{Request, Suggestions};
 use crate::ui::keymap::{self, Command, Scope};
 use masonry::core::WidgetId;
 use masonry::core::keyboard::Modifiers;
+use aquilum_core::text::matcher::{IGNORE_CASE, Matcher};
 
 const OPEN: &str = "[[";
 const CLOSE: &str = "]]";
@@ -12,6 +14,8 @@ const CLOSE: &str = "]]";
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum Source {
     Link { wrap: bool, close: bool },
+    /// A heading of a note: `[[Note#Heading`.
+    Heading { close: bool },
     Key,
     Value,
     /// The whole text of a note-name field.
@@ -27,7 +31,7 @@ impl Source {
     }
 
     fn local(self) -> bool {
-        !matches!(self, Source::Link { .. } | Source::Name)
+        !matches!(self, Source::Link { .. } | Source::Heading { .. } | Source::Name)
     }
 }
 
@@ -37,8 +41,12 @@ pub(super) struct Suggest {
     to: usize,
     query: String,
     items: Vec<String>,
+    /// Level of each heading (H1 to H6); empty for the other kinds of suggestion.
+    hints: Vec<String>,
     selected: usize,
     source: Source,
+    /// The note whose headings are listed, to ask again when they arrive.
+    note: Option<String>,
 }
 
 impl TextEditor {
@@ -63,29 +71,68 @@ impl TextEditor {
                 None => self.suggest.as_ref().map(|s| s.items.clone()).unwrap_or_default(),
             };
             let selected = self.keep_selected(&query, &items);
-            self.suggest = Some(Suggest { from: 0, to: self.doc.len(), query, items, selected, source: Source::Name });
+            self.suggest = Some(Suggest { from: 0, to: self.doc.len(), query, items, hints: Vec::new(), selected, source: Source::Name, note: None });
             return self.publish_suggest(id);
         }
         let Some(resolver) = self.doc.resolver.clone() else { return };
         let Some(min) = resolver.suggest_min() else { return self.close_suggest() };
-        let Some((from, to, query, source)) = self.suggest_context().filter(|c| c.2.chars().count() >= min) else {
+        let Some(context) = self.suggest_context() else { return self.close_suggest() };
+        let Context { from, to, query, source, note } = context;
+        if let (Source::Heading { .. }, Some(target)) = (source, note.as_deref()) {
+            // The list opens as soon as the # is typed, with every heading, and narrows as the title is typed.
+            let (items, hints) = match self.heading_items(&resolver, target, &query) {
+                Some(found) => found,
+                None => self.suggest.as_ref().map(|s| (s.items.clone(), s.hints.clone())).unwrap_or_default(),
+            };
+            let selected = self.keep_selected(&query, &items);
+            self.suggest = Some(Suggest { from, to, query, items, hints, selected, source, note });
+            return self.publish_suggest(id);
+        }
+        if query.chars().count() < min {
             return self.close_suggest();
-        };
+        }
         let items = match resolver.suggest(&query) {
             Some(items) => items,
             None => self.suggest.as_ref().map(|s| s.items.clone()).unwrap_or_default(),
         };
         let selected = self.keep_selected(&query, &items);
-        self.suggest = Some(Suggest { from, to, query, items, selected, source });
+        self.suggest = Some(Suggest { from, to, query, items, hints: Vec::new(), selected, source, note: None });
         self.publish_suggest(id);
+    }
+
+    /// Titles and level tags of the headings of `target` that match `query`; `None` while the note is still being read.
+    fn heading_items(&self, resolver: &std::sync::Arc<dyn crate::ui::editor::resolve::Resolver>, target: &str, query: &str) -> Option<(Vec<String>, Vec<String>)> {
+        let list = if target.trim().is_empty() {
+            aquilum_core::search::headings::headings(&self.doc.whole()).into_iter().map(|heading| (heading.level, heading.title)).collect()
+        } else {
+            resolver.headings(target.trim())?
+        };
+        let matcher = Matcher::new(query.trim(), IGNORE_CASE);
+        let (mut items, mut hints) = (Vec::new(), Vec::new());
+        for (level, title) in list.into_iter().filter(|(_, title)| !title.is_empty() && (query.trim().is_empty() || matcher.first(title).is_some())) {
+            items.push(title);
+            hints.push(format!("H{level}"));
+        }
+        Some((items, hints))
     }
 
     pub(super) fn poll_suggest(&mut self, id: WidgetId) {
         let Some(current) = self.suggest.as_ref().filter(|s| !s.source.local()) else { return };
-        let Some(items) = self.doc.resolver.as_ref().and_then(|r| r.suggest(&current.query)) else { return };
+        let Some(resolver) = self.doc.resolver.clone() else { return };
+        let (items, hints) = match (current.source, current.note.as_deref()) {
+            (Source::Heading { .. }, Some(target)) => match self.heading_items(&resolver, target, &current.query) {
+                Some(found) => found,
+                None => return,
+            },
+            _ => match resolver.suggest(&current.query) {
+                Some(items) => (items, Vec::new()),
+                None => return,
+            },
+        };
         if items != current.items {
             if let Some(s) = &mut self.suggest {
                 s.items = items;
+                s.hints = hints;
                 s.selected = 0;
             }
             self.publish_suggest(id);
@@ -99,6 +146,7 @@ impl TextEditor {
             caret: self.caret_at(s.from - s.source.lead(), 0, Affinity::Downstream),
             query: s.query.clone(),
             items: s.items.clone(),
+            hints: s.hints.clone(),
             selected: s.selected,
         });
         if view != self.suggest_shown {
@@ -164,10 +212,11 @@ impl TextEditor {
         let Some(title) = s.items.get(index) else { return false };
         let insert = match s.source {
             Source::Link { wrap, close } => format!("{}{title}{}", if wrap { OPEN } else { "" }, if close { CLOSE } else { "" }),
+            Source::Heading { close } => format!("{}{}", aquilum_core::search::headings::link_text(title), if close { CLOSE } else { "" }),
             Source::Key => format!("{title}: "),
             Source::Value | Source::Name => title.clone(),
         };
-        let skip = matches!(s.source, Source::Link { close: false, .. }) && self.doc.after(s.to).starts_with(CLOSE);
+        let skip = matches!(s.source, Source::Link { close: false, .. } | Source::Heading { close: false }) && self.doc.after(s.to).starts_with(CLOSE);
         let caret = s.from + insert.len() + if skip { CLOSE.len() } else { 0 };
         self.dispatch(vec![(s.from..s.to, insert)], Some((caret, caret)), Kind::Other);
         self.close_suggest();

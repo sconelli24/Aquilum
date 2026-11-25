@@ -4,6 +4,7 @@ mod dataview;
 mod links;
 mod media;
 mod note;
+mod outline;
 mod resolver;
 #[cfg(test)]
 mod testing;
@@ -33,6 +34,7 @@ struct Inner {
     media: Cache<Media>,
     books: Cache<Book>,
     notes: Cache<NoteText>,
+    outlines: Cache<Vec<(u8, String)>>,
     /// The notes whose text is being drawn around this one, itself included: an embed of any of them would loop.
     chain: Vec<PathBuf>,
     depth: u8,
@@ -87,6 +89,7 @@ impl Embeds {
             media: Cache::default(),
             books: Cache::default(),
             notes: Cache::default(),
+            outlines: Cache::default(),
             chain,
             depth: 0,
             children: Mutex::default(),
@@ -118,6 +121,7 @@ impl Embeds {
             media: Cache::default(),
             books: Cache::default(),
             notes: Cache::default(),
+            outlines: Cache::default(),
             chain,
             depth: self.0.depth + 1,
             children: Mutex::default(),
@@ -157,7 +161,7 @@ impl Embeds {
         fn running<T>(cache: &Cache<T>) -> bool {
             cache.entries.lock().unwrap_or_else(|e| e.into_inner()).values().any(|e| e.running)
         }
-        running(&self.0.grids) || running(&self.0.media) || running(&self.0.books) || running(&self.0.notes) || self.0.children.lock().unwrap_or_else(|e| e.into_inner()).values().any(Embeds::busy)
+        running(&self.0.grids) || running(&self.0.media) || running(&self.0.books) || running(&self.0.notes) || running(&self.0.outlines) || self.0.children.lock().unwrap_or_else(|e| e.into_inner()).values().any(Embeds::busy)
     }
 
     fn shared(&self, key: &str) -> String {
@@ -178,6 +182,7 @@ impl Embeds {
         if paths.iter().any(|p| is_markdown(p)) {
             self.0.books.epoch.fetch_add(1, Ordering::AcqRel);
             self.0.notes.epoch.fetch_add(1, Ordering::AcqRel);
+            self.0.outlines.epoch.fetch_add(1, Ordering::AcqRel);
             stale = true;
         }
         for child in self.0.children.lock().unwrap_or_else(|e| e.into_inner()).values() {
@@ -196,6 +201,7 @@ impl Embeds {
         commit(&self.0.media, &self.0.stamps);
         commit(&self.0.books, &self.0.stamps);
         commit(&self.0.notes, &self.0.stamps);
+        commit(&self.0.outlines, &self.0.stamps);
         for child in self.0.children.lock().unwrap_or_else(|e| e.into_inner()).values() {
             child.take_changed();
         }
@@ -227,6 +233,7 @@ fn forget(inner: &Arc<Inner>) {
     inner.suggestions.epoch.fetch_add(1, Ordering::AcqRel);
     inner.books.epoch.fetch_add(1, Ordering::AcqRel);
     inner.notes.epoch.fetch_add(1, Ordering::AcqRel);
+    inner.outlines.epoch.fetch_add(1, Ordering::AcqRel);
     for child in inner.children.lock().unwrap_or_else(|e| e.into_inner()).values() {
         forget(&child.0);
     }

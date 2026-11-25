@@ -94,6 +94,8 @@ pub struct Suggestions {
     pub caret: masonry::kurbo::Rect,
     pub query: String,
     pub items: Vec<String>,
+    /// A short tag for each item (the level of a heading, H1 to H6); empty when the items have none.
+    pub hints: Vec<String>,
     pub selected: usize,
 }
 
@@ -107,6 +109,10 @@ pub trait Resolver: Send + Sync {
     }
     /// What resolves the embeds of a note that is itself shown inside this one: one level deeper, aware of the notes above.
     fn nested(&self, _note: &std::path::Path) -> Option<Arc<dyn Resolver>> {
+        None
+    }
+    /// The headings of a note, in order, as (level, title); `None` while they are being read.
+    fn headings(&self, _target: &str) -> Option<Vec<(u8, String)>> {
         None
     }
     fn request(&self, request: Request);

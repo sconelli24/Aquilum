@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 
-use super::{Embeds, Entry, book, claim, dataview, links, media, note, refresh_after};
+use super::{Embeds, Entry, book, claim, dataview, links, media, note, outline, refresh_after};
 use crate::ui::editor::resolve::{Book, Fetch, Grid, Media, NoteText, Request, Resolver};
 
 const SUGGESTIONS: usize = 12;
@@ -67,6 +67,16 @@ impl Resolver for Embeds {
         (fetched, stamp.wrapping_mul(1_000_003).wrapping_add(inside))
     }
 
+    fn headings(&self, target: &str) -> Option<Vec<(u8, String)>> {
+        let key = target.to_owned();
+        let wanted = key.clone();
+        match self.fetch(|i| &i.outlines, &key, move |inner| outline::load(inner, &wanted)).0 {
+            Fetch::Ready(list) => Some(list),
+            Fetch::Missing(_) => Some(Vec::new()),
+            Fetch::Pending => None,
+        }
+    }
+
     fn nested(&self, note: &std::path::Path) -> Option<Arc<dyn Resolver>> {
         Some(Arc::new(Embeds::nested(self, note.to_path_buf())))
     }
@@ -104,6 +114,7 @@ impl Resolver for Embeds {
         self.0.grids.sweep(|_| {});
         self.0.books.sweep(|_| {});
         self.0.notes.sweep(|_| {});
+        // The lists of headings are asked for while typing, not while laying out: a sweep would drop them mid-fetch.
     }
 
     fn request(&self, request: Request) {

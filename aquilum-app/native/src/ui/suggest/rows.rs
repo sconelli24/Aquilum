@@ -12,25 +12,32 @@ use crate::ui::text::{Line, Style};
 use crate::ui::theme;
 use crate::ui::tokens::{number, size};
 
+/// Room kept at the end of a row for its tag (H1 to H6).
+const TAG_WIDTH: f64 = 28.0;
+
 #[derive(Debug)]
 pub struct SuggestPicked(pub usize);
 
 pub(super) struct Rows {
     items: Vec<String>,
+    /// A short tag shown at the end of each row (H1 to H6 for headings); empty for none.
+    hints: Vec<String>,
     query: String,
     selected: usize,
     hovered: Option<usize>,
     lines: Vec<Line>,
+    tags: Vec<Line>,
 }
 
 impl Rows {
-    pub(super) fn new(items: Vec<String>, query: String, selected: usize) -> Self {
-        Rows { items, query, selected, hovered: None, lines: Vec::new() }
+    pub(super) fn new(items: Vec<String>, hints: Vec<String>, query: String, selected: usize) -> Self {
+        Rows { items, hints, query, selected, hovered: None, lines: Vec::new(), tags: Vec::new() }
     }
 
-    pub(super) fn set(this: &mut WidgetMut<'_, Self>, items: Vec<String>, query: String, selected: usize) {
-        let resized = this.widget.items != items;
+    pub(super) fn set(this: &mut WidgetMut<'_, Self>, items: Vec<String>, hints: Vec<String>, query: String, selected: usize) {
+        let resized = this.widget.items != items || this.widget.hints != hints;
         this.widget.items = items;
+        this.widget.hints = hints;
         this.widget.query = query;
         this.widget.selected = selected;
         if resized {
@@ -40,10 +47,11 @@ impl Rows {
         this.ctx.request_paint_only();
     }
 
-    pub(super) fn size_for(items: &[String]) -> Size {
+    pub(super) fn size_for(items: &[String], hints: &[String]) -> Size {
         let font = theme::ui_font_settings();
         let text = items.iter().map(|t| t.chars().count() as f64 * f64::from(font.size) * 0.6).fold(0.0, f64::max);
-        let width = text + size::PADDING_XS * 2.0 + size::GAP_XS * 2.0;
+        let tag = if hints.iter().any(|h| !h.is_empty()) { TAG_WIDTH + size::GAP_XS } else { 0.0 };
+        let width = text + tag + size::PADDING_XS * 2.0 + size::GAP_XS * 2.0;
         Size::new(width.clamp(size::SUGGEST_MIN_WIDTH, size::SUGGEST_MAX_WIDTH).round(), items.len() as f64 * size::SUGGEST_ROW_HEIGHT + size::GAP_XS * 2.0)
     }
 
@@ -95,7 +103,7 @@ impl Widget for Rows {
     fn register_children(&mut self, _ctx: &mut RegisterCtx<'_>) {}
 
     fn measure(&mut self, _ctx: &mut MeasureCtx<'_>, _props: &PropertiesRef<'_>, axis: Axis, _len_req: LenReq, _cross: Option<Length>) -> Length {
-        Length::px(Self::size_for(&self.items).get_coord(axis))
+        Length::px(Self::size_for(&self.items, &self.hints).get_coord(axis))
     }
 
     fn layout(&mut self, _ctx: &mut LayoutCtx<'_>, _props: &PropertiesRef<'_>, _size: Size) {}
@@ -107,6 +115,8 @@ impl Widget for Rows {
         let style = Style::ui(line);
         let matcher = Matcher::new(&self.query, IGNORE_CASE);
         self.lines.resize_with(self.items.len(), Line::default);
+        self.tags.resize_with(self.items.len(), Line::default);
+        let tagged = self.hints.iter().any(|h| !h.is_empty());
         for (i, (title, cache)) in self.items.iter().zip(&mut self.lines).enumerate() {
             let (top, bottom) = Self::span(i);
             let row = Rect::new(bounds.x0 + size::GAP_XS, bounds.y0 + top, bounds.x1 - size::GAP_XS, bounds.y0 + bottom);
@@ -114,7 +124,8 @@ impl Widget for Rows {
             if let Some(color) = background {
                 painter.fill(RoundedRect::from_rect(row, size::RADIUS_LG), color).draw();
             }
-            let width = (row.width() - size::PADDING_XS * 2.0).max(1.0);
+            let room = if tagged { TAG_WIDTH + size::GAP_XS } else { 0.0 };
+            let width = (row.width() - size::PADDING_XS * 2.0 - room).max(1.0);
             let layout = cache.layout(ctx, title, width, style);
             let origin = Point::new(row.x0 + size::PADDING_XS, row.y0 + ((row.height() - line) / 2.0).round());
             if let Some(found) = matcher.first(title) {
@@ -124,6 +135,11 @@ impl Widget for Rows {
                 painter.fill(RoundedRect::from_rect(mark, size::ROUNDED_SM), tm.search_match_bg).draw();
             }
             render_text(painter, Affine::translate(origin.to_vec2()), layout, &[tm.text_primary.into()], true);
+            if let Some(hint) = self.hints.get(i).filter(|h| !h.is_empty()) {
+                let tag = self.tags[i].layout(ctx, hint, TAG_WIDTH, style);
+                let at = Point::new(row.x1 - size::PADDING_XS - f64::from(tag.width()), origin.y);
+                render_text(painter, Affine::translate(at.to_vec2()), tag, &[tm.text_tertiary.into()], true);
+            }
         }
     }
 

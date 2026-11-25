@@ -18,17 +18,17 @@ impl App {
         };
         let Some(transform) = root.get_widget(view.editor).map(|w| w.ctx().window_transform()) else { return };
         let caret = transform.transform_rect_bbox(view.caret) - Vec2::new(size::PADDING_XS + size::GAP_XS, 0.0);
-        let natural = SuggestList::size_for(&view.items);
+        let natural = SuggestList::size_for(&view.items, &view.hints);
         let (at, height) = Menu::around(caret, natural, self.room());
         let fitted = Size::new(natural.width, height);
         match self.suggest_layer {
             Some((layer, _)) => {
-                root.edit_widget(layer, |mut w| SuggestList::set(&mut w.downcast(), view.items, view.query, view.selected, fitted));
+                root.edit_widget(layer, |mut w| SuggestList::set(&mut w.downcast(), view.items, view.hints, view.query, view.selected, fitted));
                 root.reposition_layer(layer, at);
                 self.suggest_layer = Some((layer, view.editor));
             }
             None => {
-                let list = SuggestList::new(view.items, view.query, view.selected, fitted);
+                let list = SuggestList::new(view.items, view.hints, view.query, view.selected, fitted);
                 let layer = list.id();
                 root.add_layer(list, at);
                 self.suggest_layer = Some((layer, view.editor));

@@ -91,8 +91,8 @@ fn block(source: &str, body: usize, id: &str) -> Option<(String, usize)> {
     Some((text.join("\n").trim().to_owned(), all[first].0))
 }
 
-/// The note `target` (a wiki link target) shown from the note that holds the embed, or why it cannot be shown.
-pub(super) fn load(inner: &Inner, target: &str, anchor: Option<&str>) -> Fetch<NoteText> {
+/// Where the note a link target names is. `Err(None)` means the index is not ready yet; `Err(Some(_))`, that there is no such note.
+pub(super) fn locate(inner: &Inner, target: &str) -> Result<PathBuf, Option<String>> {
     let (workspace, document) = (inner.workspace(), inner.source());
     // The index may still be getting ready: ask again for a moment before giving up until it announces itself.
     let mut found = inner.core.search.resolve_wiki_links(&workspace, &document, &[target.to_owned()]);
@@ -103,12 +103,20 @@ pub(super) fn load(inner: &Inner, target: &str, anchor: Option<&str>) -> Fetch<N
         std::thread::sleep(std::time::Duration::from_millis(100));
         found = inner.core.search.resolve_wiki_links(&workspace, &document, &[target.to_owned()]);
     }
-    let path = match found {
-        Err(SearchError::Unavailable { .. }) => return Fetch::Pending,
-        Err(error) => return Fetch::Missing(error.to_string()),
-        Ok(found) => found.paths.into_iter().next().flatten().map(PathBuf::from),
+    match found {
+        Err(SearchError::Unavailable { .. }) => Err(None),
+        Err(error) => Err(Some(error.to_string())),
+        Ok(found) => found.paths.into_iter().next().flatten().map(PathBuf::from).filter(|path| is_markdown(path)).ok_or_else(|| Some(target.to_owned())),
+    }
+}
+
+/// The note `target` (a wiki link target) shown from the note that holds the embed, or why it cannot be shown.
+pub(super) fn load(inner: &Inner, target: &str, anchor: Option<&str>) -> Fetch<NoteText> {
+    let path = match locate(inner, target) {
+        Ok(path) => path,
+        Err(None) => return Fetch::Pending,
+        Err(Some(reason)) => return Fetch::Missing(reason),
     };
-    let Some(path) = path.filter(|path| is_markdown(path)) else { return Fetch::Missing(target.to_owned()) };
     let title = path.file_stem().map_or_else(|| strip_markdown_extension(target).to_owned(), |stem| stem.to_string_lossy().into_owned());
     let label = anchor.map(str::trim).filter(|a| !a.is_empty()).map(|a| a.trim_start_matches('^').to_owned());
     let blocked = if inner.chain.iter().any(|ancestor| same_path(ancestor, &path)) {

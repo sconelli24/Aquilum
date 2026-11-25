@@ -93,3 +93,111 @@ fn typing_suggests_notes_and_enter_links_them() {
     }
     assert_eq!(text(&h), "[[Проектирование]] [[Проектирование]] ");
 }
+
+fn shown(h: &Harness) -> Option<(Vec<String>, Vec<String>)> {
+    let editor = h.app.editor_id()?;
+    h.root.get_widget(editor)?.downcast::<crate::ui::editor::TextEditor>()?.inner().suggestions()
+}
+
+fn wait_for_suggestions(h: &mut Harness, wanted: impl Fn(&(Vec<String>, Vec<String>)) -> bool) -> (Vec<String>, Vec<String>) {
+    if !h.wait_for(|h| shown(h).is_some_and(|found| wanted(&found))) {
+        panic!("the suggestions never matched: {:?} in {:?}", shown(h), h.body_text());
+    }
+    shown(h).unwrap()
+}
+
+fn open_empty_note(h: &mut Harness) {
+    let note = h.write_note("Principal.md", "");
+    h.open(note);
+    let _ = h.root.redraw();
+    h.focus_editor();
+}
+
+#[test]
+fn typing_a_hash_in_a_link_lists_the_headings_of_that_note_with_their_level() {
+    for opening in ["[[", "![["] {
+        let mut h = Harness::new();
+        h.write_note("Fuente.md", "# Uno
+
+texto
+
+## Dos
+
+### Tres
+
+## Cuatro: final
+");
+        open_empty_note(&mut h);
+        h.type_text(&format!("{opening}Fuente#"));
+        let (items, hints) = wait_for_suggestions(&mut h, |(items, _)| items.len() == 4);
+        assert_eq!(items, ["Uno", "Dos", "Tres", "Cuatro: final"], "{opening}: every heading shows up as soon as the # is typed");
+        assert_eq!(hints, ["H1", "H2", "H3", "H2"], "{opening}: each one says which level it is");
+        h.type_text("tre");
+        let (items, hints) = wait_for_suggestions(&mut h, |(items, _)| items.len() == 1);
+        assert_eq!((items[0].as_str(), hints[0].as_str()), ("Tres", "H3"), "{opening}: typing narrows the list");
+        h.key(Key::Named(NamedKey::Enter), Modifiers::empty());
+        let _ = h.root.redraw();
+        assert_eq!(h.body_text(), format!("{opening}Fuente#Tres]]"), "{opening}: Enter writes the heading and closes the link");
+        assert!(shown(&h).is_none(), "the list closes after choosing");
+    }
+}
+
+#[test]
+fn a_heading_with_characters_of_link_syntax_is_written_without_them() {
+    let mut h = Harness::new();
+    h.write_note("Fuente.md", "## Cuatro: final #2
+");
+    open_empty_note(&mut h);
+    h.type_text("[[Fuente#");
+    wait_for_suggestions(&mut h, |(items, _)| items.len() == 1);
+    h.key(Key::Named(NamedKey::Enter), Modifiers::empty());
+    let _ = h.root.redraw();
+    assert_eq!(h.body_text(), "[[Fuente#Cuatro final 2]]");
+}
+
+#[test]
+fn a_hash_right_after_the_brackets_lists_the_headings_of_the_note_being_written() {
+    let mut h = Harness::new();
+    let note = h.write_note("Principal.md", "# Introducción
+
+## Detalles
+
+");
+    h.open(note);
+    let _ = h.root.redraw();
+    h.focus_editor();
+    h.key(Key::Named(NamedKey::End), Modifiers::CONTROL);
+    h.type_text("[[#");
+    let (items, hints) = wait_for_suggestions(&mut h, |(items, _)| !items.is_empty());
+    assert_eq!((items, hints), (vec!["Introducción".to_owned(), "Detalles".to_owned()], vec!["H1".to_owned(), "H2".to_owned()]));
+}
+
+#[test]
+fn a_note_that_does_not_exist_lists_no_headings() {
+    let mut h = Harness::new();
+    open_empty_note(&mut h);
+    h.type_text("[[No existe#");
+    for _ in 0..30 {
+        h.app.on_core_events(&mut h.root);
+        let _ = h.root.redraw();
+        std::thread::sleep(std::time::Duration::from_millis(20));
+    }
+    assert!(shown(&h).is_none(), "{:?}", shown(&h));
+}
+
+/// Run with `AQ_OUT=<folder>` to write a picture of the list of headings, to look at it.
+#[test]
+fn snapshot_of_the_list_of_headings() {
+    if std::env::var_os("AQ_OUT").is_none() {
+        return;
+    }
+    let mut h = Harness::new();
+    h.write_note("Fuente.md", "# Plan general\n\n## Objetivos\n\n### Objetivo uno\n\n### Objetivo dos\n\n## Tareas pendientes\n\n#### Detalle fino\n");
+    open_empty_note(&mut h);
+    h.type_text("Mira ![[Fuente#");
+    wait_for_suggestions(&mut h, |(items, _)| items.len() == 6);
+    h.app.on_core_events(&mut h.root);
+    h.settle();
+    assert!(h.app.suggest_layer.is_some(), "the list is not on screen");
+    dump("heading-suggestions.png", &h.frame(900, 700, 1.0));
+}

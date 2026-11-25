@@ -35,10 +35,10 @@ impl TextEditor {
                 (from, caret, crate::frontmatter::suggest_keys(key), Source::Key)
             }
         };
-        Some(Suggest { from, to, query: self.doc.slice(from..caret).to_owned(), items, selected: 0, source })
+        Some(Suggest { from, to, query: self.doc.slice(from..caret).to_owned(), items, hints: Vec::new(), selected: 0, source, note: None })
     }
 
-    pub(super) fn suggest_context(&self) -> Option<(usize, usize, String, Source)> {
+    pub(super) fn suggest_context(&self) -> Option<Context> {
         if self.single_line || self.doc.markdown.is_none() || !self.selection().is_empty() {
             return None;
         }
@@ -55,12 +55,23 @@ impl TextEditor {
         if let Some(open) = before.rfind(OPEN) {
             let query = &before[open + OPEN.len()..];
             if !query.contains(CLOSE) {
-                if query.contains(['|', '#']) {
+                if query.contains('|') {
                     return None;
                 }
+                let base = line_start + open + OPEN.len();
                 let after = self.doc.slice(caret..line_end);
+                if let Some(first) = query.find('#') {
+                    // `[[Note#Part`: the headings of that note, from the moment the # is typed. `[[#` is the note itself.
+                    let last = query.rfind('#').unwrap_or(first);
+                    let heading = &query[last + 1..];
+                    if heading.starts_with('^') {
+                        return None;
+                    }
+                    let stop = after.char_indices().find(|&(at, c)| c == '|' || after[at..].starts_with(CLOSE)).map(|(at, _)| at);
+                    return Some(Context { from: base + last + 1, to: caret + stop.unwrap_or(0), query: heading.to_owned(), source: Source::Heading { close: stop.is_none() }, note: Some(query[..first].to_owned()) });
+                }
                 let stop = after.char_indices().find(|&(at, c)| matches!(c, '|' | '#') || after[at..].starts_with(CLOSE)).map(|(at, _)| at);
-                return Some((line_start + open + OPEN.len(), caret + stop.unwrap_or(0), query.to_owned(), Source::Link { wrap: false, close: stop.is_none() }));
+                return Some(Context { from: base, to: caret + stop.unwrap_or(0), query: query.to_owned(), source: Source::Link { wrap: false, close: stop.is_none() }, note: None });
             }
         }
         if self.in_frontmatter() {
@@ -70,6 +81,16 @@ impl TextEditor {
         if before[..start].ends_with('#') {
             return None;
         }
-        Some((line_start + start, caret, before[start..].to_owned(), Source::Link { wrap: true, close: true }))
+        Some(Context { from: line_start + start, to: caret, query: before[start..].to_owned(), source: Source::Link { wrap: true, close: true }, note: None })
     }
+}
+
+/// What the caret is in the middle of typing, and which text it would replace.
+pub(super) struct Context {
+    pub(super) from: usize,
+    pub(super) to: usize,
+    pub(super) query: String,
+    pub(super) source: Source,
+    /// For a heading: the note it is in (empty is the note being edited).
+    pub(super) note: Option<String>,
 }

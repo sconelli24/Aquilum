@@ -50,6 +50,11 @@ impl TextEditor {
             .collect()
     }
 
+    /// What the suggestion list shows: the items and their tags.
+    pub fn suggestions(&self) -> Option<(Vec<String>, Vec<String>)> {
+        self.suggest_shown.as_ref().map(|shown| (shown.items.clone(), shown.hints.clone()))
+    }
+
     pub fn card_scrollbar(&self) -> Option<crate::ui::scroll::bar::Span> {
         self.doc.paragraphs().filter(|p| p.fold == Fold::Head).find_map(|p| self.block_span(p.start))
     }

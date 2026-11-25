@@ -23,24 +23,24 @@ pub struct SuggestList {
 }
 
 impl SuggestList {
-    pub fn new(items: Vec<String>, query: String, selected: usize, size: Size) -> NewWidget<Self> {
-        let rows = NewWidget::new(Rows::new(items, query, selected));
+    pub fn new(items: Vec<String>, hints: Vec<String>, query: String, selected: usize, size: Size) -> NewWidget<Self> {
+        let rows = NewWidget::new(Rows::new(items, hints, query, selected));
         NewWidget::new(SuggestList { scroll: NewWidget::new(ScrollArea::new(rows)).to_pod(), size })
     }
 
-    pub fn set(this: &mut WidgetMut<'_, Self>, items: Vec<String>, query: String, selected: usize, size: Size) {
+    pub fn set(this: &mut WidgetMut<'_, Self>, items: Vec<String>, hints: Vec<String>, query: String, selected: usize, size: Size) {
         if this.widget.size != size {
             this.widget.size = size;
             this.ctx.request_layout();
         }
         let mut scroll = this.ctx.get_mut(&mut this.widget.scroll);
-        Rows::set(&mut ScrollArea::child_mut(&mut scroll), items, query, selected);
+        Rows::set(&mut ScrollArea::child_mut(&mut scroll), items, hints, query, selected);
         let (top, bottom) = Rows::span(selected);
         ScrollArea::reveal(&mut scroll, top, bottom);
     }
 
-    pub fn size_for(items: &[String]) -> Size {
-        let rows = Rows::size_for(items);
+    pub fn size_for(items: &[String], hints: &[String]) -> Size {
+        let rows = Rows::size_for(items, hints);
         Size::new(rows.width, rows.height.min(size::SUGGEST_MAX_HEIGHT))
     }
 }
