@@ -2,8 +2,11 @@
 //! for the cues (`::question text`) and takes the whole width again for the closing summary (`::summary text`). A cue or a
 //! summary is a paragraph that starts with its marker; callouts are not touched.
 
+use masonry::core::{BrushIndex, StyleSet};
+use masonry::parley::{Alignment, FontContext, Layout, LayoutContext};
+
 use super::super::markdown::Block;
-use super::Document;
+use super::{Document, text};
 
 /// Narrower windows keep the usual single column.
 const MIN_WIDTH: f32 = 700.0;
@@ -32,8 +35,13 @@ impl Document {
         }
     }
 
+    /// Whether the note is a Cornell note, however wide the window is.
+    pub fn cornell_note(&self) -> bool {
+        if self.front > 0 { self.cornell } else { self.told }
+    }
+
     pub fn is_cornell(&self) -> bool {
-        (if self.front > 0 { self.cornell } else { self.told }) && self.width.is_some_and(|width| width >= MIN_WIDTH)
+        self.cornell_note() && self.width.is_some_and(|width| width >= MIN_WIDTH)
     }
 
     /// Width of the left column, without the gutter.
@@ -55,26 +63,39 @@ impl Document {
     }
 
     pub fn lane(&self, line: usize) -> Lane {
-        if !self.is_cornell() || self.start(line) < self.front {
+        if !self.is_cornell() || self.start(line) < self.front || matches!(self.block(line), Block::Heading { .. }) {
             return Lane::Full;
         }
-        if matches!(self.block(line), Block::Heading { .. }) {
-            return Lane::Full;
-        }
-        if self.line(line).trim().is_empty() {
-            return Lane::Notes;
+        self.cornell_kind(line).unwrap_or(Lane::Notes)
+    }
+
+    /// `Cue` or `Summary` when the line is in the paragraph a marker opens, whatever the width of the window.
+    pub fn cornell_kind(&self, line: usize) -> Option<Lane> {
+        if !self.cornell_note() || self.start(line) < self.front || matches!(self.block(line), Block::Heading { .. }) || self.line(line).trim().is_empty() {
+            return None;
         }
         // A cue or a summary is the paragraph its marker opens: look up to the first line of the paragraph.
         let mut j = line;
         loop {
             if let Some((lane, _)) = self.marker_of(j) {
-                return lane;
+                return Some(lane);
             }
             if j == 0 || self.start(j - 1) < self.front || self.line(j - 1).trim().is_empty() {
-                return Lane::Notes;
+                return None;
             }
             j -= 1;
         }
+    }
+
+    /// A line of hint text, laid out like the rest of the page.
+    pub fn hint(&self, fcx: &mut FontContext, lcx: &mut LayoutContext<BrushIndex>, styles: &StyleSet, hint: &str) -> Layout<BrushIndex> {
+        text::build(fcx, lcx, styles, hint, None, None, Alignment::Start, None).0
+    }
+
+    /// The kind of a cue or a summary that has no text yet, to show a hint in its place.
+    pub fn placeholder(&self, line: usize) -> Option<Lane> {
+        let (lane, cut) = self.marker_of(line).filter(|_| self.is_cornell())?;
+        (self.bare(line).is_some() && self.line(line)[cut..].trim().is_empty()).then_some(lane)
     }
 
     /// Whether the line is one that opens a cue or a summary.
@@ -188,13 +209,15 @@ impl Document {
 
     /// Air under the line that closes the row above, and the blank lines between the cue and the first text of its notes.
     pub(super) fn cue_offset(&self, head: usize) -> f64 {
-        let mut offset = ROW_AIR;
+        let mut blanks = 0.0;
         let mut k = self.cue_end(head) + 1;
         while k < self.lines.count() && self.lane(k) == Lane::Notes && self.line(k).trim().is_empty() {
-            offset += self.heights.text(k);
+            blanks += self.heights.text(k);
             k += 1;
         }
-        offset
+        // Only when the row has text of its own is the cue level with it; an empty row keeps it at the top.
+        let has_text = k < self.lines.count() && self.lane(k) == Lane::Notes;
+        ROW_AIR + if has_text { blanks } else { 0.0 }
     }
 
     /// The rows from `first` to `last` (a cue and the lines up to the next cue), as first and last line.

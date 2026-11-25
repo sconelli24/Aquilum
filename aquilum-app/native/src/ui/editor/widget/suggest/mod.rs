@@ -20,6 +20,8 @@ enum Source {
     Block { close: bool },
     Key,
     Value,
+    /// `::` at the start of a line of a Cornell note: a cue or a summary.
+    Cornell,
     /// The whole text of a note-name field.
     Name,
 }
@@ -67,7 +69,7 @@ impl TextEditor {
     }
 
     pub(super) fn update_suggest(&mut self, id: WidgetId) {
-        if let Some(next) = self.property_suggest() {
+        if let Some(next) = self.property_suggest().or_else(|| self.cornell_suggest()) {
             let selected = self.keep_selected(&next.query, &next.items);
             self.suggest = Some(Suggest { selected, ..next });
             return self.publish_suggest(id);
@@ -301,6 +303,7 @@ impl TextEditor {
             // Blocks are handled above: they also write an identifier.
             Source::Block { .. } => String::new(),
             Source::Key => format!("{title}: "),
+            Source::Cornell => format!("{title} "),
             Source::Value | Source::Name => title.clone(),
         };
         let skip = matches!(s.source, Source::Link { close: false, .. } | Source::Heading { close: false }) && self.doc.after(s.to).starts_with(CLOSE);

@@ -44,6 +44,9 @@
     "bookTitlePlaceholder": "Título del libro",
     "insertTable": "Insertar tabla",
     "insertFrontmatter": "Insertar metadatos",
+    "cornellQuestion": "Pregunta clave",
+    "cornellSummary": "Resumen",
+    "cornellRow": "Nueva fila Cornell",
     "table": {
       "menuAria": "Acciones de la tabla",
       "copy": "Copiar tabla",

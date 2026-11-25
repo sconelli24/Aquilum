@@ -1,7 +1,6 @@
 mod checkpoints;
 mod classify;
 mod cornell;
-#[cfg(test)]
 pub use cornell::Lane;
 #[cfg(test)]
 mod cornell_tests;

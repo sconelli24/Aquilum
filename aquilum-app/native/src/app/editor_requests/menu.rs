@@ -18,10 +18,12 @@ pub enum EditorCommand {
     InsertBook,
     InsertTable,
     InsertFrontmatter,
+    InsertCornellRow,
 }
 
 const SELECTED: &[EditorCommand] = &[EditorCommand::Cut, EditorCommand::Copy, EditorCommand::Paste, EditorCommand::SelectAll];
 const CARET: &[EditorCommand] = &[EditorCommand::Paste, EditorCommand::SelectAll, EditorCommand::InsertBook, EditorCommand::InsertTable, EditorCommand::InsertFrontmatter];
+const CARET_CORNELL: &[EditorCommand] = &[EditorCommand::Paste, EditorCommand::SelectAll, EditorCommand::InsertCornellRow, EditorCommand::InsertBook, EditorCommand::InsertTable, EditorCommand::InsertFrontmatter];
 const PLAIN: &[EditorCommand] = &[EditorCommand::Paste, EditorCommand::SelectAll];
 
 impl EditorCommand {
@@ -34,6 +36,7 @@ impl EditorCommand {
             EditorCommand::InsertBook => (t("editor.insertBook"), icons::BOOK_OPEN),
             EditorCommand::InsertTable => (t("editor.insertTable"), icons::TABLE),
             EditorCommand::InsertFrontmatter => (t("editor.insertFrontmatter"), icons::TAG),
+            EditorCommand::InsertCornellRow => (t("editor.cornellRow"), icons::PLUS),
         }
     }
 }
@@ -52,6 +55,14 @@ impl App {
             let body = ids.body.id();
             root.focus_on(Some(body));
             ids.body.edit(root, |mut editor| TextEditor::table_command(&mut editor, command));
+        }
+    }
+
+    /// Adds a row to the Cornell note being edited and leaves the caret in its cue.
+    pub(in crate::app) fn insert_cornell_row(&mut self, root: &mut RenderRoot) {
+        if let Some(ids) = &self.note_ids {
+            root.focus_on(Some(ids.body.id()));
+            ids.body.edit(root, |mut editor| TextEditor::insert_cornell_row(&mut editor));
         }
     }
 
@@ -76,6 +87,7 @@ impl App {
         };
         let commands = match (menu.selected, menu.inserts) {
             (true, _) => SELECTED,
+            (false, true) if self.is_cornell() => CARET_CORNELL,
             (false, true) => CARET,
             (false, false) => PLAIN,
         };
@@ -145,6 +157,7 @@ impl App {
                 edit(root, &|e| TextEditor::insert_text(e, &text));
             }
             EditorCommand::InsertTable => edit(root, &|e| TextEditor::insert_table(e, 2, 2)),
+            EditorCommand::InsertCornellRow => edit(root, &TextEditor::insert_cornell_row),
             EditorCommand::InsertFrontmatter => {
                 if !self.has_frontmatter() {
                     let mut text = self.text.clone();

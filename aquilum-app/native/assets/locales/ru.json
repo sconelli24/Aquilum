@@ -44,6 +44,9 @@
     "bookTitlePlaceholder": "Название книги",
     "insertTable": "Вставить таблицу",
     "insertFrontmatter": "Вставить метаданные",
+    "cornellQuestion": "Ключевой вопрос",
+    "cornellSummary": "Резюме",
+    "cornellRow": "Новая строка Корнелла",
     "table": {
       "menuAria": "Действия с таблицей",
       "copy": "Копировать таблицу",

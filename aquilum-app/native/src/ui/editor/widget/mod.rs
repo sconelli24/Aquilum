@@ -30,6 +30,7 @@ mod build;
 mod block_bar;
 mod caret;
 mod code;
+mod cornell;
 mod edit;
 mod find;
 mod matching;

@@ -107,3 +107,14 @@ fn a_cue_shows_without_its_marker_until_the_caret_is_in_it() {
     assert!(inside > away + 20.0, "with the caret in it the marker is shown: {inside} against {away}");
     assert!((width(&mut doc, None) - away).abs() < 0.5, "and hidden again when the caret leaves");
 }
+
+#[test]
+fn an_empty_cue_or_summary_asks_for_a_hint_until_it_has_text_or_the_caret() {
+    let doc = laid("---\ntype: cornell\n---\n\n::question \n\nNota\n\n::summary\n", 900.0);
+    // 0-2 properties, 3 blank, 4 cue, 5 blank, 6 note, 7 blank, 8 summary
+    assert_eq!(doc.placeholder(4), Some(Lane::Cue));
+    assert_eq!(doc.placeholder(8), Some(Lane::Summary));
+    assert_eq!(doc.placeholder(6), None);
+    let filled = laid("---\ntype: cornell\n---\n\n::question Algo\n", 900.0);
+    assert_eq!(filled.placeholder(4), None);
+}

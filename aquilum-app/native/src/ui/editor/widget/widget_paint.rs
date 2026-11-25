@@ -76,6 +76,17 @@ impl TextEditor {
             }
             self.clipped(painter, i, |painter| render_text(painter, Affine::translate(self.shift() + self.doc.origin(i)), self.doc.paragraph(i).layout(), &palette, true));
         }
+        if markdown && self.doc.is_cornell() {
+            // A cue or a summary with no text yet shows what it is for, in gray, where its text will go.
+            let hint = [masonry::peniko::Brush::Solid(tm.icon_muted)];
+            let (fcx, lcx) = ctx.text_contexts();
+            for i in first..=last {
+                let Some(lane) = self.doc.placeholder(i) else { continue };
+                let key = if lane == super::super::document::Lane::Cue { "editor.cornellQuestion" } else { "editor.cornellSummary" };
+                let layout = self.doc.hint(fcx, lcx, &self.styles, &format!("{}…", crate::i18n::t(key)));
+                render_text(painter, Affine::translate(self.shift() + self.doc.origin(i)), &layout, &hint, true);
+            }
+        }
     }
 
     pub(super) fn do_post_paint(&mut self, ctx: &mut PaintCtx<'_>, _props: &PropertiesRef<'_>, painter: &mut Painter<'_>) {

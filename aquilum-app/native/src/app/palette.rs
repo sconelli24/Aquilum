@@ -29,6 +29,8 @@ pub enum Item {
     Settings,
     Graph,
     NewCanvas,
+    /// Add a row to a Cornell note.
+    CornellRow,
 }
 
 /// Shortcut commands offered in the palette, in the order they are listed.
@@ -80,7 +82,7 @@ fn filtered(entries: &[Entry], query: &str) -> Vec<usize> {
 }
 
 /// Every command the palette lists, with its current shortcut.
-pub fn entries() -> Vec<Entry> {
+pub fn entries(cornell: bool) -> Vec<Entry> {
     let mut entries: Vec<Entry> = COMMANDS
         .iter()
         .filter_map(|&command| {
@@ -89,6 +91,9 @@ pub fn entries() -> Vec<Entry> {
         })
         .collect();
     let plain = |item, label: &str| Entry { item, label: t(label), keys: String::new() };
+    if cornell {
+        entries.push(plain(Item::CornellRow, "editor.cornellRow"));
+    }
     entries.push(plain(Item::NewCanvas, "fileTree.newCanvas"));
     entries.push(plain(Item::Graph, "palette.openGraph"));
     entries.push(plain(Item::Settings, "palette.openSettings"));
@@ -110,7 +115,7 @@ impl App {
         root.add_layer(layer, Point::ORIGIN);
         root.focus_on(Some(search_box.field.id()));
 
-        let entries = entries();
+        let entries = entries(self.is_cornell());
         let filtered = (0..entries.len()).collect();
         self.popup = Some(Popup::Palette(PaletteState {
             layer: layer_id,
@@ -219,6 +224,10 @@ impl App {
             Item::Graph => {
                 self.open_graph(root);
                 Outcome { title: true, ..Outcome::default() }
+            }
+            Item::CornellRow => {
+                self.insert_cornell_row(root);
+                Outcome::default()
             }
             Item::NewCanvas => {
                 let folder = self.tree.root().map(std::path::Path::to_path_buf);

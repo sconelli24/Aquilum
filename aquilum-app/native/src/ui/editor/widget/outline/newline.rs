@@ -13,6 +13,9 @@ impl TextEditor {
     }
 
     pub(in super::super) fn newline(&mut self, hard: bool) -> bool {
+        if !hard && self.cornell_enter() {
+            return true;
+        }
         let range = self.selection();
         if !range.is_empty() {
             return false;

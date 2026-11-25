@@ -38,6 +38,30 @@ impl TextEditor {
         Some(Suggest { from, to, query: self.doc.slice(from..caret).to_owned(), items, hints: Vec::new(), selected: 0, source, note: None, blocks: None })
     }
 
+    /// `::` at the start of a line of a Cornell note lists what can be opened there: a cue or the summary.
+    pub(super) fn cornell_suggest(&self) -> Option<Suggest> {
+        use crate::i18n::t;
+        if self.single_line || self.doc.markdown.is_none() || !self.selection().is_empty() || !self.doc.cornell_note() || self.in_frontmatter() {
+            return None;
+        }
+        let caret = self.focus;
+        let paragraph = self.doc.paragraph(self.doc.at_offset(caret));
+        if paragraph.block.is_code() || !self.doc.slice(caret..paragraph.end()).trim().is_empty() {
+            return None;
+        }
+        let typed = self.doc.slice(paragraph.start..caret).strip_prefix("::")?.to_owned();
+        if !typed.chars().all(char::is_alphabetic) {
+            return None;
+        }
+        let matcher = Matcher::new(&typed, IGNORE_CASE);
+        let (items, hints): (Vec<String>, Vec<String>) = [("::question", t("editor.cornellQuestion")), ("::summary", t("editor.cornellSummary"))]
+            .into_iter()
+            .filter(|(marker, _)| typed.is_empty() || matcher.first(&marker[2..]).is_some())
+            .map(|(marker, hint)| (marker.to_owned(), hint))
+            .unzip();
+        (!items.is_empty()).then(|| Suggest { from: paragraph.start, to: caret, query: typed, items, hints, selected: 0, source: Source::Cornell, note: None, blocks: None })
+    }
+
     pub(super) fn suggest_context(&self) -> Option<Context> {
         if self.single_line || self.doc.markdown.is_none() || !self.selection().is_empty() {
             return None;
