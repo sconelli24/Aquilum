@@ -104,7 +104,9 @@ impl Document {
     /// Gives the last line of a row the height its cue is taller by, so the next row starts below the cue.
     fn close_row(doc: &mut Document, row: &mut Option<(f64, f64)>, top: &mut f64, next: usize, put: &dyn Fn(&mut Document, usize, f64, Fold)) {
         let Some((cue, started)) = row.take() else { return };
-        let missing = cue - (*top - started);
+        // A row is as tall as its cue and has air under its notes before the line that closes it.
+        let notes = *top - started;
+        let missing = cue.max(notes + super::super::cornell::ROW_PAD) - notes;
         let mut at = next.saturating_sub(1);
         while at > 0 && doc.heights.fold(at) == Fold::Member {
             at -= 1;

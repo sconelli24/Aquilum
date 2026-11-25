@@ -393,7 +393,7 @@ fn snapshot_of_a_cornell_note() {
     let note = h.write_note("Clase.md", "---\ntype: cornell\ntags: [cornell]\n---\n\n# Fotosíntesis\n\n::question ¿Qué es la fotosíntesis?\n\nProceso por el cual las plantas convierten luz en energía química.\n\n- Ocurre en los cloroplastos\n- Usa agua y dióxido de carbono\n\n> una cita común\n\n```rust\nlet x = 1;\n```\n\nUn dato más.\n\n::question \n\n\n\n::summary \n");
     h.open(note);
     h.settle();
-    dump("cornell.png", &h.frame(1600, 1100, 1.0));
+    dump("cornell.png", &h.frame(1900, 1100, 1.0));
 }
 
 #[test]

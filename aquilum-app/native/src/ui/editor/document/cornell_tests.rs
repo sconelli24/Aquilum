@@ -68,7 +68,7 @@ fn a_tall_row_of_notes_is_not_stretched_by_a_short_cue() {
     let doc = laid(&format!("---\ntype: cornell\n---\n\n::question Corta\n\n{notes}::question Otra\n"), 900.0);
     let (first, second) = (4, doc.line_count() - 2);
     let row: f64 = (first + 1..second).map(|k| doc.heights.text(k)).sum();
-    assert!((doc.top(second) - doc.top(first) - row).abs() < 1.0, "a row of notes taller than its cue keeps its own height");
+    assert!((doc.top(second) - doc.top(first) - row - super::cornell::ROW_PAD).abs() < 1.0, "a row of notes taller than its cue is as tall as its notes and the air under them");
 }
 
 #[test]

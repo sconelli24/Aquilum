@@ -32,6 +32,8 @@ pub use builder::push;
 pub struct Bare {
     /// How much of the line is the marker (`::question `): it is hidden.
     pub cut: usize,
+    /// Cues stand out from the notes beside them.
+    pub strong: bool,
 }
 
 pub struct Context<'a> {
@@ -75,6 +77,9 @@ pub fn style(builder: &mut RangedBuilder<'_, BrushIndex>, frame: &Frame, block: 
     let content = block.content(frame).max(spaces).min(text.len());
     let content = context.bare.map_or(content, |bare| {
         hide(builder, 0..bare.cut.min(text.len()), 0.0);
+        if bare.strong {
+            push(builder, StyleProperty::FontWeight(masonry::parley::FontWeight::SEMI_BOLD), bare.cut.min(text.len())..text.len());
+        }
         bare.cut.min(text.len())
     });
     let empty = text[content..].trim().is_empty();

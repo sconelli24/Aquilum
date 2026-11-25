@@ -10,9 +10,9 @@ use super::{Document, text};
 
 /// Narrower windows keep the usual single column.
 const MIN_WIDTH: f32 = 700.0;
-const GUTTER: f32 = 20.0;
-/// Air between the line that closes a row and the cue of the next one.
-const ROW_AIR: f64 = 8.0;
+const GUTTER: f32 = 44.0;
+/// Air under the last line of a row, before the line that closes it.
+pub(super) const ROW_PAD: f64 = 16.0;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Lane {
@@ -128,7 +128,7 @@ impl Document {
             return None;
         }
         let cut = self.marker_of(line).map_or(0, |(_, cut)| cut.min(self.line(line).len()));
-        Some(super::super::markdown::Bare { cut })
+        Some(super::super::markdown::Bare { cut, strong: self.lane(line) == Lane::Cue })
     }
 
     /// Where the text of a line starts and how wide it may be.
@@ -207,7 +207,7 @@ impl Document {
         lift + self.cue_offset(head)
     }
 
-    /// Air under the line that closes the row above, and the blank lines between the cue and the first text of its notes.
+    /// The blank lines between a cue and the first text of its notes: the cue is level with that text.
     pub(super) fn cue_offset(&self, head: usize) -> f64 {
         let mut blanks = 0.0;
         let mut k = self.cue_end(head) + 1;
@@ -217,7 +217,7 @@ impl Document {
         }
         // Only when the row has text of its own is the cue level with it; an empty row keeps it at the top.
         let has_text = k < self.lines.count() && self.lane(k) == Lane::Notes;
-        ROW_AIR + if has_text { blanks } else { 0.0 }
+        if has_text { blanks } else { 0.0 }
     }
 
     /// The rows from `first` to `last` (a cue and the lines up to the next cue), as first and last line.

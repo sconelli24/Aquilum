@@ -60,12 +60,12 @@ impl TextEditor {
             let (y0, y1) = (self.doc.top(head), self.doc.bottom(end));
             let line = tm.block_divider;
             let divide = x + self.doc.divider_x();
-            painter.fill(Rect::new(divide - CORNELL_LINE / 2.0, y0, divide + CORNELL_LINE / 2.0, y1), line).draw();
+            painter.fill(Rect::new(divide - CORNELL_LINE / 2.0, y0, divide + CORNELL_LINE / 2.0, y1), tm.bg_accent.multiply_alpha(0.55)).draw();
             painter.fill(Rect::new(x, y1 - CORNELL_LINE / 2.0, right, y1 + CORNELL_LINE / 2.0), line).draw();
         }
         for head in self.doc.summaries(first, last) {
             let y = self.doc.top(head);
-            painter.fill(Rect::new(x, y - CORNELL_LINE / 2.0, right, y + CORNELL_LINE / 2.0), tm.block_divider).draw();
+            painter.fill(Rect::new(x, y - CORNELL_LINE / 2.0, right, y + CORNELL_LINE / 2.0), tm.bg_accent.multiply_alpha(0.55)).draw();
         }
         self.paint_outline_guides(painter, first, last, fonts);
         clips

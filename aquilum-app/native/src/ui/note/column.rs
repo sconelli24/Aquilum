@@ -26,17 +26,21 @@ pub fn ch_width(ctx: &mut MeasureCtx<'_>) -> f64 {
 
 const WIDE_MARGIN: f64 = size::SPACE_32 - size::EDITOR_PADDING_X;
 
+/// A Cornell note takes the room its two columns need, and no more: the lines stay short.
+const CORNELL_MAX: f64 = 1040.0;
+
 pub struct EditorColumn {
     child: WidgetPod<Flex>,
     ch: Option<(EditorFont, f64)>,
     inset: f64,
     wide: bool,
+    cornell: bool,
     blend: f64,
 }
 
 impl EditorColumn {
-    pub fn new(child: NewWidget<Flex>, inset: f64, wide: bool) -> NewWidget<Self> {
-        NewWidget::new(EditorColumn { child: child.to_pod(), ch: None, inset, wide, blend: if wide { 1.0 } else { 0.0 } })
+    pub fn new(child: NewWidget<Flex>, inset: f64, wide: bool, cornell: bool) -> NewWidget<Self> {
+        NewWidget::new(EditorColumn { child: child.to_pod(), ch: None, inset, wide, cornell, blend: if wide { 1.0 } else { 0.0 } })
     }
 
     pub fn set_wide(this: &mut WidgetMut<'_, Self>, wide: bool) {
@@ -48,6 +52,9 @@ impl EditorColumn {
 
     fn inner(&self, width: f64, max: f64) -> f64 {
         let narrow = width.min(max);
+        if self.cornell {
+            return (width - WIDE_MARGIN * 2.0).min(CORNELL_MAX).max(narrow);
+        }
         let wide = (width - WIDE_MARGIN * 2.0).max(narrow);
         narrow + (wide - narrow) * bezier(EASE_IN_OUT, self.blend)
     }

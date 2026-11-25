@@ -137,7 +137,7 @@ pub fn page(view: NoteView<'_>) -> (NewWidget<Flex>, NoteIds) {
     let hero_slot_handle = Handle::of(&hero_slot);
     let spacer = NewWidget::new(SizedBox::empty().height(Length::px(parts.top)));
     let spacer_handle = Handle::of(&spacer);
-    let column = EditorColumn::new(NewWidget::new(content), parts.inset, view.wide || view.cornell);
+    let column = EditorColumn::new(NewWidget::new(content), parts.inset, view.wide, view.cornell);
     let column_handle = Handle::of(&column);
     let (pad_left, pad_right) = if view.compact {
         (size::SPACE_12, size::SPACE_4)

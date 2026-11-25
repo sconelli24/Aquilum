@@ -5,11 +5,10 @@ use crate::ui::note::EditorColumn;
 
 impl App {
     pub fn toggle_wide_mode(&mut self, root: &mut RenderRoot) {
-        let cornell = self.is_cornell();
         let wide = !self.interface.wide();
         self.interface.set_wide(wide);
         if let Some(ids) = &self.note_ids {
-            ids.column.edit(root, |mut column| EditorColumn::set_wide(&mut column, wide || cornell));
+            ids.column.edit(root, |mut column| EditorColumn::set_wide(&mut column, wide));
         }
     }
 }
