@@ -27,6 +27,8 @@ pub enum Part {
     Book,
     Math,
     Image,
+    /// A note shown inside the note: its link is written, so the caret on it must show it.
+    Note,
     Table,
 }
 
@@ -38,6 +40,8 @@ impl Part {
             Part::Setext | Part::Fence | Part::Callout | Part::Dataview | Part::Book => Reveal::Block,
             Part::Math => Reveal::Below,
             Part::Image => Reveal::Above,
+            // The link above and the card below it, from the moment the caret touches the line (like a formula).
+            Part::Note => Reveal::Below,
             Part::Table => Reveal::Never,
         }
     }

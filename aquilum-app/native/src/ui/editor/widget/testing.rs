@@ -42,12 +42,17 @@ impl TextEditor {
         self.doc
             .paragraphs()
             .enumerate()
-            .filter(|(_, p)| p.fold == Fold::Head)
+            .filter(|(_, p)| matches!(p.fold, Fold::Head | Fold::Below | Fold::Above))
             .filter_map(|(i, p)| match p.embed.map(|e| &e.view) {
                 Some(View::Drawing(drawing)) => Some((Point::new(self.embed_x(i), self.doc.top(i)), drawing.height, drawing.hits.iter().filter_map(|(_, action, _)| if let Action::Link { target } = action { Some(target.clone()) } else { None }).collect())),
                 _ => None,
             })
             .collect()
+    }
+
+    /// How many cards show the text of their link (the caret is on it) instead of only the card.
+    pub fn cards_with_source(&self) -> usize {
+        self.doc.paragraphs().filter(|p| matches!(p.fold, Fold::Below | Fold::Above) && p.embed.is_some()).count()
     }
 
     /// What the suggestion list shows: the items and their tags.

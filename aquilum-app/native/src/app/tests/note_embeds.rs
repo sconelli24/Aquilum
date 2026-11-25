@@ -189,3 +189,99 @@ fn a_heading_with_characters_of_link_syntax_can_be_embedded_by_the_name_a_link_g
     assert!(h.wait_for(|h| cards(h).len() == 1), "the embed by the name a link gives the heading was not drawn");
     assert_eq!(titles(&h), vec!["Fuente#Tareas fase 1".to_owned()]);
 }
+
+fn with_source(h: &Harness) -> usize {
+    let Some(editor) = h.app.editor_id() else { return 0 };
+    h.root.get_widget(editor).and_then(|w| w.downcast::<TextEditor>().map(|e| e.inner().cards_with_source())).unwrap_or(0)
+}
+
+#[test]
+fn the_link_of_an_embedded_note_shows_when_the_caret_is_on_its_line_and_hides_when_it_leaves() {
+    let mut h = Harness::new();
+    h.write_note("Fuente.md", "# Uno
+
+## Dos
+
+texto de la sección
+");
+    let host = h.write_note("Principal.md", "Antes
+
+![[Fuente#Dos]]
+
+Después
+");
+    h.open(host);
+    assert!(h.wait_for(|h| cards(h).len() == 1));
+    h.settle();
+    h.focus_editor();
+    h.key(Key::Named(NamedKey::Home), Modifiers::CONTROL);
+    h.settle();
+    assert_eq!(with_source(&h), 0, "with the caret elsewhere only the card shows");
+    let height_alone = cards(&h)[0].0;
+    h.key(Key::Named(NamedKey::ArrowDown), Modifiers::empty());
+    h.key(Key::Named(NamedKey::ArrowDown), Modifiers::empty());
+    h.settle();
+    assert_eq!(with_source(&h), 1, "arriving on the line with the arrows shows its text");
+    assert_eq!(cards(&h).len(), 1, "the card stays below the text");
+    assert!(h.body_text().contains("![[Fuente#Dos]]"));
+    h.key(Key::Named(NamedKey::ArrowDown), Modifiers::empty());
+    h.key(Key::Named(NamedKey::ArrowDown), Modifiers::empty());
+    h.settle();
+    assert_eq!(with_source(&h), 0, "leaving the line hides the text again");
+    assert_eq!(cards(&h)[0].0, height_alone, "and the card is as it was");
+}
+
+#[test]
+fn clicking_the_body_of_an_embedded_note_puts_the_caret_on_its_line_to_edit_or_delete_it() {
+    let mut h = Harness::new();
+    h.write_note("Fuente.md", "# Uno
+
+texto de la sección
+
+más texto
+");
+    let host = h.write_note("Principal.md", "Antes
+
+![[Fuente]]
+
+Después
+");
+    h.open(host);
+    assert!(h.wait_for(|h| cards(h).len() == 1));
+    h.settle();
+    let editor_widget = h.root.get_widget(h.app.editor_id().unwrap()).unwrap();
+    let origin = editor_widget.ctx().bounding_box().origin();
+    let (place, height) = {
+        let (place, height, _) = editor_widget.downcast::<TextEditor>().unwrap().inner().card_places().remove(0);
+        (place, height)
+    };
+    h.click(origin.x + place.x + 60.0, origin.y + place.y + height - 12.0);
+    h.settle();
+    assert_eq!(with_source(&h), 1, "a click inside the card shows the text of the link");
+    // Delete the whole line: the card goes away with it.
+    h.key(Key::Named(NamedKey::Home), Modifiers::empty());
+    h.key(Key::Named(NamedKey::End), Modifiers::SHIFT);
+    h.key(Key::Named(NamedKey::Delete), Modifiers::empty());
+    h.settle();
+    assert!(!h.body_text().contains("![["), "the link is gone: {:?}", h.body_text());
+    assert_eq!(cards(&h).len(), 0, "and so is the card");
+}
+
+/// Run with `AQ_OUT=<folder>` to write a picture of an embed whose link is shown, to look at it.
+#[test]
+fn snapshot_of_an_embed_with_its_link_shown() {
+    let Some(_) = std::env::var_os("AQ_OUT") else { return };
+    let mut h = Harness::new();
+    h.write_note("Fuente.md", "# Plan\n\n## Tareas\n\n- [ ] primera tarea\n- [x] segunda tarea\n");
+    let host = h.write_note("Principal.md", "Texto antes.\n\n![[Fuente#Tareas]]\n\nTexto después.\n");
+    h.open(host);
+    assert!(h.wait_for(|h| cards(h).first().is_some_and(|card| card.0 > 100.0)), "the card never got its text");
+    h.settle();
+    h.focus_editor();
+    h.key(Key::Named(NamedKey::Home), Modifiers::CONTROL);
+    h.key(Key::Named(NamedKey::ArrowDown), Modifiers::empty());
+    h.key(Key::Named(NamedKey::ArrowDown), Modifiers::empty());
+    h.settle();
+    assert_eq!(with_source(&h), 1);
+    dump("note-embed-source.png", &h.frame(900, 700, 1.0));
+}

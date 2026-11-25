@@ -46,7 +46,10 @@ impl Document {
             Block::Table { first: true, .. } => until(&|b| matches!(b, Block::Table { last: true, .. })).map(|e| (e, Part::Table.reveal())),
             Block::Code { first: true, lang: Some(Lang::Math), .. } => until(&|b| matches!(b, Block::Code { last: true, .. })).map(|e| (e, Part::Math.reveal())),
             Block::Code { first: true, lang: Some(Lang::Dataview), .. } if resolved => until(&|b| matches!(b, Block::Code { last: true, .. })).map(|e| (e, Part::Dataview.reveal())),
-            Block::Image if resolved => Some((i, Part::Image.reveal())),
+            Block::Image if resolved => {
+                let line = &self.line(i)[self.blocks.get(i).0.lead..];
+                Some((i, if media::note_embed(line).is_some() { Part::Note } else { Part::Image }.reveal()))
+            }
             Block::Callout { kind: Callout::Book, .. } if resolved => {
                 let book = |j: usize| matches!(block(j), Block::Callout { kind: Callout::Book, .. });
                 let quoted = |j: usize| self.blocks.get(j).0.quote > 0 && !matches!(block(j), Block::Callout { .. });

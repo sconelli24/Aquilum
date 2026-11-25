@@ -50,7 +50,12 @@ impl TextEditor {
         }
         for (i, top, _) in self.doc.placed(shown) {
             let p = self.doc.paragraph(i);
-            let (Fold::Head | Fold::Above, Some(embed)) = (p.fold, &p.embed) else { continue };
+            let (Fold::Head | Fold::Above | Fold::Below, Some(embed)) = (p.fold, &p.embed) else { continue };
+            // A formula's preview below its source is drawn with its code block; any other card shows under its text.
+            if p.fold == Fold::Below && p.block.is_code() {
+                continue;
+            }
+            let top = if p.fold == Fold::Below { self.doc.bottom(i) - embed.view.height() } else { top };
             let mut overlay = match &self.table {
                 Some(session) if session.start == p.start => session.overlay(self.hovered_table == Some(p.start)),
                 _ => super::super::table::Overlay { hovered: self.hovered_table == Some(p.start), scroll_x: self.embed_scroll_x(p.start), ..Default::default() },
