@@ -285,3 +285,96 @@ fn snapshot_of_an_embed_with_its_link_shown() {
     assert_eq!(with_source(&h), 1);
     dump("note-embed-source.png", &h.frame(900, 700, 1.0));
 }
+
+fn card_rects(h: &Harness) -> (Vec<(masonry::kurbo::Rect, String)>, f64) {
+    let editor = h.app.editor_id().unwrap();
+    h.root.get_widget(editor).unwrap().downcast::<TextEditor>().unwrap().inner().card_hits().expect("a card")
+}
+
+#[test]
+fn a_button_at_the_right_of_the_title_bar_opens_the_note_and_so_does_the_title() {
+    let mut h = Harness::new();
+    let source = h.write_note("Fuente.md", "# Uno
+
+texto de la fuente
+");
+    let host = h.write_note("Principal.md", "![[Fuente]]
+");
+    h.open(host.clone());
+    assert!(h.wait_for(|h| cards(h).first().is_some_and(|card| card.0 > 60.0)));
+    h.settle();
+    let (hits, width) = card_rects(&h);
+    assert_eq!(hits.len(), 2, "the title and the button");
+    let button = hits.iter().map(|(rect, _)| *rect).max_by(|a, b| a.x0.total_cmp(&b.x0)).unwrap();
+    assert!(button.center().x > width * 0.8, "the button is at the right end of the card: {button:?} of {width}");
+    let editor = h.root.get_widget(h.app.editor_id().unwrap()).unwrap();
+    let origin = editor.ctx().bounding_box().origin();
+    let place = editor.downcast::<TextEditor>().unwrap().inner().card_places().remove(0).0;
+    h.click(origin.x + place.x + button.center().x, origin.y + place.y + button.center().y);
+    assert!(h.wait_for(|h| h.app.note.as_ref().is_some_and(|n| n.is(&source))), "the button did not open the note");
+    h.open(host);
+    assert!(h.wait_for(|h| cards(h).len() == 1));
+}
+
+#[test]
+fn the_button_still_opens_the_note_while_the_link_is_shown_above_the_card() {
+    let mut h = Harness::new();
+    let source = h.write_note("Fuente.md", "# Uno
+
+texto de la fuente
+");
+    let host = h.write_note("Principal.md", "Antes
+
+![[Fuente]]
+
+Después
+");
+    h.open(host);
+    assert!(h.wait_for(|h| cards(h).first().is_some_and(|card| card.0 > 60.0)));
+    h.settle();
+    h.focus_editor();
+    h.key(Key::Named(NamedKey::Home), Modifiers::CONTROL);
+    h.key(Key::Named(NamedKey::ArrowDown), Modifiers::empty());
+    h.key(Key::Named(NamedKey::ArrowDown), Modifiers::empty());
+    h.settle();
+    assert_eq!(with_source(&h), 1);
+    let (hits, _) = card_rects(&h);
+    let button = hits.iter().map(|(rect, _)| *rect).max_by(|a, b| a.x0.total_cmp(&b.x0)).unwrap();
+    let editor = h.root.get_widget(h.app.editor_id().unwrap()).unwrap();
+    let origin = editor.ctx().bounding_box().origin();
+    let place = editor.downcast::<TextEditor>().unwrap().inner().card_places().remove(0);
+    // The card sits below the line that shows the link: its top is the bottom of the paragraph minus its height.
+    h.click(origin.x + place.0.x + button.center().x, origin.y + place.0.y + (editor_line_and_card(&h) - place.1) + button.center().y);
+    assert!(h.wait_for(|h| h.app.note.as_ref().is_some_and(|n| n.is(&source))), "the button did not open the note");
+}
+
+/// Height of the paragraph that holds the link and the card under it.
+fn editor_line_and_card(h: &Harness) -> f64 {
+    let editor = h.root.get_widget(h.app.editor_id().unwrap()).unwrap();
+    editor.downcast::<TextEditor>().unwrap().inner().card_paragraph_height().expect("a card")
+}
+
+#[test]
+fn identifiers_do_not_show_inside_an_embedded_note() {
+    let mut h = Harness::new();
+    h.write_note("Fuente.md", "Un párrafo con id ^abc123
+
+- un punto ^p1
+");
+    let host = h.write_note("Principal.md", "![[Fuente]]
+");
+    h.open(host);
+    assert!(h.wait_for(|h| cards(h).first().is_some_and(|card| card.0 > 60.0)));
+    // The card is laid out from the text without identifiers: a source of exactly that text is as tall as the card.
+    let tall = cards(&h)[0].0;
+    let plain = h.write_note("Igual.md", "Un párrafo con id
+
+- un punto
+");
+    let twin = h.write_note("Gemela.md", "![[Igual]]
+");
+    h.open(twin);
+    assert!(h.wait_for(|h| cards(h).first().is_some_and(|card| card.0 > 60.0)));
+    let _ = plain;
+    assert_eq!(cards(&h)[0].0, tall, "the card of the note with identifiers is as tall as the one of the same note without them");
+}

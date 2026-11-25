@@ -44,10 +44,28 @@ impl TextEditor {
             .enumerate()
             .filter(|(_, p)| matches!(p.fold, Fold::Head | Fold::Below | Fold::Above))
             .filter_map(|(i, p)| match p.embed.map(|e| &e.view) {
-                Some(View::Drawing(drawing)) => Some((Point::new(self.embed_x(i), self.doc.top(i)), drawing.height, drawing.hits.iter().filter_map(|(_, action, _)| if let Action::Link { target } = action { Some(target.clone()) } else { None }).collect())),
+                Some(View::Drawing(drawing)) => Some((Point::new(self.embed_x(i), self.doc.top(i)), drawing.height, {
+                    let mut targets: Vec<String> = drawing.hits.iter().filter_map(|(_, action, _)| if let Action::Link { target } = action { Some(target.clone()) } else { None }).collect();
+                    targets.dedup();
+                    targets
+                })),
                 _ => None,
             })
             .collect()
+    }
+
+    /// The click targets of the first card (rectangles in the card's own coordinates) with where they lead, and the card's width.
+    pub fn card_hits(&self) -> Option<(Vec<(Rect, String)>, f64)> {
+        use crate::ui::editor::embed::{Action, View};
+        self.doc.paragraphs().filter(|p| matches!(p.fold, Fold::Head | Fold::Below | Fold::Above)).find_map(|p| match p.embed.map(|e| &e.view) {
+            Some(View::Drawing(drawing)) => Some((drawing.hits.iter().filter_map(|(rect, action, _)| if let Action::Link { target } = action { Some((*rect, target.clone())) } else { None }).collect(), drawing.width())),
+            _ => None,
+        })
+    }
+
+    /// Height of the paragraph that holds a card (the line of its link too when it is shown).
+    pub fn card_paragraph_height(&self) -> Option<f64> {
+        self.doc.paragraphs().enumerate().find(|(_, p)| matches!(p.fold, Fold::Head | Fold::Below | Fold::Above) && p.embed.is_some()).map(|(i, _)| self.doc.bottom(i) - self.doc.top(i))
     }
 
     /// How many cards show the text of their link (the caret is on it) instead of only the card.

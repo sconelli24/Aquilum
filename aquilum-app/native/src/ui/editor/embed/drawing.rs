@@ -34,6 +34,8 @@ pub(super) enum Item {
     Dim(Box<Item>),
     Path(BezPath, Option<Color>, Option<Stroke>),
     Glyphs(FontData, f32, Vec<Glyph>, Option<Color>),
+    /// A line icon of the given size, drawn in the muted icon color.
+    Icon(Point, &'static crate::ui::icons::Icon, f64),
     /// Something drawn beforehand, such as the body of a note shown inside a note.
     Scene(Point, std::sync::Arc<Scene>),
 }
@@ -60,6 +62,10 @@ impl Drawing {
 
     pub(super) fn card(width: f64, height: f64, items: Vec<Item>) -> Self {
         Drawing { view: width, width, ..Drawing::new(height, items) }
+    }
+
+    pub fn width(&self) -> f64 {
+        self.width
     }
 
     pub fn max_scroll(&self) -> f64 {
@@ -180,6 +186,7 @@ pub(super) fn paint_item<S: PaintSink + ?Sized>(painter: &mut Painter<'_, S>, it
             Some(stroke) => painter.stroke(path, stroke, ink(color, palette)).transform(at).draw(),
             None => painter.fill(path, ink(color, palette)).transform(at).draw(),
         },
+        Item::Icon(p, icon, size) => icon.draw(painter, at * *p, *size, 1.6, theme::current().icon_muted),
         Item::Scene(p, scene) => replay_transformed(scene, painter.sink_mut(), at * Affine::translate(p.to_vec2())),
         Item::Glyphs(font, size, glyphs, color) => painter.glyphs(font, ink(color, palette)).transform(at).font_size(*size).hint(true).draw(&Style::Fill(Fill::NonZero), glyphs),
     }

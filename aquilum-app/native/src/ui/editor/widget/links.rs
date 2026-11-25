@@ -24,10 +24,15 @@ impl TextEditor {
     }
 
     fn card_at(&self, point: Point) -> Option<(usize, &crate::ui::editor::embed::Drawing, Point)> {
-        match self.head_embed_at(point)? {
-            (p, crate::ui::editor::embed::View::Drawing(drawing), local) => Some((p.start, drawing, local + Vec2::new(drawing.scrolled(self.embed_scroll_x(p.start)), 0.0))),
-            _ => None,
+        if let Some((p, crate::ui::editor::embed::View::Drawing(drawing), local)) = self.head_embed_at(point) {
+            return Some((p.start, drawing, local + Vec2::new(drawing.scrolled(self.embed_scroll_x(p.start)), 0.0)));
         }
+        // With the caret on its link a card sits below the text of the link.
+        let i = self.index_at(point)?;
+        let p = self.doc.paragraph(i);
+        let Some(crate::ui::editor::embed::View::Drawing(drawing)) = p.embed.map(|e| &e.view).filter(|_| p.fold == Fold::Below && !p.block.is_code()) else { return None };
+        let local = point - Vec2::new(self.embed_x(i), self.doc.bottom(i) - drawing.height);
+        Some((p.start, drawing, local))
     }
 
     fn card_action_at(&self, point: Point) -> Option<crate::ui::editor::embed::Action> {

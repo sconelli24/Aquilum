@@ -38,7 +38,7 @@ fn valid_id(id: &str) -> bool {
 }
 
 /// The identifier a line ends with (` ^id`), and where the space before it starts.
-fn trailing_id(text: &str) -> Option<(usize, &str)> {
+pub fn trailing_id(text: &str) -> Option<(usize, &str)> {
     let trimmed = text.trim_end();
     let caret = trimmed.rfind('^')?;
     let id = &trimmed[caret + 1..];
@@ -46,7 +46,7 @@ fn trailing_id(text: &str) -> Option<(usize, &str)> {
     (valid_id(id) && before.ends_with(char::is_whitespace)).then(|| (before.trim_end().len(), id))
 }
 
-fn alone_id(text: &str) -> Option<&str> {
+pub fn alone_id(text: &str) -> Option<&str> {
     let t = text.trim();
     t.strip_prefix('^').filter(|id| valid_id(id))
 }

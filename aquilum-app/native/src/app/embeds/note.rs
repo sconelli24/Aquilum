@@ -13,6 +13,44 @@ use crate::ui::editor::resolve::{Blocked, Fetch, NoteText};
 /// How many notes deep embeds go: a note shown inside a note shown inside a note.
 pub(super) const MAX_DEPTH: u8 = 4;
 
+/// `text` as a reader sees it: no ` ^id` at the end of a line and no line holding only an identifier. Code is left as written.
+pub(super) fn without_ids(text: &str) -> String {
+    use aquilum_core::search::blocks::{alone_id, trailing_id};
+    let mut kept: Vec<String> = Vec::new();
+    let mut fence: Option<String> = None;
+    let mut dropped = false;
+    for line in text.lines() {
+        let t = line.trim_start();
+        if let Some(open) = &fence {
+            if t.starts_with(open.as_str()) {
+                fence = None;
+            }
+            kept.push(line.to_owned());
+            continue;
+        }
+        if t.starts_with("```") || t.starts_with("~~~") {
+            fence = Some(t[..3].to_owned());
+            kept.push(line.to_owned());
+            continue;
+        }
+        if alone_id(t).is_some() {
+            dropped = true;
+            continue;
+        }
+        // The blank line that set a lone identifier apart goes with it.
+        if dropped && t.is_empty() && kept.last().is_some_and(|last| last.trim().is_empty()) {
+            dropped = false;
+            continue;
+        }
+        dropped = false;
+        kept.push(match trailing_id(line) {
+            Some((at, _)) => line[..at].to_owned(),
+            None => line.to_owned(),
+        });
+    }
+    kept.join("\n").trim_matches('\n').to_owned()
+}
+
 /// The part of `source` an anchor points to, and where it starts in `source`.
 ///
 /// No anchor is the whole note without its properties, `Heading` is that section with everything under it (the heading line
@@ -22,7 +60,7 @@ pub(super) fn extract(source: &str, anchor: Option<&str>) -> Option<(String, usi
     let Some(anchor) = anchor.map(str::trim).filter(|anchor| !anchor.is_empty()) else {
         let rest = &source[body..];
         let skipped = rest.len() - rest.trim_start_matches(['\r', '\n']).len();
-        return Some((rest.trim_matches(['\r', '\n']).to_owned(), body + skipped));
+        return Some((without_ids(rest.trim_matches(['\r', '\n'])), body + skipped));
     };
     match anchor.strip_prefix('^') {
         Some(id) => block(source, body, id.trim()),
@@ -32,7 +70,7 @@ pub(super) fn extract(source: &str, anchor: Option<&str>) -> Option<(String, usi
             let list = headings(source);
             let found = *matching(&list, wanted).first()?;
             let section = &source[found.start..found.content.end.max(found.start)];
-            Some((section.trim_end().to_owned(), found.start))
+            Some((without_ids(section.trim_end()), found.start))
         }
     }
 }
@@ -148,7 +186,8 @@ mod tests {
     #[test]
     fn the_whole_note_comes_without_its_properties() {
         let (text, start) = extract(NOTE, None).unwrap();
-        assert!(text.starts_with("# Один") && text.ends_with("^lst"), "{text:?}");
+        assert!(text.starts_with("# Один") && text.ends_with("- ещё"), "{text:?}");
+        assert!(!text.contains('^'), "a card shows no identifiers: {text:?}");
         assert!(!text.contains("type: note"));
         assert!(NOTE[start..].starts_with("# Один"));
         assert_eq!(extract("просто текст\n", Some("  ")).unwrap().0, "просто текст");
@@ -181,5 +220,38 @@ mod tests {
         assert_eq!(text, "- пункт\n- ещё");
         let multi = "строка раз\nстрока два ^m1\n\nдругой абзац\n";
         assert_eq!(extract(multi, Some("^m1")).unwrap().0, "строка раз\nстрока два");
+    }
+
+    #[test]
+    fn identifiers_are_left_out_of_what_a_card_shows_but_code_is_left_as_written() {
+        use super::without_ids;
+        assert_eq!(without_ids("Uno ^a1
+
+Dos
+
+> cita
+
+^cita
+
+Tres ^b-2
+"), "Uno
+
+Dos
+
+> cita
+
+Tres");
+        assert_eq!(without_ids("```
+let x = 1; ^no
+^tampoco
+```
+
+fin ^si"), "```
+let x = 1; ^no
+^tampoco
+```
+
+fin");
+        assert_eq!(without_ids("a ^no válido y 2^3 sigue"), "a ^no válido y 2^3 sigue", "a caret that is not an identifier stays");
     }
 }

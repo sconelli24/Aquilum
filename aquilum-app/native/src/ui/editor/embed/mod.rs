@@ -19,7 +19,7 @@ pub use dataview::dataview;
 pub use drawing::{Action, Drawing};
 pub use math::{Formula, formula, math};
 pub use media::{MediaHit, MediaOverlay, MediaView};
-pub use note::{Body as NoteBody, note};
+pub use note::{BUTTON_ROOM as NOTE_BUTTON_ROOM, Body as NoteBody, note};
 pub use spec::{Font, Spec};
 
 pub enum View {

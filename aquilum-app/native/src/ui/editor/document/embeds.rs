@@ -183,7 +183,7 @@ impl Document {
                     },
                     _ => note.target.clone(),
                 };
-                let title = text::spec_layout(fcx, lcx, styles, fonts, &Spec { wrap: Some(width), ..Spec::plain(&title_text, Font::Ui(LABEL_SIZE + 1), markdown::LINK) });
+                let title = text::spec_layout(fcx, lcx, styles, fonts, &Spec { wrap: Some((width - embed::NOTE_BUTTON_ROOM).max(0.0)), ..Spec::plain(&title_text, Font::Ui(LABEL_SIZE + 1), markdown::LINK) });
                 let notice = |fcx: &mut FontContext, lcx: &mut LayoutContext<BrushIndex>, message: &str| {
                     embed::NoteBody::Notice(text::spec_layout(fcx, lcx, styles, fonts, &Spec { wrap: Some(width), ..Spec::plain(message, Font::Ui(LABEL_SIZE + 1), markdown::SYNTAX) }))
                 };
